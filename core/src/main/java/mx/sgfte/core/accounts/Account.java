@@ -1,5 +1,4 @@
 package mx.sgfte.core.accounts;
-
 import java.math.BigDecimal;
 
 public class Account {
