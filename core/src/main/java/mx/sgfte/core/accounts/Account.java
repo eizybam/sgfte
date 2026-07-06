@@ -11,4 +11,11 @@ public class Account {
         this.purpose = purpose;
         this.balance = BigDecimal.ZERO;
     }
+
+    public void deposit(BigDecimal amount) {
+        if  (amount.signum() <= 0) {
+            throw new IllegalArgumentException("amount must be positive");
+        }
+        balance = balance.add(amount);
+    }
 }
