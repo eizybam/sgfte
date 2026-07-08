@@ -40,3 +40,7 @@ build/
 
 #IDEs
 .idea
+
+#Databases
+src/main/resources/db.properties
+
