@@ -39,7 +39,7 @@ public class CardholderDao {
                     return keys.getLong(1);
                 }
             }
-            return -1L;
+            throw new IllegalStateException("Insert succeeded but no generated id was returned");
         } catch (SQLException e) {
             throw new RuntimeException("Error inserting cardholder", e);
         }
