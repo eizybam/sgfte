@@ -3,13 +3,18 @@ import java.math.BigDecimal;
 
 public class Account {
     private final String id;
-    private final String purpose;
+    private final Long cardholderId;
+    private final Long categoryId;
     private BigDecimal balance;
+    private boolean isActive;
 
-    public Account(String id, String purpose) {
+    public Account(String id, Long cardholderId, Long categoryId) {
         this.id = id;
-        this.purpose = purpose;
+        this.cardholderId = cardholderId;
+        this.categoryId = categoryId;
         this.balance = BigDecimal.ZERO;
+        this.isActive = true;
+
     }
 
     public void deposit(BigDecimal amount) {
@@ -32,6 +37,7 @@ public class Account {
     }
 
     public String getId()          { return id; }
-    public String getPurpose()     { return purpose; }
+    public Long getCategoryId()     { return categoryId; }
     public BigDecimal getBalance() { return balance; }
+    public String getCardholderId() {return cardholderId;}
 }
