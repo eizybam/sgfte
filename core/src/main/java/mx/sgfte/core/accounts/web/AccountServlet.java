@@ -17,8 +17,10 @@ import java.util.List;
 
 @WebServlet("/accounts")
 public class AccountServlet extends HttpServlet {
+
     private final AccountService accountService = new AccountService();
     private final CardholderDao cardholderDao = new CardholderDao();
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
