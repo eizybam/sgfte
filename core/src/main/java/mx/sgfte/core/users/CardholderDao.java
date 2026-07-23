@@ -1,11 +1,14 @@
 package mx.sgfte.core.users;
 
 import mx.sgfte.core.shared.db.Db;
+import oracle.jdbc.proxy.annotation.Pre;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Persistence for cardholders (JDBC over Oracle). */
 public class CardholderDao {
@@ -42,6 +45,23 @@ public class CardholderDao {
             throw new IllegalStateException("Insert succeeded but no generated id was returned");
         } catch (SQLException e) {
             throw new RuntimeException("Error inserting cardholder", e);
+        }
+    }
+
+    public List<Cardholder> findAllActive() {
+        String sql = "SELECT id, first_name, last_name FROM cardholders WHERE status = 'ACTIVE' ORDER BY last_name";
+        List<Cardholder> cardholders = new ArrayList<>();
+        try (Connection connection = Db.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            while (resultSet.next()) {
+                cardholders.add(new Cardholder(resultSet.getString("first_name"), resultSet.getString("last_name"),
+                        resultSet.getString("email"), resultSet.getString("phone")));
+            }
+            return cardholders;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading cardholders", e);
         }
     }
 }
