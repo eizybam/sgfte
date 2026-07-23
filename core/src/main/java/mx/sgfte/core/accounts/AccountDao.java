@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Optional;
 
 public class AccountDao {
@@ -13,11 +14,11 @@ public class AccountDao {
     /** True if the cardholder already has an account with this purpose. */
     public boolean existForPurpose(Long cardholderId, long categoryId) {
         String sql = "SELECT 1 FROM account WHERE cardholder_id = ? AND category_id = ?";
-        try (Connection c = Db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setLong(1, cardholderId);
-            ps.setLong(2, categoryId);
-            try (ResultSet rs = ps.executeQuery()) {
+        try (Connection connection = Db.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setLong(1, cardholderId);
+            preparedStatement.setLong(2, categoryId);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 return rs.next();
             }
         } catch (SQLException e) {
@@ -29,16 +30,19 @@ public class AccountDao {
      * Inserts an account with its business code (account_number).
      * Sets the generated numeric id back on the object and also returns it.
      * NOTE: account.getAccountNumber() must be set (generated in the service) before calling this.
+     *
+     * If the UNIQUE constraint on account_number is violated, throws
+     * DuplicateAccountNumberException so the service can regenerate and retry.
      */
     public long insert(Account account) {
         String sql = "INSERT INTO account (account_number, cardholder_id, category_id) VALUES (?, ?, ?)";
-        try (Connection c = Db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql, new String[]{"id"})) {
-            ps.setString(1, account.getAccountNumber());
-            ps.setLong(2, account.getCardholderId());
-            ps.setLong(3, account.getCategoryId());
-            ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
+        try (Connection connection = Db.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql, new String[]{"id"})) {
+            preparedStatement.setString(1, account.getAccountNumber());
+            preparedStatement.setLong(2, account.getCardholderId());
+            preparedStatement.setLong(3, account.getCategoryId());
+            preparedStatement.executeUpdate();
+            try (ResultSet keys = preparedStatement.getGeneratedKeys()) {
                 if (keys.next()) {
                     long id = keys.getLong(1);
                     account.setId(id);
@@ -46,6 +50,14 @@ public class AccountDao {
                 }
             }
             throw new IllegalStateException("Insert succeeded but no generated id was returned");
+        } catch (SQLIntegrityConstraintViolationException e) {
+            // Oracle ORA-00001. Distinguish WHICH unique constraint failed by name.
+            String msg = e.getMessage() == null ? "" : e.getMessage().toUpperCase();
+            if (msg.contains("UQ_ACCOUNT_NUMBER")) {
+                throw new DuplicateAccountNumberException(account.getAccountNumber(), e);
+            }
+            // e.g. UQ_ACCOUNT_PURPOSE — a real conflict a retry can't fix; let it surface.
+            throw new RuntimeException("Constraint violation inserting account", e);
         } catch (SQLException e) {
             throw new RuntimeException("Error inserting account", e);
         }
@@ -57,11 +69,11 @@ public class AccountDao {
      */
     public Optional<Account> findByAccountNumber(String accountNumber) {
         String sql = "SELECT id, account_number, cardholder_id, category_id, balance, status "
-                   + "FROM account WHERE account_number = ?";
-        try (Connection c = Db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, accountNumber);
-            try (ResultSet rs = ps.executeQuery()) {
+                + "FROM account WHERE account_number = ?";
+        try (Connection connection = Db.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, accountNumber);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapRow(rs));
                 }
