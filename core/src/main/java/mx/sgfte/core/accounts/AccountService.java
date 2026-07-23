@@ -56,6 +56,7 @@ public class AccountService {
         for (int i = 0; i < MAX_TRIES; i++) {
             account.setAccountNumber(prefix + "-" + randomSuffix());
             try {
+                
                 return dao.insert(account);
             } catch (DuplicateAccountNumberException e) {
                 // Astronomically rare collision on account_number: regenerate and retry.
