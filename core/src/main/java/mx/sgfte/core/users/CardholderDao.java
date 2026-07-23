@@ -49,7 +49,7 @@ public class CardholderDao {
     }
 
     public List<Cardholder> findAllActive() {
-        String sql = "SELECT id, first_name, last_name FROM cardholders WHERE status = 'ACTIVE' ORDER BY last_name";
+        String sql = "SELECT id, first_name, last_name FROM cardholder WHERE status = 'ACTIVE' ORDER BY last_name";
         List<Cardholder> cardholders = new ArrayList<>();
         try (Connection connection = Db.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
