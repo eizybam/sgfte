@@ -1,0 +1,299 @@
+/* ==========================================================================
+   SGFTE · Auth styles (login, and base for password / forgot-password screens)
+   Design tokens mirror the Figma "Login" frame (node 15:295) — warm charcoal
+   + burnt-orange. Reuse these variables for the forgot-password modal.
+
+   Layout system:
+   - 8px spacing grid (4px half-step) — every gap/pad/margin uses --sp-*.
+   - 12-column page grid — image spans 6 cols, form panel spans 6.
+   ========================================================================== */
+
+:root {
+    /* Surfaces */
+    --sgfte-bg:            #141312;
+    --sgfte-card:          #1d1b1a;
+    --sgfte-border:        #594139;
+    --sgfte-highlight:     #feb96b;
+
+    /* Text */
+    --sgfte-white:         #ffffff;
+    --sgfte-cream:         #e6e1df;
+    --sgfte-tan:           #e1bfb4;
+    --sgfte-salmon:        #ffb59b;
+    --sgfte-muted:         #9b8e88;
+    --sgfte-placeholder:   rgba(169, 138, 128, 0.5);
+
+    /* Brand button */
+    --sgfte-primary:        #c34100;
+    --sgfte-primary-hover:  #d94d06;
+    --sgfte-primary-active: #a83700;
+    --sgfte-primary-text:   #ffede8;
+
+    /* Feedback */
+    --sgfte-error-bg:     rgba(209, 72, 54, 0.14);
+    --sgfte-error-border: rgba(255, 180, 171, 0.35);
+    --sgfte-error-text:   #ffb4ab;
+    --sgfte-ok-bg:        rgba(108, 192, 112, 0.15);
+    --sgfte-ok-border:    rgba(108, 192, 112, 0.4);
+    --sgfte-ok-text:      #a9d6ab;
+
+    /* Shape */
+    --sgfte-radius-card:  12px;
+    --sgfte-radius-field: 2px;   /* matches the login frame's squared inputs/button */
+
+    /* 8px spacing grid (4px half-step) */
+    --sp-half: 4px;
+    --sp-1:  8px;
+    --sp-2: 16px;
+    --sp-3: 24px;
+    --sp-4: 32px;
+    --sp-5: 40px;
+    --sp-6: 48px;
+    --sp-8: 64px;
+
+    /* Type */
+    --sgfte-font-body:  "Hanken Grotesk", system-ui, sans-serif;
+    --sgfte-font-title: "Manrope", system-ui, sans-serif;
+    --sgfte-font-mono:  "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body.auth {
+    font-family: var(--sgfte-font-body);
+    color: var(--sgfte-cream);
+    background: var(--sgfte-bg);
+}
+
+/* ---- Page: 12-column grid ------------------------------------------------ */
+.auth-page {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    min-height: 100vh;
+}
+
+/* Left: corporate building image (cols 1–6). Drop the real export at
+   assets/img/login-bg.jpg; the gradient below is a graceful fallback. */
+.auth-visual {
+    grid-column: 1 / span 6;
+    background-image:
+        linear-gradient(rgba(20, 19, 18, 0.30), rgba(20, 19, 18, 0.55)),
+        url("../img/login-bg.jpg"),
+        linear-gradient(150deg, #2b3a44 0%, #1a2730 45%, #141312 100%);
+    background-size: cover, cover, cover;
+    background-position: center, center, center;
+    background-repeat: no-repeat;
+}
+
+/* Right: form panel (cols 7–12) */
+.auth-panel {
+    grid-column: 7 / span 6;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-6) var(--sp-8);
+    overflow: hidden;
+}
+
+/* Top-right ambient orange glow (Figma "Ambient Glow") */
+.auth-glow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 384px;   /* 8 × 48 */
+    height: 384px;
+    border-radius: 12px;
+    background: rgba(195, 65, 0, 0.05);
+    filter: blur(50px);
+    pointer-events: none;
+}
+
+.auth-content {
+    position: relative;
+    width: 100%;
+    max-width: 464px;   /* 8 × 58 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---- Header -------------------------------------------------------------- */
+.auth-head { margin-bottom: var(--sp-4); }
+
+.auth-brand {
+    margin: 0 0 var(--sp-1);
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    font-size: 44px;
+    letter-spacing: 0.5px;
+    color: var(--sgfte-salmon);
+}
+
+.auth-title {
+    margin: 0 0 var(--sp-2);
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 36px;
+    line-height: 40px;   /* 8 × 5 */
+    color: var(--sgfte-white);
+}
+
+.auth-subtitle {
+    margin: 0;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;   /* 8 × 3 */
+    color: var(--sgfte-tan);
+}
+
+/* ---- Card --------------------------------------------------------------- */
+.auth-card {
+    background: var(--sgfte-card);
+    border: 1px solid var(--sgfte-border);
+    border-radius: var(--sgfte-radius-card);
+    padding: var(--sp-3);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+}
+
+/* ---- Alerts (populated by the servlet via ${error} / ${success}) -------- */
+.auth-alert {
+    border-radius: var(--sgfte-radius-field);
+    padding: var(--sp-1) var(--sp-2);
+    font-size: 14px;
+    margin-bottom: var(--sp-2);
+}
+.auth-alert--error {
+    background: var(--sgfte-error-bg);
+    border: 1px solid var(--sgfte-error-border);
+    color: var(--sgfte-error-text);
+}
+.auth-alert--ok {
+    background: var(--sgfte-ok-bg);
+    border: 1px solid var(--sgfte-ok-border);
+    color: var(--sgfte-ok-text);
+}
+
+/* ---- Fields ------------------------------------------------------------- */
+.auth-field { margin-bottom: var(--sp-3); }
+
+.auth-field__labelrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-1);
+}
+
+.auth-label {
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--sgfte-tan);
+}
+
+.auth-input-wrap { position: relative; }
+
+.auth-input-wrap svg {
+    position: absolute;
+    left: var(--sp-2);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: var(--sgfte-muted);
+    pointer-events: none;
+}
+
+.auth-input {
+    width: 100%;
+    height: var(--sp-6);                 /* 48px */
+    padding: 0 var(--sp-2) 0 var(--sp-6);/* left 48 = icon(16) + 20 + gap(12) room */
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-border);
+    border-radius: var(--sgfte-radius-field);
+    color: var(--sgfte-cream);
+    font-family: var(--sgfte-font-body);
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.auth-input::placeholder { color: var(--sgfte-placeholder); }
+
+.auth-input:focus {
+    border-color: var(--sgfte-highlight);
+    box-shadow: 0 0 0 3px rgba(254, 185, 107, 0.12);
+}
+
+.auth-input.is-invalid {
+    border-color: var(--sgfte-error-text);
+    box-shadow: 0 0 0 3px rgba(255, 180, 171, 0.12);
+}
+.auth-field__error {
+    display: none;
+    margin-top: var(--sp-1);
+    font-size: 13px;
+    color: var(--sgfte-error-text);
+}
+.auth-field.has-error .auth-field__error { display: block; }
+
+/* ---- Forgot-password link ----------------------------------------------- */
+.auth-forgot {
+    display: inline-block;
+    margin: var(--sp-1) 0 var(--sp-3);
+    font-size: 14px;
+    color: var(--sgfte-salmon);
+    text-decoration: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+.auth-forgot:hover { text-decoration: underline; }
+
+/* ---- Submit ------------------------------------------------------------- */
+.auth-submit {
+    width: 100%;
+    height: var(--sp-6);   /* 48px */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-1);
+    background: var(--sgfte-primary);
+    color: var(--sgfte-primary-text);
+    border: 0;
+    border-radius: var(--sgfte-radius-field);
+    font-family: var(--sgfte-font-title);
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(195, 65, 0, 0.2), 0 2px 4px -2px rgba(195, 65, 0, 0.2);
+    transition: background 0.15s ease;
+}
+.auth-submit:hover  { background: var(--sgfte-primary-hover); }
+.auth-submit:active { background: var(--sgfte-primary-active); }
+.auth-submit svg { width: 16px; height: 16px; }
+
+/* ---- Responsive --------------------------------------------------------- */
+/* Tablet / narrow: drop the image, form panel takes all 12 columns. */
+@media (max-width: 860px) {
+    .auth-visual { display: none; }
+    .auth-panel {
+        grid-column: 1 / -1;
+        padding: var(--sp-5) var(--sp-3);
+    }
+}
+
+/* Phone: tighten spacing and scale the headings down. */
+@media (max-width: 480px) {
+    .auth-panel { padding: var(--sp-4) var(--sp-2); }
+    .auth-card  { padding: var(--sp-2); }
+    .auth-brand { font-size: 38px; }
+    .auth-title { font-size: 30px; line-height: 32px; }
+}
