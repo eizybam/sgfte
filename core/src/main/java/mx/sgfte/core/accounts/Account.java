@@ -1,26 +1,36 @@
 package mx.sgfte.core.accounts;
+
 import java.math.BigDecimal;
 
+/**
+ * An account with a specific purpose (category). MONEY LIVES HERE.
+ * - id: internal numeric PK (what FKs and joins use; never shown to users).
+ * - accountNumber: public business code shown to users, e.g. "GAS-48HSY".
+ */
 public class Account {
-    private final String id;
-    private final String purpose;
+    private Long id;
+    private String accountNumber;
+    private Long cardholderId;
+    private final Long categoryId;
     private BigDecimal balance;
+    private boolean isActive;
 
-    public Account(String id, String purpose) {
-        this.id = id;
-        this.purpose = purpose;
+    public Account(Long cardholderId, Long categoryId) {
+        this.cardholderId = cardholderId;
+        this.categoryId = categoryId;
         this.balance = BigDecimal.ZERO;
+        this.isActive = true;
     }
 
     public void deposit(BigDecimal amount) {
-        if  (amount.signum() <= 0) {
+        if (amount.signum() <= 0) {
             throw new IllegalArgumentException("amount must be positive");
         }
         this.balance = this.balance.add(amount);
     }
 
     public void withdraw(BigDecimal amount) {
-        if  (amount.signum() <= 0) {
+        if (amount.signum() <= 0) {
             throw new IllegalArgumentException("amount must be positive");
         }
 
@@ -31,7 +41,18 @@ public class Account {
         this.balance = this.balance.subtract(amount);
     }
 
-    public String getId()          { return id; }
-    public String getPurpose()     { return purpose; }
-    public BigDecimal getBalance() { return balance; }
+    public Long getId()                { return id; }
+    public void setId(Long id)         { this.id = id; }
+
+    public String getAccountNumber()                    { return accountNumber; }
+    public void setAccountNumber(String accountNumber)  { this.accountNumber = accountNumber; }
+
+    public Long getCardholderId()      { return cardholderId; }
+    public Long getCategoryId()        { return categoryId; }
+
+    public BigDecimal getBalance()             { return balance; }
+    public void setBalance(BigDecimal balance) { this.balance = balance; }
+
+    public boolean isActive()              { return isActive; }
+    public void setActive(boolean active)  { this.isActive = active; }
 }
