@@ -75,7 +75,8 @@ body.auth {
 .auth-page {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    min-height: 100vh;
+    height: 100vh;      /* pin to viewport: card grows inside, page never does */
+    overflow: hidden;   /* image stays fixed; no vertical page growth on errors */
 }
 
 /* Left: corporate building image (cols 1–6). Drop the real export at
@@ -283,6 +284,8 @@ body.auth {
 /* ---- Responsive --------------------------------------------------------- */
 /* Tablet / narrow: drop the image, form panel takes all 12 columns. */
 @media (max-width: 860px) {
+    /* No image column on small screens — let the page scroll naturally if needed. */
+    .auth-page { height: auto; min-height: 100vh; overflow: visible; }
     .auth-visual { display: none; }
     .auth-panel {
         grid-column: 1 / -1;
