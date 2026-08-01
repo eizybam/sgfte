@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 public class AccountDao {
 
@@ -92,5 +93,39 @@ public class AccountDao {
         a.setBalance(rs.getBigDecimal("balance"));
         a.setActive("ACTIVE".equals(rs.getString("status")));
         return a;
+    }
+
+    /**
+     * Debits (subtracts) amount from an account's balance.
+     * Returns false if the account has insufficient balance (uses CHECK constraint balance >= 0).
+     * Runs inside a caller-managed transaction.
+     */
+    public boolean debit(Connection conn, long accountId, java.math.BigDecimal amount) throws java.sql.SQLException {
+        String sql = "UPDATE account SET balance = balance - ? WHERE id = ? AND status = 'ACTIVE'";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setLong(2, accountId);
+            try {
+                int rows = ps.executeUpdate();
+                return rows > 0;
+            } catch (SQLException e) {
+                // Oracle raises ORA-02290 when CHECK constraint (balance >= 0) is violated
+                if (e.getErrorCode() == 2290) return false;
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Credits (adds) amount to an account's balance.
+     * Runs inside a caller-managed transaction.
+     */
+    public void credit(Connection conn, long accountId, java.math.BigDecimal amount) throws java.sql.SQLException {
+        String sql = "UPDATE account SET balance = balance + ? WHERE id = ? AND status = 'ACTIVE'";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setLong(2, accountId);
+            ps.executeUpdate();
+        }
     }
 }
