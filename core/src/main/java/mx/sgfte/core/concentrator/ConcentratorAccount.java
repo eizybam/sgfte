@@ -2,6 +2,12 @@ package mx.sgfte.core.concentrator;
 
 import java.math.BigDecimal;
 
+/**
+ * The Concentrator account: the company's single source of funds (singleton).
+ * Money flows OUT of here to cardholder accounts (dispersion) and back IN here
+ * when an account/user is deleted (reintegration).
+ */
+
 public class ConcentratorAccount {
     private long  id;
     private String name;
