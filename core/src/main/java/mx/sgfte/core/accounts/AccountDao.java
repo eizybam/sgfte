@@ -93,4 +93,33 @@ public class AccountDao {
         a.setActive("ACTIVE".equals(rs.getString("status")));
         return a;
     }
+
+    /**
+     * Adds money to an ACTIVE account inside a transaction.
+     * @return true if it affected 1 row (account exists and is active); false otherwise.
+     */
+    public boolean credit(java.sql.Connection conn, long accountId, java.math.BigDecimal amount)
+            throws java.sql.SQLException {
+        String sql = "UPDATE account SET balance = balance + ? WHERE id = ? AND status = 'ACTIVE'";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setLong(2, accountId);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    /**
+     * (Used by Modules 3 and 4) Debits an ACTIVE account with enough balance.
+     * @return true if it affected 1 row (there was balance); false otherwise.
+     */
+    public boolean debit(java.sql.Connection conn, long accountId, java.math.BigDecimal amount)
+            throws java.sql.SQLException {
+        String sql = "UPDATE account SET balance = balance - ? WHERE id = ? AND status = 'ACTIVE' AND balance >= ?";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setLong(2, accountId);
+            ps.setBigDecimal(3, amount);
+            return ps.executeUpdate() == 1;
+        }
+    }
 }
