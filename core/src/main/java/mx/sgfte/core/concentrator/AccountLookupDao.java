@@ -9,35 +9,28 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Lookup DAO that provides active accounts for UI dropdowns.
- * Used by TransferServlet and HistorialServlet.
- */
+/** Read-only lookups of active accounts for the dispersion screen. */
 public class AccountLookupDao {
 
-    /**
-     * Returns all active accounts formatted for HTML select dropdowns.
-     * Each entry has id, a human-readable label, and balance.
-     */
     public List<AccountOption> findActiveForSelect() {
-        String sql = "SELECT a.id, a.account_number, a.balance, c.first_name || ' ' || c.last_name AS owner_name, cat.name AS category_name "
-                   + "FROM account a "
-                   + "JOIN cardholder c ON a.cardholder_id = c.id "
-                   + "JOIN category cat ON a.category_id = cat.id "
-                   + "WHERE a.status = 'ACTIVE' "
-                   + "ORDER BY a.id";
-        List<AccountOption> list = new ArrayList<>();
+        String sql = "SELECT a.id, a.balance, c.first_name, c.last_name, cat.name AS purpose "
+                + "FROM account a "
+                + "JOIN cardholder c ON c.id = a.cardholder_id "
+                + "JOIN category  cat ON cat.id = a.category_id "
+                + "WHERE a.status = 'ACTIVE' "
+                + "ORDER BY c.last_name, cat.name";
+        List<AccountOption> options = new ArrayList<>();
         try (Connection conn = Db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                long id = rs.getLong("id");
-                String label = rs.getString("account_number") + " – " + rs.getString("owner_name") + " (" + rs.getString("category_name") + ")";
-                list.add(new AccountOption(id, label, rs.getBigDecimal("balance")));
+                String label = rs.getString("last_name") + ", " + rs.getString("first_name")
+                        + " — " + rs.getString("purpose");
+                options.add(new AccountOption(rs.getLong("id"), label, rs.getBigDecimal("balance")));
             }
-            return list;
+            return options;
         } catch (SQLException e) {
-            throw new RuntimeException("Error loading accounts for select", e);
+            throw new RuntimeException("Error loading accounts for dispersion", e);
         }
     }
 }

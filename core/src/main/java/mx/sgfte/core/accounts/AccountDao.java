@@ -96,36 +96,31 @@ public class AccountDao {
     }
 
     /**
-     * Debits (subtracts) amount from an account's balance.
-     * Returns false if the account has insufficient balance (uses CHECK constraint balance >= 0).
-     * Runs inside a caller-managed transaction.
+     * Adds money to an ACTIVE account inside a transaction.
+     * @return true if it affected 1 row (account exists and is active); false otherwise.
      */
-    public boolean debit(Connection conn, long accountId, java.math.BigDecimal amount) throws java.sql.SQLException {
-        String sql = "UPDATE account SET balance = balance - ? WHERE id = ? AND status = 'ACTIVE'";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    public boolean credit(java.sql.Connection conn, long accountId, java.math.BigDecimal amount)
+            throws java.sql.SQLException {
+        String sql = "UPDATE account SET balance = balance + ? WHERE id = ? AND status = 'ACTIVE'";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBigDecimal(1, amount);
             ps.setLong(2, accountId);
-            try {
-                int rows = ps.executeUpdate();
-                return rows > 0;
-            } catch (SQLException e) {
-                // Oracle raises ORA-02290 when CHECK constraint (balance >= 0) is violated
-                if (e.getErrorCode() == 2290) return false;
-                throw e;
-            }
+            return ps.executeUpdate() == 1;
         }
     }
 
     /**
-     * Credits (adds) amount to an account's balance.
-     * Runs inside a caller-managed transaction.
+     * (Used by Modules 3 and 4) Debits an ACTIVE account with enough balance.
+     * @return true if it affected 1 row (there was balance); false otherwise.
      */
-    public void credit(Connection conn, long accountId, java.math.BigDecimal amount) throws java.sql.SQLException {
-        String sql = "UPDATE account SET balance = balance + ? WHERE id = ? AND status = 'ACTIVE'";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    public boolean debit(java.sql.Connection conn, long accountId, java.math.BigDecimal amount)
+            throws java.sql.SQLException {
+        String sql = "UPDATE account SET balance = balance - ? WHERE id = ? AND status = 'ACTIVE' AND balance >= ?";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBigDecimal(1, amount);
             ps.setLong(2, accountId);
-            ps.executeUpdate();
+            ps.setBigDecimal(3, amount);
+            return ps.executeUpdate() == 1;
         }
     }
 }

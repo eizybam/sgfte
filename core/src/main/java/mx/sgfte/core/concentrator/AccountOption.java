@@ -2,13 +2,10 @@ package mx.sgfte.core.concentrator;
 
 import java.math.BigDecimal;
 
-/**
- * Lightweight read-only DTO for account select dropdowns.
- * Properties exposed as JavaBean getters so JSP EL can read ${a.id}, ${a.label}, ${a.balance}.
- */
+/** Lightweight read model for the dispersion account dropdown. */
 public class AccountOption {
     private final long id;
-    private final String label;
+    private final String label;      // e.g. "López, Ana — Gasolina"
     private final BigDecimal balance;
 
     public AccountOption(long id, String label, BigDecimal balance) {
