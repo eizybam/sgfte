@@ -1,0 +1,5 @@
+<%-- Cierra la estructura abierta en admin-top.jspf. --%>
+    </main>
+</div>
+</body>
+</html>

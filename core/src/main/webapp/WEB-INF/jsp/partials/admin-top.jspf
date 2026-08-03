@@ -1,0 +1,96 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${pageTitle} · SGFTE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sgfte.css">
+</head>
+<body>
+<%@ include file="/WEB-INF/jsp/partials/icons.jspf" %>
+
+<div class="app">
+
+    <header class="app-header">
+        <nav class="app-header__nav">
+            <a class="app-header__link ${activeNav == 'overview' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/admin/home">Dashboard</a>
+            <a class="app-header__link ${activeNav == 'analytics' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/admin/dashboard">Analíticas</a>
+            <a class="app-header__link ${activeNav == 'notifications' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/admin/logs">Notificaciones</a>
+        </nav>
+
+        <div class="app-header__user">
+            <span class="app-header__icon" title="Ajustes">
+                <svg width="22" height="22"><use href="#i-gear"/></svg>
+            </span>
+            <div class="app-header__who">
+                <div class="app-header__name">${sessionScope.user.fullName}</div>
+                <div class="app-header__id">ID: ${sessionScope.user.id}</div>
+            </div>
+            <form method="post" action="${pageContext.request.contextPath}/logout" style="margin:0;">
+                <button type="submit" class="btn btn--secondary" style="padding:6px 12px; font-size:13px;">
+                    Salir
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <aside class="app-side">
+        <nav class="app-side__nav">
+            <a class="app-side__link ${activeNav == 'overview' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/admin/home">
+                <svg width="22" height="22"><use href="#i-overview"/></svg> Vista General
+            </a>
+            <a class="app-side__link ${activeNav == 'cards' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/admin/cards">
+                <svg width="22" height="22"><use href="#i-cards"/></svg> Expedir Tarjetas
+            </a>
+            <a class="app-side__link ${activeNav == 'accounts' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/accounts">
+                <svg width="22" height="22"><use href="#i-accounts"/></svg> Gestión de cuentas
+            </a>
+            <a class="app-side__link ${activeNav == 'logs' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/admin/historial">
+                <svg width="22" height="22"><use href="#i-logs"/></svg> Registros e historial
+            </a>
+            <a class="app-side__link ${activeNav == 'people' ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/cardholders">
+                <svg width="22" height="22"><use href="#i-people"/></svg> Empleados
+            </a>
+        </nav>
+
+        <p class="app-side__legal">
+            ®Sistema de Gestión de Fondos y Tarjetas Empresariales de Empresa S.A de C.V
+        </p>
+    </aside>
+
+    <main class="app-main">
+
+        <div class="page-head">
+            <div>
+                <h1 class="page-title">${pageTitle}</h1>
+                <c:if test="${not empty pageSubtitle}">
+                    <p class="page-subtitle">${pageSubtitle}</p>
+                </c:if>
+            </div>
+            <c:if test="${not empty pageAction}">
+                <div>${pageAction}</div>
+            </c:if>
+        </div>
+
+        <c:if test="${not empty success}">
+            <div class="alert alert--ok">${success}</div>
+        </c:if>
+        <c:if test="${not empty errors}">
+            <div class="alert alert--error">
+                <ul><c:forEach var="e" items="${errors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>

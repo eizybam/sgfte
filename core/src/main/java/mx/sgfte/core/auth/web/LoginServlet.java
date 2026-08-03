@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.auth.AppUser;
 import mx.sgfte.core.auth.AuthService;
+import mx.sgfte.core.auth.Role;
 import mx.sgfte.core.auth.SessionUser;
 
 import java.io.IOException;
@@ -26,8 +27,11 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         HttpSession session = req.getSession(false);
-        if (session != null && session.getAttribute("user") != null) {
-            resp.sendRedirect(req.getContextPath() + "/admin/home");
+        Object principal = session == null ? null : session.getAttribute("user");
+        if (principal instanceof SessionUser user) {
+            // Send them to their OWN area: a cardholder bounced to /admin/home
+            // would just be redirected straight back out by AuthFilter.
+            resp.sendRedirect(req.getContextPath() + Role.homeFor(user.getRole()));
             return;
         }
         forwardToForm(req, resp);
@@ -55,12 +59,11 @@ public class LoginServlet extends HttpServlet {
             old.invalidate();
         }
         HttpSession session = req.getSession(true);
-        session.setAttribute("user", new SessionUser(user.getId(), user.getFullName(), user.getRole()));
+        session.setAttribute("user", new SessionUser(
+                user.getId(), user.getFullName(), user.getRole(), user.getCardholderId()));
         session.setMaxInactiveInterval(30 * 60); // 30 minutes
 
-        // Cardholder home is a future slice; admins land on the dashboard.
-        String target = "ADMIN".equals(user.getRole()) ? "/admin/home" : "/app/home";
-        resp.sendRedirect(req.getContextPath() + target);
+        resp.sendRedirect(req.getContextPath() + Role.homeFor(user.getRole()));
     }
 
     private void forwardToForm(HttpServletRequest req, HttpServletResponse resp)

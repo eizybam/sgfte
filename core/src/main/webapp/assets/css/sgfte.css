@@ -1,0 +1,715 @@
+/* ==========================================================================
+   SGFTE · Sistema de diseño
+   --------------------------------------------------------------------------
+   Fuente de verdad: biblioteca Figma "tcds_prototipo_integradora_4_3E_Final"
+   (Componentes 360:84). Este archivo es el ÚNICO lugar donde se definen
+   colores, tipografías y componentes. Las vistas solo componen clases.
+
+   Reglas canónicas acordadas con el cliente (7 jul 2026):
+     · Radio 8 en TODO (botones, tarjetas, inputs, tablas). Badges r4, píldoras r999.
+     · Botón primario   = relleno #C34100, texto #FFEDE8.
+     · Botón secundario = transparente, borde #FEB96B@0.5, TEXTO AMARILLO #FEB96B.
+     · Par de botones   = ocupan el ancho del formulario, 20px de separación,
+                          secundario a la izquierda, primario a la derecha.
+     · Tabla canónica   = estilo "Vista de Logs", contenido CENTRADO.
+
+   Orden de carga:  sgfte.css  →  (opcional) auth.css solo en el login.
+   ========================================================================== */
+
+/* ==========================================================================
+   1 · Tokens
+   ========================================================================== */
+:root {
+    /* Superficies */
+    --sgfte-bg:            #141312;
+    --sgfte-surface:       #1d1b1a;
+    --sgfte-surface-2:     #211f1d;
+    --sgfte-line:          #2b2a28;   /* divisores y bordes de tabla */
+    --sgfte-line-warm:     #594139;   /* bordes cálidos (tarjetas de formulario) */
+    --sgfte-line-pill:     #463e3b;   /* borde de píldoras/dropdowns */
+
+    /* Texto */
+    --sgfte-white:         #ffffff;
+    --sgfte-cream:         #e6e1df;
+    --sgfte-tan:           #e1bfb4;
+    --sgfte-salmon:        #ffb59b;
+    --sgfte-muted:         #9b8e88;
+    --sgfte-mono-muted:    #a98a80;   /* encabezados de tabla, etiquetas KPI */
+    --sgfte-placeholder:   rgba(169, 138, 128, 0.5);
+
+    /* Marca */
+    --sgfte-primary:        #c34100;
+    --sgfte-primary-hover:  #d94d06;
+    --sgfte-primary-active: #a83700;
+    --sgfte-primary-text:   #ffede8;
+    --sgfte-accent:         #feb96b;   /* amarillo del botón secundario */
+
+    /* Destructivo */
+    --sgfte-danger:         #d14836;
+    --sgfte-danger-hover:   #e25848;
+    --sgfte-danger-active:  #b03a2a;
+
+    /* Estados */
+    --sgfte-ok:            #6cc070;
+    --sgfte-ok-text:       #a9d6ab;
+    --sgfte-error:         #ffb4ab;
+    --sgfte-warn:          #feb96b;
+
+    /* Propósitos (badges de categoría) */
+    --sgfte-purpose-1:     #7fa63f;   /* gasolina  */
+    --sgfte-purpose-2:     #2f7f9e;   /* viajes    */
+    --sgfte-purpose-3:     #b3487a;   /* comida    */
+    --sgfte-purpose-4:     #7b3fb0;   /* viáticos  */
+
+    /* Forma */
+    --sgfte-radius:        8px;
+    --sgfte-radius-badge:  4px;
+    --sgfte-radius-pill:   999px;
+
+    /* Rejilla de 8px */
+    --sp-half: 4px;
+    --sp-1:  8px;
+    --sp-2: 16px;
+    --sp-3: 24px;
+    --sp-4: 32px;
+    --sp-5: 40px;
+    --sp-6: 48px;
+    --sp-8: 64px;
+
+    /* Tipografía */
+    --sgfte-font-body:  "Hanken Grotesk", system-ui, sans-serif;
+    --sgfte-font-title: "Manrope", system-ui, sans-serif;
+    --sgfte-font-mono:  "JetBrains Mono", ui-monospace, monospace;
+
+    /* Estructura */
+    --sgfte-sidebar-w: 250px;
+    --sgfte-header-h:  78px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+    min-height: 100vh;
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+    color: var(--sgfte-cream);
+    background: var(--sgfte-bg);
+    /* Resplandor cálido de la esquina superior izquierda (Figma) */
+    background-image: radial-gradient(760px 420px at 8% -6%, rgba(195, 65, 0, 0.16), transparent 70%);
+    background-repeat: no-repeat;
+}
+
+a { color: inherit; }
+
+/* ==========================================================================
+   2 · Estructura de la aplicación (header + sidebar + contenido)
+   ========================================================================== */
+.app {
+    display: grid;
+    grid-template-columns: var(--sgfte-sidebar-w) 1fr;
+    grid-template-rows: var(--sgfte-header-h) 1fr;
+    grid-template-areas:
+        "header header"
+        "side   main";
+    min-height: 100vh;
+}
+
+/* ---- Header -------------------------------------------------------------- */
+.app-header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: 0 var(--sp-4);
+    border-bottom: 1px solid var(--sgfte-line);
+}
+
+.app-header__nav {
+    display: flex;
+    align-items: stretch;
+    gap: var(--sp-5);
+    margin: 0 auto;
+    height: 100%;
+}
+
+.app-header__link {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--sp-1);
+    font-size: 17px;
+    color: var(--sgfte-salmon);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+}
+
+.app-header__link:hover { color: var(--sgfte-white); }
+
+.app-header__link.is-active {
+    color: var(--sgfte-primary-hover);
+    border-bottom-color: var(--sgfte-primary);
+}
+
+.app-header__user {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-left: auto;
+}
+
+.app-header__who { text-align: right; line-height: 1.3; }
+.app-header__name { font-size: 14px; color: var(--sgfte-cream); }
+
+.app-header__id {
+    font-family: var(--sgfte-font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--sgfte-mono-muted);
+}
+
+.app-header__icon { color: var(--sgfte-muted); display: flex; }
+.app-header__icon:hover { color: var(--sgfte-cream); }
+
+/* ---- Sidebar ------------------------------------------------------------- */
+.app-side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    padding: var(--sp-3) var(--sp-2);
+    border-right: 1px solid var(--sgfte-line);
+}
+
+.app-side__nav { display: flex; flex-direction: column; gap: var(--sp-1); }
+
+.app-side__link {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2);
+    border: 1px solid transparent;
+    border-radius: var(--sgfte-radius);
+    color: var(--sgfte-cream);
+    text-decoration: none;
+    font-size: 16px;
+    line-height: 1.25;
+}
+
+.app-side__link:hover { background: rgba(255, 255, 255, 0.04); }
+
+.app-side__link.is-active {
+    background: rgba(254, 185, 107, 0.08);
+    border-color: rgba(254, 185, 107, 0.22);
+    color: var(--sgfte-white);
+}
+
+.app-side__link svg { flex: 0 0 auto; }
+
+.app-side__legal {
+    margin-top: auto;
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--sgfte-line);
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--sgfte-muted);
+}
+
+/* ---- Contenido ----------------------------------------------------------- */
+.app-main {
+    grid-area: main;
+    padding: var(--sp-5) var(--sp-6) var(--sp-8);
+    max-width: 1200px;
+    width: 100%;
+}
+
+/* Encabezado de página: título + subtítulo a la izquierda, acción a la derecha */
+.page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-5);
+    flex-wrap: wrap;
+}
+
+.page-title {
+    margin: 0 0 var(--sp-half);
+    font-family: var(--sgfte-font-title);
+    font-weight: 500;
+    font-size: 40px;
+    line-height: 1.1;
+    color: var(--sgfte-white);
+}
+
+.page-subtitle { margin: 0; font-size: 17px; color: var(--sgfte-salmon); }
+
+/* ==========================================================================
+   3 · Botones
+   ========================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-1);
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid transparent;
+    border-radius: var(--sgfte-radius);
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn--primary { background: var(--sgfte-primary); color: var(--sgfte-primary-text); }
+.btn--primary:hover { background: var(--sgfte-primary-hover); }
+.btn--primary:active { background: var(--sgfte-primary-active); }
+
+/* Secundario: texto AMARILLO, no blanco (corrección del cliente) */
+.btn--secondary {
+    background: transparent;
+    border-color: rgba(254, 185, 107, 0.5);
+    color: var(--sgfte-accent);
+}
+.btn--secondary:hover { border-color: rgba(254, 185, 107, 0.8); background: rgba(254, 185, 107, 0.08); }
+.btn--secondary:active { border-color: var(--sgfte-accent); background: rgba(254, 185, 107, 0.14); }
+
+.btn--danger { background: var(--sgfte-danger); color: var(--sgfte-primary-text); }
+.btn--danger:hover { background: var(--sgfte-danger-hover); }
+.btn--danger:active { background: var(--sgfte-danger-active); }
+
+.btn--link {
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--sgfte-accent);
+    font-weight: 400;
+    text-decoration: underline;
+}
+
+.btn--block { width: 100%; }
+
+/*
+  Par canónico: los dos botones LLENAN el ancho del formulario con 20px de
+  separación (el cliente rechazó el par centrado y pequeño).
+*/
+.btn-pair { display: flex; gap: 20px; }
+.btn-pair > .btn { flex: 1 1 0; }
+
+/* ==========================================================================
+   4 · Tarjetas
+   ========================================================================== */
+.card {
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    padding: var(--sp-4);
+}
+
+/* Variante vidrio (estándar del prototipo para tarjetas de contenido) */
+.card--glass {
+    background: rgba(30, 28, 27, 0.6);
+    border-color: rgba(169, 138, 128, 0.1);
+    backdrop-filter: blur(12px);
+}
+
+/* Tarjeta destacada: la Concentradora en la Vista Global */
+.card--feature { border-color: rgba(254, 185, 107, 0.55); }
+
+.card__title {
+    margin: 0 0 var(--sp-2);
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--sgfte-white);
+}
+
+.card__label {
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sgfte-mono-muted);
+}
+
+/* Cifras de dinero: siempre monoespaciadas para que alineen */
+.money {
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    color: var(--sgfte-white);
+}
+
+.money--xl { font-size: 44px; letter-spacing: -0.01em; }
+.money--lg { font-size: 30px; }
+.money__currency { font-size: 0.5em; color: var(--sgfte-salmon); margin-left: var(--sp-1); }
+
+/* Rejilla de KPIs */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-2); }
+
+.kpi { display: flex; flex-direction: column; gap: var(--sp-2); }
+.kpi__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+
+.grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-2); align-items: start; }
+
+@media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   5 · Barra de filtros
+   ========================================================================== */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 12px 20px;
+    margin-bottom: var(--sp-3);
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    flex-wrap: wrap;
+}
+
+.toolbar__count {
+    margin-left: auto;
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    color: var(--sgfte-muted);
+}
+
+/* Conmutador segmentado */
+.segmented {
+    display: flex;
+    gap: var(--sp-half);
+    padding: 4px;
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius-pill);
+}
+
+.segmented__item {
+    padding: 8px 14px;
+    border: none;
+    border-radius: var(--sgfte-radius-pill);
+    background: transparent;
+    color: var(--sgfte-muted);
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.segmented__item.is-active { background: rgba(195, 65, 0, 0.18); color: var(--sgfte-salmon); }
+
+/* Dropdown en píldora */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid var(--sgfte-line-pill);
+    border-radius: var(--sgfte-radius-pill);
+    color: var(--sgfte-cream);
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   6 · Formularios
+   ========================================================================== */
+.field { margin-bottom: var(--sp-3); }
+
+.label {
+    display: block;
+    margin-bottom: var(--sp-1);
+    font-size: 14px;
+    color: var(--sgfte-tan);
+}
+
+.input {
+    width: 100%;
+    height: 44px;
+    padding: 0 var(--sp-2);
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line-warm);
+    border-radius: var(--sgfte-radius);
+    color: var(--sgfte-cream);
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+}
+
+.input::placeholder { color: var(--sgfte-placeholder); }
+
+.input:focus {
+    outline: none;
+    border-color: var(--sgfte-accent);
+    box-shadow: 0 0 0 3px rgba(254, 185, 107, 0.12);
+}
+
+select.input { appearance: none; cursor: pointer; padding-right: var(--sp-4); }
+textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: vertical; }
+
+/* Buscador de la barra de filtros */
+.search { position: relative; flex: 1 1 260px; max-width: 340px; }
+.search .input { height: 40px; padding-left: var(--sp-5); }
+
+.search__icon {
+    position: absolute;
+    left: var(--sp-2);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sgfte-muted);
+    pointer-events: none;
+    display: flex;
+}
+
+/* ==========================================================================
+   7 · Tabla canónica (estilo "Vista de Logs") · contenido CENTRADO
+   ========================================================================== */
+.table-card {
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    overflow: hidden;
+}
+
+.table { width: 100%; border-collapse: collapse; }
+
+.table th {
+    height: 62px;
+    padding: 0 var(--sp-2);
+    text-align: center;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sgfte-mono-muted);
+    border-bottom: 1px solid var(--sgfte-line);
+    white-space: nowrap;
+}
+
+.table td {
+    height: 72px;
+    padding: var(--sp-1) var(--sp-2);
+    text-align: center;
+    font-size: 15px;
+    color: var(--sgfte-cream);
+    border-bottom: 1px solid var(--sgfte-line);
+    vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+/* Valores monoespaciados: códigos de cuenta, montos, fechas */
+.table .mono { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-tan); }
+.table .num  { font-family: var(--sgfte-font-mono); font-size: 14px; }
+
+/* Celda de dos líneas (p. ej. FECHA / HORA) */
+.cell-duo { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cell-duo small { font-size: 12px; color: var(--sgfte-muted); }
+
+.table__empty { padding: var(--sp-5); text-align: center; color: var(--sgfte-muted); }
+
+/* Signo del movimiento */
+.amount-in  { color: var(--sgfte-ok-text); }
+.amount-out { color: var(--sgfte-salmon); }
+
+/* ==========================================================================
+   8 · Badges
+   ========================================================================== */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px 5px 9px;
+    border-radius: var(--sgfte-radius-badge);
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.badge--ok      { background: rgba(108, 192, 112, 0.15); color: var(--sgfte-ok-text); }
+.badge--error   { background: rgba(255, 180, 171, 0.16); color: var(--sgfte-error); }
+.badge--warn    { background: rgba(254, 185, 107, 0.15); color: var(--sgfte-warn); }
+.badge--neutral { background: rgba(169, 138, 128, 0.14); color: var(--sgfte-mono-muted); }
+
+/* Badges de propósito: color de la categoría al 30% + texto claro */
+.badge--p1 { background: rgba(127, 166, 63, 0.30); color: #cfe39a; }
+.badge--p2 { background: rgba(47, 127, 158, 0.30); color: #a8d6e8; }
+.badge--p3 { background: rgba(179, 72, 122, 0.30); color: #f0aecb; }
+.badge--p4 { background: rgba(123, 63, 176, 0.30); color: #cbb0ea; }
+
+/* ==========================================================================
+   9 · Avisos
+   ========================================================================== */
+.alert {
+    padding: var(--sp-2);
+    margin-bottom: var(--sp-3);
+    border: 1px solid transparent;
+    border-radius: var(--sgfte-radius);
+    font-size: 14px;
+}
+
+.alert ul { margin: 0; padding-left: var(--sp-2); }
+
+.alert--ok    { background: rgba(108, 192, 112, 0.15); border-color: rgba(108, 192, 112, 0.4); color: var(--sgfte-ok-text); }
+.alert--error { background: rgba(209, 72, 54, 0.14);  border-color: rgba(255, 180, 171, 0.35); color: var(--sgfte-error); }
+
+/* ==========================================================================
+   10 · Utilidades
+   ========================================================================== */
+.stack   { display: flex; flex-direction: column; gap: var(--sp-3); }
+.row     { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.muted   { color: var(--sgfte-muted); }
+.empty   { color: var(--sgfte-muted); font-size: 14px; }
+.back    { display: inline-block; margin-bottom: var(--sp-2); font-size: 13px; color: var(--sgfte-tan); text-decoration: none; }
+.back:hover { color: var(--sgfte-white); }
+.mt-4    { margin-top: var(--sp-4); }
+
+/* Ancho cómodo para formularios de una sola columna */
+.form-narrow { max-width: 560px; }
+
+/* ==========================================================================
+   11 · Área del tarjetahabiente (/app)
+   --------------------------------------------------------------------------
+   El empleado no tiene sidebar: son pocas pantallas y se navegan desde una
+   barra superior simple. Todo lo demás (tarjetas, tablas, badges, botones,
+   inputs, avisos) es EXACTAMENTE el mismo componente que usa el admin, para
+   que las dos áreas no se separen visualmente con el tiempo.
+   ========================================================================== */
+.portal { max-width: 900px; margin: 0 auto; padding: var(--sp-5) var(--sp-3) var(--sp-8); }
+
+.portal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--sgfte-line);
+    flex-wrap: wrap;
+}
+
+.portal-nav__brand { display: flex; flex-direction: column; gap: var(--sp-half); }
+
+.portal-nav__mark {
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 13px;
+    color: var(--sgfte-salmon);
+}
+
+.portal-nav__who { font-size: 15px; color: var(--sgfte-cream); }
+.portal-nav__links { display: flex; align-items: center; gap: var(--sp-3); }
+
+.portal-nav__links a {
+    color: var(--sgfte-tan);
+    text-decoration: none;
+    font-size: 14px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+}
+
+.portal-nav__links a:hover { color: var(--sgfte-white); border-bottom-color: var(--sgfte-primary); }
+.portal-nav__links form { margin: 0; }
+
+/* Rejilla de cuentas del empleado */
+.account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp-2); }
+
+.account-card {
+    display: block;
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    padding: var(--sp-3);
+    text-decoration: none;
+    transition: border-color 120ms ease;
+}
+
+.account-card:hover { border-color: var(--sgfte-accent); }
+
+.account-card__purpose {
+    font-family: var(--sgfte-font-title);
+    font-size: 18px;
+    color: var(--sgfte-white);
+    margin-bottom: var(--sp-half);
+}
+
+.account-card__number {
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    color: var(--sgfte-muted);
+    margin-bottom: var(--sp-2);
+}
+
+.account-card__cards { font-size: 13px; color: var(--sgfte-tan); margin-top: var(--sp-1); }
+
+/* Tarjetas físicas/digitales como "chips" */
+.chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+
+.chip {
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    padding: var(--sp-1) var(--sp-2);
+    font-family: var(--sgfte-font-mono);
+    font-size: 13px;
+    color: var(--sgfte-cream);
+}
+
+.chip small {
+    display: block;
+    font-family: var(--sgfte-font-body);
+    font-size: 11px;
+    color: var(--sgfte-muted);
+    margin-top: 2px;
+}
+
+.chip--inactive { opacity: 0.45; }
+
+/* ==========================================================================
+   12 · Responsive
+   ========================================================================== */
+@media (max-width: 860px) {
+    .app {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "header"
+            "side"
+            "main";
+    }
+
+    .app-side { border-right: none; border-bottom: 1px solid var(--sgfte-line); }
+    .app-side__nav { flex-direction: row; flex-wrap: wrap; }
+    .app-side__legal { display: none; }
+    .app-main { padding: var(--sp-4) var(--sp-3) var(--sp-6); }
+    .page-title { font-size: 30px; }
+    .app-header__nav { gap: var(--sp-3); }
+}
