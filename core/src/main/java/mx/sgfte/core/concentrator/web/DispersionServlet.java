@@ -5,55 +5,80 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import mx.sgfte.core.concentrator.AccountLookupDao;
-import mx.sgfte.core.concentrator.ConcentratorService;
+import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.concentrator.DispersionService;
 import mx.sgfte.core.concentrator.InsufficientFundsException;
 import mx.sgfte.core.users.ValidationException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
- * GET  /admin/dispersion -> show account dropdown + amount form.
- * POST /admin/dispersion -> move money from Concentrator to the chosen account.
+ * POST /admin/dispersion — moves money from the Concentrator to an account.
+ *
+ * The form used to be its own page. In the Figma prototype it is the modal
+ * "Dispersión de fondos" (2177:376) that opens on top of the Vista Global, so
+ * there is no page left to render: the GET just sends you to /admin/home, where
+ * the modal lives.
+ *
+ * The POST follows post/redirect/get. The outcome travels in the session as a
+ * one-shot flash that AdminHomeServlet reads and clears, which means a refresh
+ * after a dispersion cannot repeat it — worth caring about when the side effect
+ * is moving money.
+ *
  * Protected by AuthFilter (/admin/*).
  */
 @WebServlet("/admin/dispersion")
 public class DispersionServlet extends HttpServlet {
 
-    private final DispersionService dispersionService = new DispersionService();
-    private final ConcentratorService concentratorService = new ConcentratorService();
-    private final AccountLookupDao accountLookupDao = new AccountLookupDao();
+    /** Set on the session so /admin/home knows to reopen the modal. */
+    public static final String FLASH_ERRORS  = "dispersionErrors";
+    public static final String FLASH_ACCOUNT = "dispersionAccountId";
+    public static final String FLASH_AMOUNT  = "dispersionAmount";
+    public static final String FLASH_SUCCESS = "success";
 
+    private final DispersionService dispersionService = new DispersionService();
+
+    /** The form is a modal now; there is nothing to show on its own. */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        render(req, resp);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.sendRedirect(req.getContextPath() + "/admin/home");
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        Long accountId = parseId(req.getParameter("accountId"));
-        BigDecimal amount = parseAmount(req.getParameter("amount"));
+
+        String rawAccountId = req.getParameter("accountId");
+        String rawAmount = req.getParameter("amount");
+
+        Long accountId = parseId(rawAccountId);
+        BigDecimal amount = parseAmount(rawAmount);
         String description = req.getParameter("description");
+
+        HttpSession session = req.getSession();
         try {
             dispersionService.disperse(accountId, amount, description);
-            req.setAttribute("success", "Dispersión aplicada. El saldo se sumó a la cuenta.");
+            session.setAttribute(FLASH_SUCCESS, "Dispersión aplicada. El saldo se sumó a la cuenta.");
         } catch (ValidationException e) {
-            req.setAttribute("errors", e.getErrors());
+            keepForRetry(session, e.getErrors(), rawAccountId, rawAmount);
         } catch (InsufficientFundsException e) {
-            req.setAttribute("errors", java.util.List.of(e.getMessage()));
+            keepForRetry(session, List.of(e.getMessage()), rawAccountId, rawAmount);
         }
-        render(req, resp);
+
+        resp.sendRedirect(req.getContextPath() + "/admin/home");
     }
 
-    private void render(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        req.setAttribute("accounts", accountLookupDao.findActiveForSelect());
-        req.setAttribute("concentrator", concentratorService.getConcentrator());
-        req.getRequestDispatcher("/WEB-INF/jsp/admin/dispersion.jsp").forward(req, resp);
+    /**
+     * Puts the errors and what the admin typed back on the session, so the modal
+     * reopens already filled in instead of making them start over.
+     */
+    private void keepForRetry(HttpSession session, List<String> errors,
+                              String rawAccountId, String rawAmount) {
+        session.setAttribute(FLASH_ERRORS, errors);
+        session.setAttribute(FLASH_ACCOUNT, rawAccountId);
+        session.setAttribute(FLASH_AMOUNT, rawAmount);
     }
 
     private Long parseId(String raw) {

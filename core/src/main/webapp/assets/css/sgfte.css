@@ -935,7 +935,137 @@ textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: v
 .dist__empty { margin: 26px 0 0; color: var(--sgfte-muted); font-size: 18px; }
 
 /* ==========================================================================
-   13 · Responsive
+   13 · Modal · marco Figma "Dispersión de fondos" (2177:376)
+   --------------------------------------------------------------------------
+   El prototipo dibuja el modal SOLO, sobre el fondo de página, así que no
+   define velo. Aquí se añade uno porque va encima de la Vista Global.
+
+   Por eso el panel lleva color SÓLIDO #231f1d y no el rgba(169,138,128,0.1)
+   del marco: ese 10% compuesto sobre #141312 da exactamente #231f1d, y
+   fijarlo hace que el panel se vea igual sea cual sea el velo de detrás.
+
+   No se usa <dialog>: los elementos de la capa superior no heredan el `zoom`
+   de la raíz, así que el modal se dibujaría a otra escala que la página.
+   ========================================================================== */
+.modal-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-3);
+    background: rgba(10, 9, 9, 0.72);
+}
+
+.modal-scrim[hidden] { display: none; }
+
+.modal {
+    width: 557px;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 0 0 38px;
+    background: #231f1d;
+    border-radius: 10px;
+}
+
+.modal__title {
+    margin: 0;
+    padding-top: 32px;
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 24px;
+    letter-spacing: 3px;
+    text-align: center;
+    color: var(--sgfte-white);
+}
+
+.modal__rule { height: 1px; margin: 37px 28px 0 29px; background: var(--sgfte-accent); }
+
+.modal__body { padding-left: 85px; }
+
+.modal__field { margin-top: 31px; }
+.modal__field + .modal__field { margin-top: 50px; }
+
+.modal__label {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 24px;
+    color: var(--sgfte-pink-text);
+}
+
+.modal__label--tracked { letter-spacing: 3px; }
+
+/*
+  Sin radio: el marco NO redondea estos dos campos, aunque el estándar del
+  proyecto pida r8 en los inputs. Se respeta el prototipo.
+*/
+.modal__control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 0 20px;
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line-warm);
+}
+
+.modal__control--select { width: 392px; height: 48px; }
+.modal__control--amount { width: 400px; height: 50px; }
+
+.modal__control:focus-within { border-color: var(--sgfte-accent); }
+
+/* Los iconos van en su tamaño natural del prototipo, no escalados */
+.modal__icon-card   { flex: 0 0 16px; width: 16px; height: 12px; color: var(--sgfte-placeholder); }
+.modal__icon-cash   { flex: 0 0 17px; width: 16.74px; height: 17px; color: var(--sgfte-mono-muted); }
+.modal__icon-chev   { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-mono-muted); }
+
+.modal__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 22px;
+    line-height: 24px;
+    color: var(--sgfte-cream);
+}
+
+.modal__input::placeholder { color: var(--sgfte-placeholder); }
+
+/* El <select> nativo pinta su propia flecha; se quita y se usa la del marco */
+select.modal__input { appearance: none; cursor: pointer; }
+
+/*
+  Un <select> con `required` y una primera opción vacía queda :invalid mientras
+  no se elija nada — así el marcador de posición se ve gris como en el diseño y
+  el color normal en cuanto hay cuenta seleccionada.
+*/
+select.modal__input:invalid { color: var(--sgfte-placeholder); }
+select.modal__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
+
+.modal__actions { display: flex; gap: 20px; margin-top: 47px; }
+
+.modal__alert { margin: var(--sp-3) 85px 0 85px; }
+
+@media (max-width: 860px) {
+    .modal__body { padding-left: var(--sp-3); padding-right: var(--sp-3); }
+    .modal__control--select,
+    .modal__control--amount { width: 100%; }
+    .modal__title { font-size: 26px; letter-spacing: 1px; }
+    .modal__actions { flex-wrap: wrap; }
+    .modal__alert { margin-left: var(--sp-3); margin-right: var(--sp-3); }
+}
+
+/* ==========================================================================
+   14 · Responsive
    ========================================================================== */
 
 /*

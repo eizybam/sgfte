@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%--
   Vista Global · marco Figma "Vista principal de Admin" (201:22).
 
@@ -28,10 +29,10 @@
         </p>
 
         <div class="conc__cta">
-            <a class="btn btn--primary btn--hero" href="${ctx}/admin/dispersion">
+            <button type="button" class="btn btn--primary btn--hero" data-open-dispersion>
                 <img src="${ctx}/assets/img/icons/transfer.png" alt="">
                 Depositar a cuenta
-            </a>
+            </button>
         </div>
     </section>
 
@@ -94,5 +95,102 @@
         </c:otherwise>
     </c:choose>
 </section>
+
+<%--
+  Modal "Dispersión de fondos" (Figma 2177:376). Antes era la página
+  /admin/dispersion; ahora esa ruta sólo redirige aquí.
+
+  Se pinta siempre en el HTML y se muestra u oculta con [hidden]: el formulario
+  no depende de JavaScript para existir, sólo para abrirse. Si la dispersión
+  falló, el servlet dejó los errores en sesión y el modal arranca abierto con lo
+  que se había tecleado.
+--%>
+<c:set var="dispersionFailed" value="${not empty dispersionErrors}"/>
+
+<div class="modal-scrim" id="dispersion-modal" ${dispersionFailed ? '' : 'hidden'}>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dispersion-title">
+        <h2 class="modal__title" id="dispersion-title">Dispersión de fondos</h2>
+        <div class="modal__rule"></div>
+
+        <c:if test="${dispersionFailed}">
+            <div class="alert alert--error modal__alert">
+                <ul><c:forEach var="e" items="${dispersionErrors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>
+
+        <form class="modal__body" method="post" action="${ctx}/admin/dispersion">
+
+            <div class="modal__field">
+                <label class="modal__label" for="accountId">CUENTA DESTINO · Origen: Concentradora</label>
+                <div class="modal__control modal__control--select">
+                    <svg class="modal__icon-card" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                    <select class="modal__input" id="accountId" name="accountId" required>
+                        <option value="" disabled ${empty dispersionAccountId ? 'selected' : ''}>Selecciona la cuenta a fondear</option>
+                        <c:forEach var="a" items="${accounts}">
+                            <option value="${a.id}" ${dispersionAccountId == a.id ? 'selected' : ''}>${a.label}</option>
+                        </c:forEach>
+                    </select>
+                    <svg class="modal__icon-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+                </div>
+            </div>
+
+            <div class="modal__field">
+                <label class="modal__label modal__label--tracked" for="amount">MONTO</label>
+                <div class="modal__control modal__control--amount">
+                    <svg class="modal__icon-cash" aria-hidden="true"><use href="#i-cash-app"/></svg>
+                    <input class="modal__input" type="number" step="0.01" min="0.01"
+                           id="amount" name="amount" placeholder="0.00"
+                           value="${fn:escapeXml(dispersionAmount)}" required>
+                </div>
+            </div>
+
+            <div class="modal__actions">
+                <button type="button" class="btn btn--secondary btn--hero" data-close-dispersion>Cancelar</button>
+                <button type="submit" class="btn btn--primary btn--hero">
+                    <img src="${ctx}/assets/img/icons/disperse.png" alt="">
+                    Dispersar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("dispersion-modal");
+        var firstField = document.getElementById("accountId");
+        var lastFocused = null;
+
+        function open() {
+            lastFocused = document.activeElement;
+            scrim.hidden = false;
+            firstField.focus();
+        }
+
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        document.querySelectorAll("[data-open-dispersion]").forEach(function (b) {
+            b.addEventListener("click", open);
+        });
+        document.querySelectorAll("[data-close-dispersion]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        // Clic en el velo, pero no dentro del panel.
+        scrim.addEventListener("mousedown", function (e) {
+            if (e.target === scrim) close();
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+
+        // Si viene de un intento fallido, arranca abierto y con el foco puesto.
+        if (!scrim.hidden) firstField.focus();
+    })();
+</script>
 
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>
