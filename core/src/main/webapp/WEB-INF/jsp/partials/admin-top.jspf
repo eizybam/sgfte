@@ -48,7 +48,12 @@
         })();
     </script>
 </head>
-<body>
+<%--
+  bodyClass deja que una pantalla pida el tratamiento de fondo de SU marco.
+  No todos comparten el mismo: la Vista Global lleva el degradado cónico y
+  "Expedir Tarjeta" un halo elíptico arriba (ver .has-topglow en sgfte.css).
+--%>
+<body class="${bodyClass}">
 <%@ include file="/WEB-INF/jsp/partials/icons.jspf" %>
 
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>

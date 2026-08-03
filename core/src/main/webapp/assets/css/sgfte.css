@@ -1065,7 +1065,276 @@ select.modal__input option { background: var(--sgfte-surface); color: var(--sgft
 }
 
 /* ==========================================================================
-   14 · Responsive
+   14 · Expedir Tarjeta · marco Figma "Expedir Tarjeta - Admin" (2038:129)
+   ========================================================================== */
+
+/*
+  Halo del marco: una elipse #C34100 al 6% con desenfoque de 120, centrada en
+  (1000, 40) del lienzo. Se reproduce como degradado radial — el desenfoque
+  ensancha el radio efectivo de 380x210 a unos 620x450.
+*/
+body.has-topglow {
+    background-image:
+        radial-gradient(1240px 900px at 1000px 40px, rgba(195, 65, 0, 0.09), transparent 62%),
+        conic-gradient(from 270deg at 50% 50%, #141413 0%, #1b1713 23.276%, #141413 100%);
+}
+
+.issue-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 600fr) minmax(0, 360fr);
+    gap: 52px;
+    max-width: 1012px;
+    align-items: start;
+}
+
+/* ---- Tarjeta del formulario --------------------------------------------- */
+.issue-card {
+    padding: 25px 29px 37px 27px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+}
+
+.issue__section {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--sgfte-salmon);
+}
+
+.issue__field { margin-top: 25px; }
+.issue__field + .issue__field { margin-top: 18px; }
+.issue__field--type { margin-top: 22px; }
+
+.issue__label {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--sgfte-pink-text);
+}
+
+/* Caja de campo: el prototipo la pinta igual esté o no habilitada */
+.issue__box {
+    display: flex;
+    align-items: center;
+    width: 544px;
+    max-width: 100%;
+    height: 52px;
+    margin-top: 10px;
+    padding: 0 17px;
+    background: var(--sgfte-line);
+    border: 1px solid rgba(89, 65, 57, 0.5);
+    border-radius: var(--sgfte-radius);
+}
+
+.issue__box:focus-within { border-color: var(--sgfte-accent); }
+
+.issue__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 16px;
+    color: var(--sgfte-cream);
+}
+
+/* Sólo lectura: se ve idéntico, pero no invita a escribir */
+.issue__input[readonly] { cursor: default; }
+
+select.issue__input { appearance: none; cursor: pointer; }
+select.issue__input:invalid { color: var(--sgfte-placeholder); }
+select.issue__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
+
+.issue__chevron { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-mono-muted); }
+
+/* ---- Selector de tipo ---------------------------------------------------- */
+.issue__types { display: flex; gap: 16px; margin-top: 12px; }
+
+.issue__type {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 264px;
+    max-width: 100%;
+    height: 56px;
+    padding: 0 17px;
+    background: var(--sgfte-line);
+    border: 1.5px solid rgba(89, 65, 57, 0.5);
+    border-radius: var(--sgfte-radius);
+    font-weight: 600;
+    font-size: 16px;
+    color: #cfc4be;
+    cursor: pointer;
+}
+
+/* El radio real se oculta pero sigue siendo el que recibe foco y teclado */
+.issue__type input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.issue__type:has(input:checked) {
+    background: rgba(195, 65, 0, 0.16);
+    border-color: rgba(195, 65, 0, 0.9);
+    color: var(--sgfte-salmon);
+}
+
+.issue__type:has(input:focus-visible) { outline: 2px solid var(--sgfte-accent); outline-offset: 2px; }
+
+/* Punto de selección: 8px, a 25.5px del borde derecho */
+.issue__type::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 25.5px;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: var(--sgfte-salmon);
+    opacity: 0;
+}
+
+.issue__type:has(input:checked)::after { opacity: 1; }
+
+/* ---- Columna derecha ----------------------------------------------------- */
+.issue__aside-label {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--sgfte-salmon);
+}
+
+/*
+  Tarjeta de vista previa. Medidas fijas del marco, así que dentro se posiciona
+  en absoluto: es una maqueta de una tarjeta, no un bloque de contenido que
+  deba fluir. El halo es otra elipse #C34100, al 22% y con desenfoque de 45.
+*/
+.card-preview {
+    position: relative;
+    width: 360px;
+    max-width: 100%;
+    height: 216px;
+    margin-top: 14px;
+    overflow: hidden;
+    background: #1a1512;
+    background-image: radial-gradient(circle 220px at 329px 9px, rgba(195, 65, 0, 0.22), transparent 70%);
+    border: 1px solid rgba(195, 65, 0, 0.35);
+    border-radius: 16px;
+}
+
+.card-preview__brand,
+.card-preview__type,
+.card-preview__chip,
+.card-preview__pan,
+.card-preview__key,
+.card-preview__value { position: absolute; margin: 0; }
+
+.card-preview__brand {
+    left: 27px; top: 25px;
+    font-family: var(--sgfte-font-mono); font-weight: 500; font-size: 14px;
+    color: var(--sgfte-pink-text);
+}
+
+.card-preview__type {
+    right: 27px; top: 27px;
+    font-family: var(--sgfte-font-mono); font-weight: 500; font-size: 12px;
+    color: var(--sgfte-salmon);
+}
+
+.card-preview__chip {
+    left: 27px; top: 71px;
+    width: 46px; height: 34px;
+    background: #d9a441;
+    border-radius: 6px;
+}
+
+.card-preview__pan {
+    left: 27px; top: 127px;
+    font-family: var(--sgfte-font-mono); font-weight: 500; font-size: 19px;
+    color: var(--sgfte-cream);
+    white-space: pre;
+}
+
+.card-preview__key {
+    top: 167px;
+    font-family: var(--sgfte-font-mono); font-size: 9px;
+    color: #a1918a;
+}
+
+.card-preview__value {
+    top: 179px;
+    font-weight: 600; font-size: 14px;
+    color: var(--sgfte-cream);
+}
+
+.card-preview__key--holder,  .card-preview__value--holder  { left: 27px; }
+.card-preview__key--purpose, .card-preview__value--purpose { left: 249px; }
+
+/* ---- Resumen ------------------------------------------------------------- */
+.issue-summary {
+    margin-top: 30px;
+    padding: 21px 25px 0 23px;
+    height: 196px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+}
+
+.issue-summary__title {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--sgfte-salmon);
+}
+
+.issue-summary__list { margin: 0; padding: 0; }
+
+/* Filas cada 32px, empezando 26px bajo el rótulo */
+.issue-summary__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    height: 32px;
+    margin: 0;
+}
+
+.issue-summary__list > .issue-summary__row:first-child { margin-top: 26px; }
+
+.issue-summary__row dt { font-size: 14px; color: #a1918a; }
+.issue-summary__row dd { margin: 0; font-weight: 500; font-size: 14px; color: var(--sgfte-cream); text-align: right; }
+
+/* ---- Acción -------------------------------------------------------------- */
+/* Centrado bajo la columna del formulario, no bajo toda la rejilla */
+.issue-actions { display: flex; justify-content: center; width: 600px; max-width: 100%; margin-top: 43px; }
+
+@media (max-width: 860px) {
+    .issue-grid { grid-template-columns: 1fr; gap: var(--sp-4); }
+    .issue__box, .issue__type { width: 100%; }
+    .issue__types { flex-wrap: wrap; }
+    .issue-actions { width: 100%; }
+    .issue-summary { height: auto; padding-bottom: var(--sp-3); }
+}
+
+/* ==========================================================================
+   15 · Responsive
    ========================================================================== */
 
 /*

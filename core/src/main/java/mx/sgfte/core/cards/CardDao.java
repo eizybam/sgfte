@@ -66,6 +66,40 @@ public class CardDao {
         }
     }
 
+    /**
+     * Every active account a card can be issued against, joined with its holder,
+     * its number and its purpose — what the "Expedir Tarjeta" screen displays.
+     *
+     * Ordered by holder then purpose so the two dropdowns read alphabetically.
+     */
+    public List<IssueTarget> findIssueTargets() {
+        String sql = "SELECT a.id, a.account_number, a.balance, "
+                + "       cat.name AS purpose, "
+                + "       ch.id AS cardholder_id, ch.first_name, ch.last_name "
+                + "FROM account a "
+                + "JOIN cardholder ch ON ch.id = a.cardholder_id "
+                + "JOIN category  cat ON cat.id = a.category_id "
+                + "WHERE a.status = 'ACTIVE' AND ch.status = 'ACTIVE' "
+                + "ORDER BY ch.last_name, ch.first_name, cat.name";
+        List<IssueTarget> targets = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                targets.add(new IssueTarget(
+                        rs.getLong("id"),
+                        rs.getString("account_number"),
+                        rs.getString("purpose"),
+                        rs.getBigDecimal("balance"),
+                        rs.getLong("cardholder_id"),
+                        rs.getString("first_name") + " " + rs.getString("last_name")));
+            }
+            return targets;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading card issue targets", e);
+        }
+    }
+
     /** True if the account exists and is ACTIVE (so we don't issue cards to dead accounts). */
     public boolean isAccountActive(long accountId) {
         String sql = "SELECT 1 FROM account WHERE id = ? AND status = 'ACTIVE'";
