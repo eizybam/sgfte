@@ -142,12 +142,12 @@
 <c:set var="registerFailed" value="${not empty registerErrors}"/>
 
 <div class="modal-scrim" id="register-modal" ${registerFailed ? '' : 'hidden'}>
-    <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="register-title">
+    <div class="modal modal--form" role="dialog" aria-modal="true" aria-labelledby="register-title">
         <h2 class="modal__title" id="register-title">Registrar tarjetahabiente</h2>
         <div class="modal__rule"></div>
 
         <c:if test="${registerFailed}">
-            <div class="alert alert--error modal__alert" style="margin: var(--sp-3) 64px 0;">
+            <div class="alert alert--error modal__alert" style="margin: var(--sp-3) 40px 0;">
                 <ul><c:forEach var="e" items="${registerErrors}"><li>${e}</li></c:forEach></ul>
             </div>
         </c:if>
@@ -178,7 +178,7 @@
                         <select class="register__input" id="department" name="department" required>
                             <option value="IT" selected>IT</option>
                         </select>
-                        <svg class="register__chevron" width="20" height="11" aria-hidden="true"><use href="#i-chevron"/></svg>
+                        <svg class="register__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
                     </div>
                 </div>
             </div>
@@ -191,7 +191,7 @@
             </div>
 
             <p class="register__note">
-                <svg width="20" height="20" aria-hidden="true"><use href="#i-info"/></svg>
+                <svg width="18" height="18" aria-hidden="true"><use href="#i-info"/></svg>
                 <span>El empleado se crea sin cuentas asociadas inicialmente. Podra asignar
                     tarjetas fisicas o virtuales posteriormente desde el panel de gestion</span>
             </p>

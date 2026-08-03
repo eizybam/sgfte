@@ -1748,31 +1748,31 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 /* ==========================================================================
    18 · Registro de tarjetahabiente · marco Figma (279:104)
    --------------------------------------------------------------------------
-   Variante ancha del modal: 784px en vez de 557, con campos de 80px de alto.
+   El marco dibuja el modal a 784 × 848 sobre un lienzo de 1024 de alto. En una
+   pantalla de portátil real eso no cabe: los botones quedaban fuera. Se
+   reescala al MISMO ancho que el modal de dispersión (557) y a sus mismas
+   medidas de campo, etiqueta y botón, de modo que los dos se vean hermanos.
+   Las proporciones internas del marco se conservan.
    ========================================================================== */
-.modal--wide { width: 784px; padding: 34px 0 16px; }
+.modal--form { width: 557px; padding: 32px 0; }
 
-.modal--wide .modal__title {
+.modal--form .modal__title {
     padding-top: 0;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-weight: 800;
-    font-size: 48px;
-    line-height: 40px;
-    letter-spacing: -0.64px;
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: 1px;
 }
 
-.modal--wide .modal__rule { margin: 16px 52px 0; }
-.modal--wide .modal__body { padding: 0 64px; }
+.modal--form .modal__rule { margin: 24px 28px 0 29px; }
+.modal--form .modal__body { padding: 0 40px; }
 
 .register__label {
     display: block;
-    margin-top: 44px;
+    margin-top: 24px;
     font-family: var(--sgfte-font-mono);
     font-weight: 700;
-    font-size: 20px;
+    font-size: 17px;
     line-height: 24px;
     color: var(--sgfte-pink-text);
 }
@@ -1781,9 +1781,9 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .register__control {
     display: flex;
     align-items: center;
-    height: 80px;
-    margin-top: 10px;
-    padding: 0 28px;
+    height: 48px;
+    margin-top: 8px;
+    padding: 0 20px;
     background: var(--sgfte-bg);
     border: 1px solid var(--sgfte-line-warm);
 }
@@ -1799,7 +1799,7 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
     border: 0;
     outline: none;
     font-family: var(--sgfte-font-body);
-    font-size: 22px;
+    font-size: 18px;
     color: var(--sgfte-cream);
 }
 
@@ -1809,49 +1809,42 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 select.register__input { appearance: none; cursor: pointer; }
 select.register__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
 
-.register__chevron { flex: 0 0 20px; width: 20px; height: 11px; color: var(--sgfte-placeholder); }
+.register__chevron { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-placeholder); }
 
-/* Fila de dos campos: 288 + 32 + 336 = los 656 del formulario */
-.register__row { display: flex; gap: 32px; }
-.register__row > :first-child { flex: 0 0 288px; }
-.register__row > :last-child { flex: 1 1 auto; }
-.register__row .register__label { margin-top: 28px; }
+/* Fila de dos campos, con la misma proporción 288:336 del marco */
+.register__row { display: flex; gap: 20px; }
+.register__row > :first-child { flex: 0 0 211px; }
+.register__row > :last-child { flex: 1 1 auto; min-width: 0; }
 
-/* Aviso: caja interior, 16px más estrecha que los campos por cada lado */
 .register__note {
     display: flex;
-    gap: 16px;
-    margin: 32px 16px 0;
-    padding: 24px 22px;
-    min-height: 160px;
+    gap: 12px;
+    margin: 24px 0 0;
+    padding: 16px 18px;
     background: var(--sgfte-bg);
     border-radius: 10px;
-    font-size: 22px;
-    line-height: 1.3;
+    font-size: 15px;
+    line-height: 1.4;
     color: var(--sgfte-placeholder);
 }
 
-.register__note svg { flex: 0 0 20px; width: 20px; height: 20px; margin-top: 4px; }
+.register__note svg { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 2px; }
 
 /*
   Par canónico documentado en el componente Button: llenan el ancho del
-  formulario, 20px de separación, secundario a la izquierda. (656-20)/2 = 318.
+  formulario, 20px de separación, secundario a la izquierda.
 */
 .register__actions { display: flex; gap: 20px; margin-top: 24px; }
-.register__actions .btn { flex: 1 1 0; height: 64px; padding: 10px; }
+.register__actions .btn { flex: 1 1 0; height: 50px; padding: 13px 20px; font-weight: 700; }
 .register__actions .btn svg { width: 22px; height: 16px; flex: 0 0 22px; }
 
 @media (max-width: 860px) {
-    .modal--wide { width: 100%; padding: var(--sp-3) 0; }
-    .modal--wide .modal__title { height: auto; font-size: 26px; line-height: 1.2; letter-spacing: 0; }
-    .modal--wide .modal__rule { margin: var(--sp-2) var(--sp-3) 0; }
-    .modal--wide .modal__body { padding: 0 var(--sp-3); }
-    .register__label { margin-top: var(--sp-3); font-size: 15px; }
-    .register__control { height: 56px; padding: 0 var(--sp-2); }
-    .register__input { font-size: 16px; }
+    .modal--form { width: 100%; padding: var(--sp-3) 0; }
+    .modal--form .modal__title { font-size: 24px; line-height: 1.2; letter-spacing: 0; }
+    .modal--form .modal__rule { margin: var(--sp-2) var(--sp-3) 0; }
+    .modal--form .modal__body { padding: 0 var(--sp-3); }
     .register__row { flex-wrap: wrap; }
     .register__row > :first-child, .register__row > :last-child { flex: 1 1 100%; }
-    .register__note { margin: var(--sp-3) 0 0; min-height: 0; font-size: 15px; }
     .register__actions { flex-wrap: wrap; }
 }
 
