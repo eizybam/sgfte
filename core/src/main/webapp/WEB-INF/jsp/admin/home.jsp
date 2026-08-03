@@ -123,21 +123,23 @@
             <div class="modal__field">
                 <label class="modal__label" for="accountId">CUENTA DESTINO · Origen: Concentradora</label>
                 <div class="modal__control modal__control--select">
-                    <svg class="modal__icon-card" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                    <%-- width/height van también como atributos: sin CSS un <svg> vacío
+                         mide 300x150 y revienta la caja. Igual que el resto de iconos. --%>
+                    <svg class="modal__icon-card" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
                     <select class="modal__input" id="accountId" name="accountId" required>
                         <option value="" disabled ${empty dispersionAccountId ? 'selected' : ''}>Selecciona la cuenta a fondear</option>
                         <c:forEach var="a" items="${accounts}">
                             <option value="${a.id}" ${dispersionAccountId == a.id ? 'selected' : ''}>${a.label}</option>
                         </c:forEach>
                     </select>
-                    <svg class="modal__icon-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+                    <svg class="modal__icon-chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
                 </div>
             </div>
 
             <div class="modal__field">
                 <label class="modal__label modal__label--tracked" for="amount">MONTO</label>
                 <div class="modal__control modal__control--amount">
-                    <svg class="modal__icon-cash" aria-hidden="true"><use href="#i-cash-app"/></svg>
+                    <svg class="modal__icon-cash" width="16.74" height="17" aria-hidden="true"><use href="#i-cash-app"/></svg>
                     <input class="modal__input" type="number" step="0.01" min="0.01"
                            id="amount" name="amount" placeholder="0.00"
                            value="${fn:escapeXml(dispersionAmount)}" required>
