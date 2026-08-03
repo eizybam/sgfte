@@ -1,11 +1,12 @@
 <%--
   Cabecera compartida del área del tarjetahabiente.
 
-  Uso (igual que admin-top.jspf):
-      <c:set var="pageTitle" value="Mis cuentas"/>
-      <%@ include file="/WEB-INF/jsp/partials/app-top.jspf" %>
-          ... contenido ...
-      <%@ include file="/WEB-INF/jsp/partials/app-bottom.jspf" %>
+  Uso: la página fija pageTitle con c:set, incluye este fragmento y cierra con
+  app-bottom.jspf. Mira app/home.jsp como ejemplo de referencia.
+
+  ⚠️ NO escribas directivas de include dentro de un comentario JSP aquí: Jasper
+  las ejecuta igual (parseFileDirectives no respeta los comentarios) y si el
+  ejemplo apunta a este archivo, se incluye a sí mismo → StackOverflowError.
 --%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
@@ -22,7 +23,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sgfte.css">
 </head>
 <body>
-<%@ include file="icons.jspf" %>
+<%@ include file="/WEB-INF/jsp/partials/icons.jspf" %>
 
 <div class="portal">
 
