@@ -5,7 +5,8 @@ import mx.sgfte.core.movements.Movement;
 import mx.sgfte.core.movements.MovementDao;
 import mx.sgfte.core.shared.db.Db;
 import mx.sgfte.core.users.ValidationException;
-
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.notifications.NotificationService;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -66,6 +67,8 @@ public class DispersionService {
                 movementDao.insert(conn, new Movement(accountId, "DEPOSIT", amount, null, text));
 
                 conn.commit();                    // all good: confirm
+                new AuditLogService().record("DEPOSIT", "Dispersión $" + amount + " a cuenta " + accountId, "admin");
+                new NotificationService().send("empleado@empresa.com", "Depósito recibido", "Se depositaron $" + amount);
             } catch (RuntimeException | SQLException e) {
                 conn.rollback();                  // something failed: undo EVERYTHING
                 throw (e instanceof RuntimeException re) ? re : new RuntimeException(e);
