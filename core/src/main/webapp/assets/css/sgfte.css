@@ -438,7 +438,7 @@ a { color: inherit; }
     align-items: center;
     gap: 12px;
     min-height: 64px;
-    padding: 12px 20px;
+    padding: 12px 20px 12px 12px;
     margin-bottom: var(--sp-3);
     background: var(--sgfte-surface);
     border: 1px solid var(--sgfte-line);
@@ -485,7 +485,7 @@ a { color: inherit; }
     display: inline-flex;
     align-items: center;
     gap: var(--sp-1);
-    padding: 10px 16px;
+    padding: 10px 12px 10px 16px;
     background: transparent;
     border: 1px solid var(--sgfte-line-pill);
     border-radius: var(--sgfte-radius-pill);
@@ -497,6 +497,28 @@ a { color: inherit; }
     letter-spacing: 0.04em;
     cursor: pointer;
 }
+
+/*
+  El <select> va desnudo dentro de la píldora: hereda la tipografía y usa la
+  flecha del marco en vez de la nativa, de modo que se ve como el componente
+  del prototipo pero sigue siendo un control real.
+*/
+.pill__select {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    outline: none;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.pill__select option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
+.pill:focus-within { border-color: var(--sgfte-accent); }
+.pill__chevron { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-mono-muted); }
 
 /* ==========================================================================
    6 · Formularios
@@ -533,51 +555,60 @@ a { color: inherit; }
 select.input { appearance: none; cursor: pointer; padding-right: var(--sp-4); }
 textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: vertical; }
 
-/* Buscador de la barra de filtros */
-.search { position: relative; flex: 1 1 260px; max-width: 340px; }
-.search .input { height: 40px; padding-left: var(--sp-5); }
+/* Buscador de la barra de filtros: 340px fijos, icono de 18 a 14 del borde */
+.search { position: relative; flex: 0 0 340px; max-width: 100%; }
+.search .input { height: 40px; padding: 0 14px 0 42px; font-size: 15px; }
+.search .input::placeholder { color: var(--sgfte-muted); }
 
 .search__icon {
     position: absolute;
-    left: var(--sp-2);
+    left: 14px;
     top: 50%;
+    width: 18px;
+    height: 18px;
     transform: translateY(-50%);
-    color: var(--sgfte-muted);
+    color: var(--sgfte-placeholder);
     pointer-events: none;
-    display: flex;
+    display: block;
 }
 
 /* ==========================================================================
    7 · Tabla canónica (estilo "Vista de Logs") · contenido CENTRADO
    ========================================================================== */
+/*
+  Las 27px de relleno lateral van en la TARJETA, no en las celdas: en el marco
+  la línea divisoria de cada fila arranca y termina a 27px del borde, no cruza
+  la tarjeta entera.
+*/
 .table-card {
+    padding: 0 27px;
     background: var(--sgfte-surface);
     border: 1px solid var(--sgfte-line);
     border-radius: var(--sgfte-radius);
     overflow: hidden;
 }
 
-.table { width: 100%; border-collapse: collapse; }
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 
 .table th {
     height: 62px;
-    padding: 0 var(--sp-2);
+    padding: 0 var(--sp-1);
     text-align: center;
     font-family: var(--sgfte-font-mono);
     font-weight: 500;
-    font-size: 15px;
+    font-size: 20px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.6px;
     color: var(--sgfte-mono-muted);
     border-bottom: 1px solid var(--sgfte-line);
     white-space: nowrap;
 }
 
 .table td {
-    height: 72px;
-    padding: var(--sp-1) var(--sp-2);
+    height: 80px;
+    padding: 0 var(--sp-1);
     text-align: center;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--sgfte-cream);
     border-bottom: 1px solid var(--sgfte-line);
     vertical-align: middle;
@@ -587,8 +618,8 @@ textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: v
 .table tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
 /* Valores monoespaciados: códigos de cuenta, montos, fechas */
-.table .mono { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-tan); }
-.table .num  { font-family: var(--sgfte-font-mono); font-size: 14px; }
+.table .mono { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
+.table .num  { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; }
 
 /* Celda de dos líneas (p. ej. FECHA / HORA) */
 .cell-duo { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -625,16 +656,20 @@ textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: v
     background: currentColor;
 }
 
-.badge--ok      { background: rgba(108, 192, 112, 0.15); color: var(--sgfte-ok-text); }
+.badge--ok      { background: rgba(108, 192, 112, 0.15); color: var(--sgfte-ok); }
 .badge--error   { background: rgba(255, 180, 171, 0.16); color: var(--sgfte-error); }
 .badge--warn    { background: rgba(254, 185, 107, 0.15); color: var(--sgfte-warn); }
 .badge--neutral { background: rgba(169, 138, 128, 0.14); color: var(--sgfte-mono-muted); }
 
-/* Badges de propósito: color de la categoría al 30% + texto claro */
-.badge--p1 { background: rgba(127, 166, 63, 0.30); color: #cfe39a; }
-.badge--p2 { background: rgba(47, 127, 158, 0.30); color: #a8d6e8; }
-.badge--p3 { background: rgba(179, 72, 122, 0.30); color: #f0aecb; }
-.badge--p4 { background: rgba(123, 63, 176, 0.30); color: #cbb0ea; }
+/*
+  Badges de propósito: el color de la categoría al 30% con el texto claro del
+  marco "Gestion de Cuentas". p2 (Viajes) no aparece en ese marco, así que su
+  texto se derivó con la misma claridad que los otros tres.
+*/
+.badge--p1 { background: rgba(99, 119, 25, 0.30);  color: #c9e06a; }
+.badge--p2 { background: rgba(25, 91, 119, 0.30);  color: #6ac4e6; }
+.badge--p3 { background: rgba(119, 25, 52, 0.30);  color: #ff9db4; }
+.badge--p4 { background: rgba(83, 25, 119, 0.30);  color: #c9a2f0; }
 
 /* ==========================================================================
    9 · Avisos
@@ -1334,7 +1369,70 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 }
 
 /* ==========================================================================
-   15 · Responsive
+   15 · Gestión de Cuentas · marco Figma "Gestion de Cuentas" (225:41)
+   ========================================================================== */
+
+/*
+  Anchos del marco (160/240/220/160/257 sobre 1037) en porcentaje, para que la
+  tabla conserve sus proporciones aunque el contenido no mida 1093px exactos.
+*/
+.table--accounts { }
+.table--accounts .col-code    { width: 15.43%; }
+.table--accounts .col-holder  { width: 23.14%; }
+.table--accounts .col-purpose { width: 21.21%; }
+.table--accounts .col-cards   { width: 15.43%; }
+.table--accounts .col-status  { width: 24.79%; }
+
+/* El botón de crear es de dos líneas y ancho fijo en el marco */
+.btn--stacked { width: 207px; line-height: 1.15; text-align: center; }
+
+/* ---- Paginador ----------------------------------------------------------- */
+.pager {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-1);
+    margin-top: 25px;
+}
+
+.pager__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius-badge);
+    background: none;
+    font-family: var(--sgfte-font-mono);
+    font-size: 14px;
+    color: var(--sgfte-mono-muted);
+    text-decoration: none;
+}
+
+.pager__item:hover { border-color: var(--sgfte-line-pill); color: var(--sgfte-cream); }
+
+/* La página actual no lleva borde: es un relleno naranja liso */
+.pager__item.is-current {
+    background: var(--sgfte-primary);
+    border-color: transparent;
+    font-weight: 500;
+    color: var(--sgfte-white);
+}
+
+/* Los saltos y los extremos deshabilitados se ven, pero no responden */
+.pager__item.is-disabled { opacity: 0.4; pointer-events: none; }
+.pager__gap { border-color: var(--sgfte-line); pointer-events: none; }
+
+.pager__item svg { width: 16px; height: 16px; display: block; }
+
+@media (max-width: 860px) {
+    .table-card { padding: 0 var(--sp-2); overflow-x: auto; }
+    .table--accounts { min-width: 760px; }
+    .search { flex: 1 1 100%; }
+}
+
+/* ==========================================================================
+   16 · Responsive
    ========================================================================== */
 
 /*

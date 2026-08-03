@@ -7,10 +7,120 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.math.BigDecimal;
 
 public class AccountDao {
+
+    /**
+     * One page of the admin accounts table, with the screen's three filters
+     * applied. Returns rows only; use {@link #countForAdmin} for the total.
+     *
+     * The badge colour comes out of the query as a rank over the catalogue
+     * ordered by id, wrapped at four. That keeps a purpose the same colour on
+     * every page and every screen — deriving it from the row's position in the
+     * page, which is what the dashboard does, would repaint the table as you
+     * page through it.
+     *
+     * @param search   matches holder name or account number; null/blank = no filter
+     * @param status   ACTIVE, INACTIVE, or null/blank for every status
+     * @param purposeId category to restrict to, or null for all
+     */
+    public List<AccountRow> findForAdmin(String search, String status, Long purposeId,
+                                         int offset, int limit) {
+        StringBuilder sql = new StringBuilder(
+                  "SELECT a.id, a.account_number, a.status, "
+                + "       ch.first_name || ' ' || ch.last_name AS holder, "
+                + "       cat.name AS purpose, "
+                + "       MOD(DENSE_RANK() OVER (ORDER BY cat.id) - 1, 4) + 1 AS purpose_color, "
+                + "       (SELECT COUNT(*) FROM card c "
+                + "         WHERE c.account_id = a.id AND c.status = 'ACTIVE') AS active_cards "
+                + "FROM account a "
+                + "JOIN cardholder ch ON ch.id = a.cardholder_id "
+                + "JOIN category  cat ON cat.id = a.category_id ");
+
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, search, status, purposeId);
+        sql.append("ORDER BY a.account_number OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add(offset);
+        params.add(limit);
+
+        List<AccountRow> rows = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bind(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(new AccountRow(
+                            rs.getLong("id"),
+                            rs.getString("account_number"),
+                            rs.getString("holder"),
+                            rs.getString("purpose"),
+                            rs.getInt("purpose_color"),
+                            rs.getInt("active_cards"),
+                            rs.getString("status")));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading admin accounts", e);
+        }
+    }
+
+    /** How many accounts match the same filters — drives the count and the pager. */
+    public int countForAdmin(String search, String status, Long purposeId) {
+        StringBuilder sql = new StringBuilder(
+                  "SELECT COUNT(*) FROM account a "
+                + "JOIN cardholder ch ON ch.id = a.cardholder_id "
+                + "JOIN category  cat ON cat.id = a.category_id ");
+
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, search, status, purposeId);
+
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bind(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error counting admin accounts", e);
+        }
+    }
+
+    /**
+     * Builds the WHERE shared by the page query and the count so the two can
+     * never drift apart. Clauses are only added when the filter is actually set,
+     * which keeps the bound types unambiguous for Oracle.
+     */
+    private void appendFilters(StringBuilder sql, List<Object> params,
+                               String search, String status, Long purposeId) {
+        sql.append("WHERE 1 = 1 ");
+
+        if (search != null && !search.isBlank()) {
+            sql.append("AND (UPPER(ch.first_name || ' ' || ch.last_name) LIKE ? ")
+               .append("  OR UPPER(a.account_number) LIKE ?) ");
+            String like = "%" + search.trim().toUpperCase() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append("AND a.status = ? ");
+            params.add(status);
+        }
+        if (purposeId != null) {
+            sql.append("AND cat.id = ? ");
+            params.add(purposeId);
+        }
+    }
+
+    private void bind(PreparedStatement ps, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+    }
 
     /** True if the cardholder already has an account with this purpose. */
     public boolean existForPurpose(Long cardholderId, long categoryId) {

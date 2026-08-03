@@ -103,8 +103,10 @@
                 <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-cards.png" alt="">
                 <span>Expedir<br>Tarjetas</span>
             </a>
+            <%-- Al listado de cuentas, no al formulario de alta: crear se hace
+                 desde el botón "Crear cuenta" de esa pantalla. --%>
             <a class="app-side__link ${activeNav == 'accounts' ? 'is-active' : ''}"
-               href="${ctx}/accounts">
+               href="${ctx}/admin/cuentas">
                 <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-accounts.png" alt="">
                 <span>Gestión de<br>cuentas</span>
             </a>
