@@ -20,7 +20,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sgfte.css">
+    <%-- Ver AssetsVersionListener: ?v= invalida la caché en cada despliegue. --%>
+    <link rel="stylesheet"
+          href="${pageContext.request.contextPath}/assets/css/sgfte.css?v=${applicationScope.assetsVersion}">
 </head>
 <body>
 <%@ include file="/WEB-INF/jsp/partials/icons.jspf" %>

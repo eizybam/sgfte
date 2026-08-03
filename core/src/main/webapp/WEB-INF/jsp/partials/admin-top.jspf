@@ -18,7 +18,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sgfte.css">
+    <%-- ?v= lo pone AssetsVersionListener: cambia en cada despliegue para que el
+         navegador no siga sirviendo la hoja de estilos anterior. --%>
+    <link rel="stylesheet"
+          href="${pageContext.request.contextPath}/assets/css/sgfte.css?v=${applicationScope.assetsVersion}">
     <script>
         /*
           El prototipo es un lienzo FIJO de 1440x1024. En vez de reflujar la
