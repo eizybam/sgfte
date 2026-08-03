@@ -1,0 +1,242 @@
+/* ==========================================================================
+   SGFTE · Employee area (/app) styles
+   Extends the tokens declared in auth.css — load auth.css FIRST, this file
+   defines no colours of its own so the two areas can never drift apart.
+   ========================================================================== */
+
+/* auth.css pins html/body to height:100% so the login screen never grows past
+   the viewport. Portal pages have lists that must scroll, so release that. */
+body.portal { height: auto; min-height: 100%; }
+
+.portal-wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: var(--sp-5) var(--sp-3) var(--sp-8);
+}
+
+/* ---- Header -------------------------------------------------------------- */
+.portal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--sgfte-border);
+    flex-wrap: wrap;
+}
+
+.portal-nav__brand { display: flex; flex-direction: column; gap: var(--sp-half); }
+
+.portal-nav__mark {
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 13px;
+    color: var(--sgfte-salmon);
+}
+
+.portal-nav__who { font-size: 15px; color: var(--sgfte-cream); }
+
+.portal-nav__links { display: flex; align-items: center; gap: var(--sp-3); }
+
+.portal-nav__links a {
+    color: var(--sgfte-tan);
+    text-decoration: none;
+    font-size: 14px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+}
+
+.portal-nav__links a:hover {
+    color: var(--sgfte-white);
+    border-bottom-color: var(--sgfte-primary);
+}
+
+.portal-nav__links form { margin: 0; }
+
+.portal-nav__logout {
+    background: none;
+    border: 1px solid var(--sgfte-border);
+    border-radius: var(--sgfte-radius-field);
+    color: var(--sgfte-muted);
+    font-family: var(--sgfte-font-body);
+    font-size: 13px;
+    padding: var(--sp-half) var(--sp-1);
+    cursor: pointer;
+}
+
+.portal-nav__logout:hover { color: var(--sgfte-cream); border-color: var(--sgfte-tan); }
+
+/* ---- Headings ------------------------------------------------------------ */
+.portal-title {
+    font-family: var(--sgfte-font-title);
+    color: var(--sgfte-white);
+    font-size: 28px;
+    margin: 0 0 var(--sp-1);
+}
+
+.portal-sub { color: var(--sgfte-muted); font-size: 14px; margin: 0 0 var(--sp-4); }
+
+/* ---- Total strip --------------------------------------------------------- */
+.portal-total {
+    background: var(--sgfte-card);
+    border: 1px solid var(--sgfte-border);
+    border-radius: var(--sgfte-radius-card);
+    padding: var(--sp-3);
+    margin-bottom: var(--sp-4);
+}
+
+.portal-total__label {
+    font-family: var(--sgfte-font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sgfte-tan);
+}
+
+.portal-total__value {
+    font-family: var(--sgfte-font-mono);
+    font-size: 32px;
+    color: var(--sgfte-white);
+    margin-top: var(--sp-half);
+}
+
+/* ---- Account cards ------------------------------------------------------- */
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--sp-2);
+}
+
+.portal-account {
+    display: block;
+    background: var(--sgfte-card);
+    border: 1px solid var(--sgfte-border);
+    border-radius: var(--sgfte-radius-card);
+    padding: var(--sp-3);
+    text-decoration: none;
+    transition: border-color 120ms ease;
+}
+
+.portal-account:hover { border-color: var(--sgfte-highlight); }
+
+.portal-account__purpose {
+    font-family: var(--sgfte-font-title);
+    font-size: 18px;
+    color: var(--sgfte-white);
+    margin-bottom: var(--sp-half);
+}
+
+.portal-account__number {
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    color: var(--sgfte-muted);
+    margin-bottom: var(--sp-2);
+}
+
+.portal-account__balance {
+    font-family: var(--sgfte-font-mono);
+    font-size: 24px;
+    color: var(--sgfte-cream);
+}
+
+.portal-account__cards { font-size: 13px; color: var(--sgfte-tan); margin-top: var(--sp-1); }
+
+/* ---- Generic panel ------------------------------------------------------- */
+.portal-card {
+    background: var(--sgfte-card);
+    border: 1px solid var(--sgfte-border);
+    border-radius: var(--sgfte-radius-card);
+    padding: var(--sp-4);
+    margin-bottom: var(--sp-3);
+}
+
+.portal-card__title {
+    font-family: var(--sgfte-font-title);
+    font-size: 16px;
+    color: var(--sgfte-white);
+    margin: 0 0 var(--sp-2);
+}
+
+/* ---- Tables -------------------------------------------------------------- */
+.portal-table { width: 100%; border-collapse: collapse; }
+
+.portal-table th,
+.portal-table td {
+    text-align: left;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) 0;
+    border-bottom: 1px solid var(--sgfte-border);
+    font-size: 14px;
+}
+
+.portal-table th {
+    font-family: var(--sgfte-font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sgfte-tan);
+}
+
+.portal-table .num { font-family: var(--sgfte-font-mono); text-align: right; }
+
+/* Money in = positive, money out = muted. Purely a reading aid. */
+.portal-in  { color: var(--sgfte-ok-text); }
+.portal-out { color: var(--sgfte-salmon); }
+
+.portal-empty { color: var(--sgfte-muted); font-size: 14px; }
+
+/* ---- Card chips ---------------------------------------------------------- */
+.portal-chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+
+.portal-chip {
+    border: 1px solid var(--sgfte-border);
+    border-radius: var(--sgfte-radius-field);
+    padding: var(--sp-1) var(--sp-2);
+    font-family: var(--sgfte-font-mono);
+    font-size: 13px;
+    color: var(--sgfte-cream);
+}
+
+.portal-chip small {
+    display: block;
+    font-family: var(--sgfte-font-body);
+    font-size: 11px;
+    color: var(--sgfte-muted);
+    margin-top: 2px;
+}
+
+.portal-chip--inactive { opacity: 0.45; }
+
+/* ---- Feedback ------------------------------------------------------------ */
+.portal-alert {
+    border-radius: var(--sgfte-radius-field);
+    padding: var(--sp-2);
+    margin-bottom: var(--sp-3);
+    font-size: 14px;
+}
+
+.portal-alert--ok {
+    background: var(--sgfte-ok-bg);
+    border: 1px solid var(--sgfte-ok-border);
+    color: var(--sgfte-ok-text);
+}
+
+.portal-alert--error {
+    background: var(--sgfte-error-bg);
+    border: 1px solid var(--sgfte-error-border);
+    color: var(--sgfte-error-text);
+}
+
+.portal-alert ul { margin: 0; padding-left: var(--sp-2); }
+
+/* ---- Back link ----------------------------------------------------------- */
+.portal-back {
+    display: inline-block;
+    color: var(--sgfte-tan);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: var(--sp-2);
+}
+
+.portal-back:hover { color: var(--sgfte-white); }

@@ -32,7 +32,7 @@ COMMIT;
 | A10 | `/admin/analytics.json` | → `/login` | → `/app/home` | 200 (JSON) |
 | A11 | **`/accounts`** | → `/login` | → `/app/home` | 200 |
 | A12 | **`/cardholders`** | → `/login` | → `/app/home` | 200 |
-| A13 | `/app/home` | → `/login` | 200 | 200 |
+| A13 | `/app/*` | → `/login` | 200 | → `/admin/home` |
 | A14 | `/logout` (POST) | — | Cierra sesión → `/login` | Cierra sesión → `/login` |
 
 > Las filas **A11 y A12** son la regresión importante: antes de este cambio
@@ -68,8 +68,9 @@ SELECT COUNT(*) FROM cardholder;
 
 - `AuthFilter` mapea `{"/admin/*", "/accounts", "/cardholders"}` y aplica dos
   comprobaciones en orden: sesión válida y después rol `ADMIN`.
-- `AppAuthFilter` mapea `/app/*` y solo exige sesión válida (cualquier rol), de
-  modo que un administrador puede revisar la vista del empleado.
+- `AppAuthFilter` mapea `/app/*` y exige sesión válida **y** que el login esté
+  ligado a una ficha de tarjetahabiente. Un `ADMIN` tiene `cardholder_id = NULL`,
+  así que no tiene cuentas que mostrar y se le redirige a `/admin/home`.
 - Los literales de rol viven en `mx.sgfte.core.auth.Role` y deben coincidir con
   el `CHECK chk_app_user_role` de `docs/schema.sql`.
 - **Pendiente:** `/accounts` y `/cardholders` deberían moverse bajo `/admin/`

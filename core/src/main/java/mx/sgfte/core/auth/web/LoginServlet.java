@@ -59,7 +59,8 @@ public class LoginServlet extends HttpServlet {
             old.invalidate();
         }
         HttpSession session = req.getSession(true);
-        session.setAttribute("user", new SessionUser(user.getId(), user.getFullName(), user.getRole()));
+        session.setAttribute("user", new SessionUser(
+                user.getId(), user.getFullName(), user.getRole(), user.getCardholderId()));
         session.setMaxInactiveInterval(30 * 60); // 30 minutes
 
         resp.sendRedirect(req.getContextPath() + Role.homeFor(user.getRole()));

@@ -5,25 +5,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mi cuenta · SGFTE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Mis cuentas · SGFTE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css">
-    <style>
-        .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--sp-6); }
-        .card { background: var(--sgfte-card); border: 1px solid var(--sgfte-border); border-radius: var(--sgfte-radius-card); padding: var(--sp-5); max-width: 520px; width: 100%; }
-        h1 { font-family: var(--sgfte-font-title); color: var(--sgfte-white); font-size: 26px; margin: 0 0 var(--sp-2); }
-        p { color: var(--sgfte-tan); }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/portal.css">
 </head>
-<body class="auth">
-<div class="wrap">
-    <div class="card">
-        <h1>Bienvenido, ${sessionScope.user.fullName}</h1>
-        <p>Área del tarjetahabiente. Aquí verás tus cuentas, tarjetas, transferencias e historial.</p>
-        <form method="post" action="${pageContext.request.contextPath}/logout">
-            <button type="submit" class="auth-submit" style="width:auto; padding:0 var(--sp-3);">Cerrar sesión</button>
-        </form>
+<body class="auth portal">
+<div class="portal-wrap">
+
+    <jsp:include page="nav.jsp"/>
+
+    <h1 class="portal-title">Mis cuentas</h1>
+    <p class="portal-sub">Cada cuenta tiene un propósito y su propio saldo. El dinero vive en la cuenta, no en la tarjeta.</p>
+
+    <div class="portal-total">
+        <div class="portal-total__label">Saldo total disponible</div>
+        <div class="portal-total__value">$ ${total} MXN</div>
     </div>
+
+    <c:choose>
+        <c:when test="${empty accounts}">
+            <div class="portal-card">
+                <p class="portal-empty">
+                    Todavía no tienes cuentas asignadas. Cuando tu administrador te asigne una,
+                    aparecerá aquí con su propósito y su saldo.
+                </p>
+            </div>
+        </c:when>
+        <c:otherwise>
+            <div class="portal-grid">
+                <c:forEach var="a" items="${accounts}">
+                    <a class="portal-account"
+                       href="${pageContext.request.contextPath}/app/cuenta?id=${a.id}">
+                        <div class="portal-account__purpose">${a.purpose}</div>
+                        <div class="portal-account__number">${a.accountNumber}</div>
+                        <div class="portal-account__balance">$ ${a.balance}</div>
+                        <div class="portal-account__cards">
+                            <c:choose>
+                                <c:when test="${a.activeCards == 0}">Sin tarjetas activas</c:when>
+                                <c:when test="${a.activeCards == 1}">1 tarjeta activa</c:when>
+                                <c:otherwise>${a.activeCards} tarjetas activas</c:otherwise>
+                            </c:choose>
+                        </div>
+                    </a>
+                </c:forEach>
+            </div>
+        </c:otherwise>
+    </c:choose>
+
 </div>
 </body>
 </html>
