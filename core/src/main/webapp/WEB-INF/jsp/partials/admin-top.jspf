@@ -116,7 +116,7 @@
                 <span>Registros<br>e historial</span>
             </a>
             <a class="app-side__link ${activeNav == 'people' ? 'is-active' : ''}"
-               href="${ctx}/cardholders">
+               href="${ctx}/admin/empleados">
                 <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-people.png" alt="">
                 <span>Empleados</span>
             </a>

@@ -1706,7 +1706,47 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 }
 
 /* ==========================================================================
-   17 · Responsive
+   17 · Gestor de empleados · marco Figma "Gestor de empleados" (287:104)
+   ========================================================================== */
+
+/* Anchos del marco (260/120/140/150/200/138 sobre 1008) en porcentaje */
+.table--staff .col-name   { width: 25.79%; }
+.table--staff .col-id     { width: 11.90%; }
+.table--staff .col-accs   { width: 13.89%; }
+.table--staff .col-cards  { width: 14.88%; }
+.table--staff .col-funds  { width: 19.85%; }
+.table--staff .col-state  { width: 13.69%; }
+
+/* Celda de dos líneas: nombre y, debajo, el dato secundario */
+.staff-name { display: block; font-size: 16px; color: var(--sgfte-cream); text-decoration: none; }
+.staff-name:hover { color: var(--sgfte-accent); }
+.staff-sub  { display: block; margin-top: 2px; font-size: 13px; color: #a1918a; }
+
+/*
+  Botón de alta: el marco lo fija en 236x42 con 10px de relleno, no con los
+  60px laterales del botón normal, así que va aparte de .btn--hero.
+*/
+.btn--fixed {
+    width: 236px;
+    height: 42px;
+    padding: 10px;
+    gap: 10px;
+    filter: drop-shadow(0 2px 2px rgba(20, 19, 18, 0.25));
+}
+
+.btn--fixed svg { width: 22px; height: 16px; flex: 0 0 22px; }
+
+/* Una píldora sin nada que filtrar todavía se ve, pero no responde */
+.pill.is-inert { opacity: 0.55; cursor: not-allowed; }
+.pill.is-inert .pill__select { pointer-events: none; }
+
+@media (max-width: 860px) {
+    .table--staff { min-width: 820px; }
+    .btn--fixed { width: 100%; }
+}
+
+/* ==========================================================================
+   18 · Responsive
    ========================================================================== */
 
 /*

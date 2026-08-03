@@ -13,6 +13,103 @@ import java.util.List;
 /** Persistence for cardholders (JDBC over Oracle). */
 public class CardholderDao {
 
+    /**
+     * One page of the employee table, with the screen's search and status
+     * filters. Accounts, cards and funds are counted per cardholder.
+     *
+     * The three totals are scalar subqueries rather than joins on purpose:
+     * joining cardholder → account → card multiplies each account row by its
+     * card count, and summing balances over that fan-out would inflate the
+     * fund total. (SUM(DISTINCT) is not a fix either — it would silently drop
+     * a second account that happens to hold the same amount.)
+     */
+    public List<CardholderAdminRow> findForAdmin(String search, String status,
+                                                 int offset, int limit) {
+        StringBuilder sql = new StringBuilder(
+                  "SELECT ch.id, ch.first_name, ch.last_name, ch.email, ch.status, "
+                + "  (SELECT COUNT(*) FROM account a "
+                + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS accounts, "
+                + "  (SELECT COUNT(*) FROM card k JOIN account ka ON ka.id = k.account_id "
+                + "    WHERE ka.cardholder_id = ch.id AND ka.status = 'ACTIVE' "
+                + "      AND k.status = 'ACTIVE') AS cards, "
+                + "  (SELECT NVL(SUM(af.balance), 0) FROM account af "
+                + "    WHERE af.cardholder_id = ch.id AND af.status = 'ACTIVE') AS funds "
+                + "FROM cardholder ch ");
+
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, search, status);
+
+        sql.append("ORDER BY ch.last_name, ch.first_name ")
+           .append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add(offset);
+        params.add(limit);
+
+        List<CardholderAdminRow> rows = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bind(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(new CardholderAdminRow(
+                            rs.getLong("id"),
+                            rs.getString("first_name") + " " + rs.getString("last_name"),
+                            rs.getString("email"),
+                            rs.getInt("accounts"),
+                            rs.getInt("cards"),
+                            rs.getBigDecimal("funds"),
+                            rs.getString("status")));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading admin cardholders", e);
+        }
+    }
+
+    /** How many cardholders match the same filters — drives the count and pager. */
+    public int countForAdmin(String search, String status) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cardholder ch ");
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, search, status);
+
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bind(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error counting admin cardholders", e);
+        }
+    }
+
+    /** Shared WHERE so the page query and the count can never drift apart. */
+    private void appendFilters(StringBuilder sql, List<Object> params,
+                               String search, String status) {
+        sql.append("WHERE 1 = 1 ");
+
+        if (search != null && !search.isBlank()) {
+            // El id se acepta como texto para que buscar "12" encuentre al 12.
+            sql.append("AND (UPPER(ch.first_name || ' ' || ch.last_name) LIKE ? ")
+               .append("  OR UPPER(ch.email) LIKE ? ")
+               .append("  OR TO_CHAR(ch.id) LIKE ?) ");
+            String like = "%" + search.trim().toUpperCase() + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append("AND ch.status = ? ");
+            params.add(status);
+        }
+    }
+
+    private void bind(PreparedStatement ps, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+    }
+
     /** True if a cardholder with this email already exists. */
     public boolean emailExists(String email) {
         String sql = "SELECT 1 FROM cardholder WHERE email = ?";
