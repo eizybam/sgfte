@@ -161,6 +161,7 @@ BEFORE UPDATE OR DELETE ON audit_log
 BEGIN
     RAISE_APPLICATION_ERROR(-20002, 'audit_log es inmutable: no se puede modificar ni borrar');
 END;
+/
 
 -- ============================================================
 -- Notas de reglas de negocio que se aplican en la CAPA JAVA (no en SQL):
