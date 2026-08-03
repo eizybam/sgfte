@@ -39,6 +39,27 @@ public class DashboardDao {
         }
     }
 
+    /**
+     * Balance currently held per purpose, biggest first — feeds the
+     * "Distribución de gasto" panel on the admin home screen.
+     * Added on top of the original analytics slice; read-only, same pattern.
+     */
+    public Map<String, BigDecimal> balanceByPurpose() {
+        String sql = "SELECT cat.name AS purpose, NVL(SUM(a.balance), 0) AS total "
+                   + "FROM account a JOIN category cat ON cat.id = a.category_id "
+                   + "WHERE a.status = 'ACTIVE' "
+                   + "GROUP BY cat.name ORDER BY total DESC";
+        Map<String, BigDecimal> map = new LinkedHashMap<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) map.put(rs.getString("purpose"), rs.getBigDecimal("total"));
+            return map;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading balance by purpose", e);
+        }
+    }
+
     private BigDecimal scalarDecimal(String sql) {
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
