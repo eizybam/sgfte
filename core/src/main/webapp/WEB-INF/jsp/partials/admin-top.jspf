@@ -1,28 +1,3 @@
-<%--
-  Cabecera compartida del área de administración.
-
-  Cómo se usa: cada página fija primero sus variables con c:set y después
-  incluye este fragmento; al final incluye admin-bottom.jspf.
-
-    Variables que lee este fragmento:
-      pageTitle     título grande de la página (obligatorio)
-      pageSubtitle  línea de apoyo bajo el título (opcional)
-      activeNav     ítem resaltado del menú: overview | analytics | notifications
-                    | cards | accounts | logs | people
-      pageAction    HTML de un botón a la derecha del título (opcional)
-
-  Mira admin/home.jsp como ejemplo de referencia.
-
-  Es un include ESTÁTICO: el fragmento se pega en tiempo de traducción y
-  comparte el pageContext, por eso las variables fijadas arriba se ven aquí.
-
-  ⚠️ NO escribas directivas de include dentro de un comentario JSP en este
-  archivo. Jasper hace una primera pasada (parseFileDirectives) que busca
-  directivas en el texto crudo SIN respetar los comentarios: un ejemplo de uso
-  citado dentro de <%-- --%> se ejecuta de verdad. Si el ejemplo apunta a este
-  mismo archivo, el fragmento se incluye a sí mismo y Tomcat responde
-  StackOverflowError al abrir cualquier página. Ya pasó una vez.
---%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>

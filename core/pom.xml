@@ -75,6 +75,15 @@
                      real Java 21 API, so we can't accidentally call a method that
                      doesn't exist on the target JDK. -->
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <!-- Pinned on purpose. Maven's default Surefire binding is old enough
+                     that it only discovers JUnit 4 tests: `mvn test` would report
+                     "Tests run: 0" and stay green while the JUnit 5 suite never ran.
+                     Silent non-execution is worse than a red build. -->
+            </plugin>
         </plugins>
     </build>
 </project>

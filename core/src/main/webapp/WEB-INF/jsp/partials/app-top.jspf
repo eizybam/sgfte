@@ -4,7 +4,7 @@
   Uso: la página fija pageTitle con c:set, incluye este fragmento y cierra con
   app-bottom.jspf. Mira app/home.jsp como ejemplo de referencia.
 
-  ⚠️ NO escribas directivas de include dentro de un comentario JSP aquí: Jasper
+  NO escribas directivas de include dentro de un comentario JSP aquí: Jasper
   las ejecuta igual (parseFileDirectives no respeta los comentarios) y si el
   ejemplo apunta a este archivo, se incluye a sí mismo → StackOverflowError.
 --%>
