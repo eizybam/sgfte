@@ -21,4 +21,11 @@ public class SessionUser implements Serializable {
     public long getId() { return id; }
     public String getFullName() { return fullName; }
     public String getRole() { return role; }
+
+    /**
+     * True when this session belongs to an administrator.
+     * Exposed as a getter-style method so JSP EL can read ${sessionScope.user.admin}
+     * to show or hide admin-only links.
+     */
+    public boolean isAdmin() { return Role.ADMIN.equals(role); }
 }
