@@ -80,7 +80,10 @@
         <tbody>
         <c:forEach var="a" items="${rows}">
             <tr>
-                <td class="mono">${fn:escapeXml(a.accountNumber)}</td>
+                <%-- En el marco el código de cuenta es el enlace al detalle. --%>
+                <td class="mono">
+                    <a class="cell-link" href="${ctx}/admin/cuenta?id=${a.id}">${fn:escapeXml(a.accountNumber)}</a>
+                </td>
                 <td>${fn:escapeXml(a.holderName)}</td>
                 <td><span class="badge badge--p${a.purposeColor}">${fn:escapeXml(a.purpose)}</span></td>
                 <td class="num">${a.activeCards}</td>

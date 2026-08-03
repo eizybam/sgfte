@@ -122,6 +122,79 @@ public class AccountDao {
         }
     }
 
+    /**
+     * Everything the account detail header needs in one read.
+     *
+     * The badge colour is computed exactly as in the listing — a rank over the
+     * catalogue ordered by id — so an account keeps the same colour whether you
+     * are looking at the table or at its detail page.
+     */
+    public Optional<AccountDetail> findDetail(long accountId) {
+        String sql = "SELECT a.id, a.account_number, a.balance, a.status, "
+                   + "       cat.name AS purpose, "
+                   + "       ch.first_name || ' ' || ch.last_name AS holder, "
+                   + "       (SELECT MOD(COUNT(*), 4) + 1 FROM category c2 WHERE c2.id < cat.id) AS purpose_color "
+                   + "FROM account a "
+                   + "JOIN cardholder ch ON ch.id = a.cardholder_id "
+                   + "JOIN category  cat ON cat.id = a.category_id "
+                   + "WHERE a.id = ?";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, accountId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(new AccountDetail(
+                        rs.getLong("id"),
+                        rs.getString("account_number"),
+                        rs.getString("purpose"),
+                        rs.getInt("purpose_color"),
+                        rs.getString("holder"),
+                        rs.getBigDecimal("balance"),
+                        rs.getString("status")));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading account detail", e);
+        }
+    }
+
+    /**
+     * The month panel, in a single round trip.
+     *
+     * "Dispersado" and "Movimientos" are scoped to the current calendar month;
+     * "Última recarga" is the newest deposit ever, since the frame shows a full
+     * date and an empty month should still tell you when funds last arrived.
+     */
+    public AccountMonthSummary monthSummary(long accountId) {
+        String sql = "SELECT "
+                   + " (SELECT NVL(SUM(amount), 0) FROM account_movement "
+                   + "   WHERE account_id = ? AND movement_type = 'DEPOSIT' "
+                   + "     AND created_at >= TRUNC(SYSDATE, 'MM')) AS dispersed, "
+                   + " (SELECT COUNT(*) FROM account_movement "
+                   + "   WHERE account_id = ? AND created_at >= TRUNC(SYSDATE, 'MM')) AS movements, "
+                   + " (SELECT MAX(created_at) FROM account_movement "
+                   + "   WHERE account_id = ? AND movement_type = 'DEPOSIT') AS last_deposit, "
+                   + " (SELECT COUNT(*) FROM card "
+                   + "   WHERE account_id = ? AND status = 'ACTIVE') AS active_cards "
+                   + "FROM dual";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            for (int i = 1; i <= 4; i++) ps.setLong(i, accountId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return new AccountMonthSummary(BigDecimal.ZERO, 0, null, 0);
+                }
+                java.sql.Timestamp last = rs.getTimestamp("last_deposit");
+                return new AccountMonthSummary(
+                        rs.getBigDecimal("dispersed"),
+                        rs.getInt("movements"),
+                        last == null ? null : last.toLocalDateTime(),
+                        rs.getInt("active_cards"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading account month summary", e);
+        }
+    }
+
     /** True if the cardholder already has an account with this purpose. */
     public boolean existForPurpose(Long cardholderId, long categoryId) {
         String sql = "SELECT 1 FROM account WHERE cardholder_id = ? AND category_id = ?";

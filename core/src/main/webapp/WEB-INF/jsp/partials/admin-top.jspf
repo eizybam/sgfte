@@ -127,19 +127,26 @@
         </p>
     </aside>
 
-    <main class="app-main">
+    <main class="app-main ${mainClass}">
 
-        <div class="page-head">
-            <div>
-                <h1 class="page-title">${pageTitle}</h1>
-                <c:if test="${not empty pageSubtitle}">
-                    <p class="page-subtitle">${pageSubtitle}</p>
+        <%--
+          Una pantalla con su propia cabecera (por ejemplo el detalle de cuenta,
+          que lleva miga de pan y un badge) pone hidePageHead y la dibuja ella.
+          pageTitle se sigue usando para el <title> del documento.
+        --%>
+        <c:if test="${empty hidePageHead}">
+            <div class="page-head">
+                <div>
+                    <h1 class="page-title">${pageTitle}</h1>
+                    <c:if test="${not empty pageSubtitle}">
+                        <p class="page-subtitle">${pageSubtitle}</p>
+                    </c:if>
+                </div>
+                <c:if test="${not empty pageAction}">
+                    <div>${pageAction}</div>
                 </c:if>
             </div>
-            <c:if test="${not empty pageAction}">
-                <div>${pageAction}</div>
-            </c:if>
-        </div>
+        </c:if>
 
         <c:if test="${not empty success}">
             <div class="alert alert--ok">${success}</div>

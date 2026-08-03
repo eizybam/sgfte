@@ -67,7 +67,20 @@ public class DispersionServlet extends HttpServlet {
             keepForRetry(session, List.of(e.getMessage()), rawAccountId, rawAmount);
         }
 
-        resp.sendRedirect(req.getContextPath() + "/admin/home");
+        resp.sendRedirect(req.getContextPath() + backTo(req));
+    }
+
+    /**
+     * Where to land after dispersing. The account detail screen opens the same
+     * modal, and bouncing back to the dashboard from there would lose the
+     * admin's place.
+     *
+     * Only an account id is accepted, never a URL, so this cannot be turned into
+     * an open redirect.
+     */
+    private String backTo(HttpServletRequest req) {
+        Long detailId = parseId(req.getParameter("returnToAccount"));
+        return detailId == null ? "/admin/home" : "/admin/cuenta?id=" + detailId;
     }
 
     /**
