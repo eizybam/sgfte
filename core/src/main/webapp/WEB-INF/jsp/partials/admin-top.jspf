@@ -1,5 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%--
+  Cascarón del área de administración: header + panel lateral.
+
+  Reproduce el componente "Header Admin" (Figma 361:146) y el panel lateral del
+  marco "Vista principal de Admin" (201:22). Los iconos son los PNG exportados
+  del prototipo, no aproximaciones dibujadas a mano: se sirven desde
+  assets/img/icons a 96px y se muestran a 42px, así que se ven nítidos.
+--%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,36 +16,68 @@
     <title>${pageTitle} · SGFTE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sgfte.css">
+    <script>
+        /*
+          El prototipo es un lienzo FIJO de 1440x1024. En vez de reflujar la
+          maquetación en pantallas más chicas, se escala entera con `zoom`: las
+          proporciones quedan idénticas al diseño, ningún rótulo parte a dos
+          líneas y el ancho efectivo nunca baja de 1440px. Por eso sgfte.css no
+          tiene puntos de corte intermedios.
+
+          Se corre en el <head>, antes de pintar, para que no se vea el salto.
+
+          --app-h es el alto del viewport YA dividido entre el zoom: bajo `zoom`
+          una altura de 100vh se pinta encogida y dejaría una franja muerta
+          abajo. El suelo de 0.6 evita que en una ventana diminuta el texto
+          quede ilegible; a partir de ahí manda el bloque responsive del CSS.
+        */
+        (function () {
+            var DESIGN_WIDTH = 1440, MIN_ZOOM = 0.6, root = document.documentElement;
+
+            function fit() {
+                var zoom = Math.max(MIN_ZOOM, Math.min(1, window.innerWidth / DESIGN_WIDTH));
+                root.style.zoom = zoom;
+                root.style.setProperty("--app-h", (window.innerHeight / zoom) + "px");
+            }
+
+            fit();
+            window.addEventListener("resize", fit);
+        })();
+    </script>
 </head>
 <body>
 <%@ include file="/WEB-INF/jsp/partials/icons.jspf" %>
+
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
 <div class="app">
 
     <header class="app-header">
         <nav class="app-header__nav">
             <a class="app-header__link ${activeNav == 'overview' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/admin/home">Dashboard</a>
+               href="${ctx}/admin/home">Dashboard</a>
             <a class="app-header__link ${activeNav == 'analytics' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/admin/dashboard">Analíticas</a>
+               href="${ctx}/admin/dashboard">Analíticas</a>
             <a class="app-header__link ${activeNav == 'notifications' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/admin/logs">Notificaciones</a>
+               href="${ctx}/admin/logs">Notificaciones</a>
         </nav>
 
         <div class="app-header__user">
-            <span class="app-header__icon" title="Ajustes">
-                <svg width="22" height="22"><use href="#i-gear"/></svg>
-            </span>
-            <div class="app-header__who">
-                <div class="app-header__name">${sessionScope.user.fullName}</div>
-                <div class="app-header__id">ID: ${sessionScope.user.id}</div>
-            </div>
-            <form method="post" action="${pageContext.request.contextPath}/logout" style="margin:0;">
-                <button type="submit" class="btn btn--secondary" style="padding:6px 12px; font-size:13px;">
-                    Salir
+            <a href="${ctx}/admin/home" title="Ajustes">
+                <img class="app-header__gear" src="${ctx}/assets/img/icons/settings.png" alt="Ajustes">
+            </a>
+            <%--
+              En el prototipo el bloque del usuario es un elemento interactivo,
+              pero no dice a dónde lleva. Se usa para cerrar sesión, que es el
+              único destino que la app necesita y el sitio donde se espera.
+            --%>
+            <form method="post" action="${ctx}/logout" style="margin:0;">
+                <button type="submit" class="app-header__who" title="Cerrar sesión">
+                    <span class="app-header__name">${sessionScope.user.fullName}</span>
+                    <span class="app-header__id">ID: ${sessionScope.user.id}</span>
                 </button>
             </form>
         </div>
@@ -46,24 +86,29 @@
     <aside class="app-side">
         <nav class="app-side__nav">
             <a class="app-side__link ${activeNav == 'overview' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/admin/home">
-                <svg width="22" height="22"><use href="#i-overview"/></svg> Vista General
+               href="${ctx}/admin/home">
+                <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-overview.png" alt="">
+                <span>Vista<br>General</span>
             </a>
             <a class="app-side__link ${activeNav == 'cards' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/admin/cards">
-                <svg width="22" height="22"><use href="#i-cards"/></svg> Expedir Tarjetas
+               href="${ctx}/admin/cards">
+                <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-cards.png" alt="">
+                <span>Expedir<br>Tarjetas</span>
             </a>
             <a class="app-side__link ${activeNav == 'accounts' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/accounts">
-                <svg width="22" height="22"><use href="#i-accounts"/></svg> Gestión de cuentas
+               href="${ctx}/accounts">
+                <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-accounts.png" alt="">
+                <span>Gestión de<br>cuentas</span>
             </a>
             <a class="app-side__link ${activeNav == 'logs' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/admin/historial">
-                <svg width="22" height="22"><use href="#i-logs"/></svg> Registros e historial
+               href="${ctx}/admin/historial">
+                <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-history.png" alt="">
+                <span>Registros<br>e historial</span>
             </a>
             <a class="app-side__link ${activeNav == 'people' ? 'is-active' : ''}"
-               href="${pageContext.request.contextPath}/cardholders">
-                <svg width="22" height="22"><use href="#i-people"/></svg> Empleados
+               href="${ctx}/cardholders">
+                <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-people.png" alt="">
+                <span>Empleados</span>
             </a>
         </nav>
 

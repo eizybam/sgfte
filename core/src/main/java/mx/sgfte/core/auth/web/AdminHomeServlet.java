@@ -35,10 +35,8 @@ public class AdminHomeServlet extends HttpServlet {
             throws ServletException, IOException {
 
         req.setAttribute("concentratorBalance", dashboardDao.concentratorBalance());
-        req.setAttribute("totalInAccounts", dashboardDao.totalInAccounts());
         req.setAttribute("activeCardholders", dashboardDao.activeCardholders());
-        req.setAttribute("activeAccounts", dashboardDao.activeAccounts());
-        req.setAttribute("activeCards", dashboardDao.activeCards());
+        req.setAttribute("dispersionThisMonth", dashboardDao.dispersionThisMonth());
         req.setAttribute("purposes", buildShares(dashboardDao.balanceByPurpose()));
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/home.jsp").forward(req, resp);

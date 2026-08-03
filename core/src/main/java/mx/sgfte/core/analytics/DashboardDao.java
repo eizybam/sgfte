@@ -21,6 +21,21 @@ public class DashboardDao {
         return scalarDecimal("SELECT NVL(SUM(balance), 0) FROM account WHERE status = 'ACTIVE'");
     }
 
+    /**
+     * Total dispersed from the concentrator so far this calendar month — the
+     * "Dispersión mensual total" KPI on the admin home screen.
+     *
+     * A dispersion is what DispersionService writes to the ledger: a DEPOSIT
+     * movement. Reading the ledger rather than the account balances is what
+     * makes this a *flow* for the month instead of a snapshot, and the ledger
+     * is immutable, so the number cannot drift.
+     */
+    public BigDecimal dispersionThisMonth() {
+        return scalarDecimal("SELECT NVL(SUM(amount), 0) FROM account_movement "
+                           + "WHERE movement_type = 'DEPOSIT' "
+                           + "AND created_at >= TRUNC(SYSDATE, 'MM')");
+    }
+
     public int activeCardholders() { return scalarInt("SELECT COUNT(*) FROM cardholder WHERE status = 'ACTIVE'"); }
     public int activeAccounts()    { return scalarInt("SELECT COUNT(*) FROM account WHERE status = 'ACTIVE'"); }
     public int activeCards()       { return scalarInt("SELECT COUNT(*) FROM card WHERE status = 'ACTIVE'"); }
