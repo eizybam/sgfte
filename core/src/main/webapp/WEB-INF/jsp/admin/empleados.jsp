@@ -17,10 +17,10 @@
 <c:set var="pageSubtitle" value="Gestion de tarjetahabientes de la empresa"/>
 <c:set var="activeNav" value="people"/>
 <c:set var="pageAction">
-    <a class="btn btn--primary btn--fixed" href="${pageContext.request.contextPath}/cardholders">
+    <button type="button" class="btn btn--primary btn--fixed" data-open-register>
         <svg width="22" height="16" aria-hidden="true"><use href="#i-user-plus"/></svg>
         Registrar Empleado
-    </a>
+    </button>
 </c:set>
 <%@ include file="/WEB-INF/jsp/partials/admin-top.jspf" %>
 
@@ -129,5 +129,141 @@
         </a>
     </nav>
 </c:if>
+
+<%--
+  Modal "Registro de tarjetahabiente" (Figma 279:104). Antes era la página
+  /cardholders; ahora esa ruta sólo procesa el alta y vuelve aquí.
+
+  El Id de empleado no se teclea: son las iniciales del nombre más cuatro
+  dígitos de una secuencia de la base. Como el número se asigna al guardar, el
+  campo va en sólo lectura y enseña las iniciales en vivo con el número aún por
+  asignar; el código definitivo aparece en la tabla al recargar.
+--%>
+<c:set var="registerFailed" value="${not empty registerErrors}"/>
+
+<div class="modal-scrim" id="register-modal" ${registerFailed ? '' : 'hidden'}>
+    <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="register-title">
+        <h2 class="modal__title" id="register-title">Registrar tarjetahabiente</h2>
+        <div class="modal__rule"></div>
+
+        <c:if test="${registerFailed}">
+            <div class="alert alert--error modal__alert" style="margin: var(--sp-3) 64px 0;">
+                <ul><c:forEach var="e" items="${registerErrors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>
+
+        <form class="modal__body" method="post" action="${ctx}/cardholders">
+
+            <label class="register__label" for="fullName">Nombre completo</label>
+            <div class="register__control">
+                <input class="register__input" type="text" id="fullName" name="fullName"
+                       placeholder="Ej. Diego Jarillo Estrada" autocomplete="off"
+                       value="${fn:escapeXml(registerName)}" required>
+            </div>
+
+            <div class="register__row">
+                <div>
+                    <label class="register__label" for="employeeCode">Id de empleado</label>
+                    <div class="register__control">
+                        <%-- Sólo lectura: lo asigna el servidor al guardar. --%>
+                        <input class="register__input" type="text" id="employeeCode"
+                               placeholder="Ej.DJE0077" readonly tabindex="-1"
+                               title="Se genera solo: iniciales del nombre + número consecutivo">
+                    </div>
+                </div>
+                <div>
+                    <label class="register__label" for="department">Departamento</label>
+                    <div class="register__control">
+                        <%-- Una sola opción por ahora; cuando exista el catálogo se llena desde ahí. --%>
+                        <select class="register__input" id="department" name="department" required>
+                            <option value="IT" selected>IT</option>
+                        </select>
+                        <svg class="register__chevron" width="20" height="11" aria-hidden="true"><use href="#i-chevron"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <label class="register__label" for="email">Correo corporativo</label>
+            <div class="register__control">
+                <input class="register__input" type="email" id="email" name="email"
+                       placeholder="Ej. dje777@sgfte.mx" autocomplete="off"
+                       value="${fn:escapeXml(registerEmail)}" required>
+            </div>
+
+            <p class="register__note">
+                <svg width="20" height="20" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>El empleado se crea sin cuentas asociadas inicialmente. Podra asignar
+                    tarjetas fisicas o virtuales posteriormente desde el panel de gestion</span>
+            </p>
+
+            <div class="register__actions">
+                <button type="button" class="btn btn--secondary" data-close-register>Cancelar</button>
+                <button type="submit" class="btn btn--primary">
+                    <svg aria-hidden="true"><use href="#i-user-plus"/></svg>
+                    Registrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("register-modal");
+        var name = document.getElementById("fullName");
+        var code = document.getElementById("employeeCode");
+        var lastFocused = null;
+
+        // Mismo criterio que EmployeeCode.initials en el servidor: primera letra
+        // de cada palabra, hasta tres, sin acentos.
+        function initials(fullName) {
+            var words = fullName.normalize("NFD").replace(/[̀-ͯ]/g, "")
+                                .trim().split(/\s+/);
+            var out = "";
+            for (var i = 0; i < words.length && out.length < 3; i++) {
+                var letters = words[i].replace(/[^A-Za-z]/g, "");
+                if (letters) out += letters.charAt(0).toUpperCase();
+            }
+            if (out.length === 1) {
+                var first = words[0].replace(/[^A-Za-z]/g, "");
+                if (first.length >= 2) out += first.charAt(1).toUpperCase();
+            }
+            return out;
+        }
+
+        function preview() {
+            var value = name.value.trim();
+            // El número lo pone la secuencia al guardar, así que aquí van puntos.
+            code.value = value ? initials(value) + "••••" : "";
+        }
+
+        function open() {
+            lastFocused = document.activeElement;
+            scrim.hidden = false;
+            name.focus();
+        }
+
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        document.querySelectorAll("[data-open-register]").forEach(function (b) {
+            b.addEventListener("click", open);
+        });
+        document.querySelectorAll("[data-close-register]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        name.addEventListener("input", preview);
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+
+        preview();
+        if (!scrim.hidden) name.focus();
+    })();
+</script>
 
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

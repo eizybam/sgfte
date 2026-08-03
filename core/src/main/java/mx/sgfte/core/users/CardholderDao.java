@@ -125,14 +125,36 @@ public class CardholderDao {
     }
 
     /** Inserts a cardholder and returns the generated id. */
+    /**
+     * The next value of seq_employee_code.
+     *
+     * Pulled separately so the code is built in the service, where the rule can
+     * be unit-tested without a database.
+     */
+    public long nextEmployeeSequence() {
+        String sql = "SELECT seq_employee_code.NEXTVAL FROM dual";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getLong(1);
+            throw new IllegalStateException("seq_employee_code returned no value");
+        } catch (SQLException e) {
+            throw new RuntimeException("Error reading employee code sequence", e);
+        }
+    }
+
     public long insert(Cardholder ch) {
-        String sql = "INSERT INTO cardholder (first_name, last_name, email, phone) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO cardholder "
+                   + "(first_name, last_name, email, phone, employee_code, department) "
+                   + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, new String[]{"id"})) {
             ps.setString(1, ch.getFirstName());
             ps.setString(2, ch.getLastName());
             ps.setString(3, ch.getEmail());
             ps.setString(4, ch.getPhone());
+            ps.setString(5, ch.getEmployeeCode());
+            ps.setString(6, ch.getDepartment());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {

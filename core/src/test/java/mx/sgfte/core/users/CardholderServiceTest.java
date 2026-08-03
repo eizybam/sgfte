@@ -16,9 +16,14 @@ class CardholderServiceTest {
     private static class FakeCardholderDao extends CardholderDao {
         boolean emailTaken = false;
         Cardholder inserted;
+        long sequence = 77L;
 
         @Override
         public boolean emailExists(String email) { return emailTaken; }
+
+        /** Sin esto el servicio iría a Oracle a por el consecutivo. */
+        @Override
+        public long nextEmployeeSequence() { return sequence; }
 
         @Override
         public long insert(Cardholder ch) {
@@ -73,6 +78,44 @@ class CardholderServiceTest {
     void invalidCardholderNeverReachesTheDao() {
         Cardholder ch = new Cardholder("", "", "bad", null);
         assertThrows(ValidationException.class, () -> service.register(ch));
+        assertNull(dao.inserted);
+    }
+
+    /** El código se asigna al registrar, con las iniciales del nombre completo. */
+    @Test
+    void registerAssignsTheEmployeeCode() {
+        Cardholder ch = new Cardholder("Diego", "Jarillo Estrada", "dje@empresa.com", null);
+        service.register(ch);
+        assertEquals("DJE0077", dao.inserted.getEmployeeCode());
+    }
+
+    /** Si ya trae código —por ejemplo al reintentar— no se vuelve a calcular. */
+    @Test
+    void registerKeepsAnExistingCode() {
+        Cardholder ch = new Cardholder("Ana", "López", "ana@empresa.com", null);
+        ch.setEmployeeCode("XX0001");
+        service.register(ch);
+        assertEquals("XX0001", dao.inserted.getEmployeeCode());
+    }
+
+    /** El modal manda un solo campo de nombre; el apellido es obligatorio. */
+    @Test
+    void registerFromFullNameSplitsAndAssigns() {
+        long id = service.registerFromFullName("Diego Jarillo Estrada", "dje@empresa.com", "IT");
+
+        assertEquals(42L, id);
+        assertEquals("Diego", dao.inserted.getFirstName());
+        assertEquals("Jarillo Estrada", dao.inserted.getLastName());
+        assertEquals("IT", dao.inserted.getDepartment());
+        assertEquals("DJE0077", dao.inserted.getEmployeeCode());
+    }
+
+    @Test
+    void registerFromFullNameRejectsASingleWord() {
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.registerFromFullName("Cher", "cher@empresa.com", "IT"));
+
+        assertTrue(e.getErrors().get(0).contains("apellido"));
         assertNull(dao.inserted);
     }
 }

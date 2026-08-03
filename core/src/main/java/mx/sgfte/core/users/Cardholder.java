@@ -12,6 +12,8 @@ public class Cardholder {
     private String email;
     private String phone;
     private String status; // ACTIVE / INACTIVE
+    private String employeeCode;  // "DJE0077" — se asigna al registrar y no cambia
+    private String department;
 
     public Cardholder() {}
 
@@ -40,4 +42,10 @@ public class Cardholder {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getEmployeeCode() { return employeeCode; }
+    public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
 }

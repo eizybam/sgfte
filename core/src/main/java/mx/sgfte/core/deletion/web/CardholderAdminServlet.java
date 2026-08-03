@@ -84,7 +84,14 @@ public class CardholderAdminServlet extends HttpServlet {
     private void consumeFlash(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         if (session == null) return;
-        for (String key : new String[]{FLASH_SUCCESS, FLASH_ERRORS}) {
+        String[] keys = {
+                FLASH_SUCCESS, FLASH_ERRORS,
+                // Del alta: si falló, el modal se reabre con lo tecleado.
+                mx.sgfte.core.users.web.CardholderServlet.FLASH_ERRORS,
+                mx.sgfte.core.users.web.CardholderServlet.FLASH_NAME,
+                mx.sgfte.core.users.web.CardholderServlet.FLASH_EMAIL,
+        };
+        for (String key : keys) {
             Object value = session.getAttribute(key);
             if (value != null) {
                 req.setAttribute(key, value);

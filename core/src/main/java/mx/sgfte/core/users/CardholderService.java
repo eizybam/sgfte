@@ -32,8 +32,43 @@ public class CardholderService {
         if (dao.emailExists(ch.getEmail())) {
             throw new ValidationException(List.of("El correo ya está registrado"));
         }
+        // El código se asigna aquí y sólo aquí: una vez guardado no se recalcula.
+        if (isBlank(ch.getEmployeeCode())) {
+            String fullName = (ch.getFirstName() + " " + ch.getLastName()).trim();
+            ch.setEmployeeCode(EmployeeCode.of(fullName, dao.nextEmployeeSequence()));
+        }
         return dao.insert(ch);
     }
+
+    /**
+     * Registers from the single "Nombre completo" field the modal uses.
+     *
+     * The table stores the name in two columns, so the first word becomes the
+     * given name and the rest the surnames — "Diego Jarillo Estrada" splits into
+     * "Diego" / "Jarillo Estrada". A one-word name is rejected rather than
+     * guessed at, because a blank last_name would violate the schema.
+     */
+    public long registerFromFullName(String fullName, String email, String department) {
+        String[] parts = splitName(fullName);
+        if (parts == null) {
+            throw new ValidationException(List.of("Escribe el nombre y al menos un apellido"));
+        }
+        Cardholder ch = new Cardholder(parts[0], parts[1], trim(email), null);
+        ch.setDepartment(trim(department));
+        return register(ch);
+    }
+
+    /** {given name, surnames} or null when there is only one word. */
+    static String[] splitName(String fullName) {
+        if (fullName == null || fullName.isBlank()) return null;
+        String[] words = fullName.trim().split("\\s+");
+        if (words.length < 2) return null;
+
+        String surnames = String.join(" ", java.util.Arrays.copyOfRange(words, 1, words.length));
+        return new String[]{words[0], surnames};
+    }
+
+    private String trim(String s) { return s == null ? null : s.trim(); }
 
     /** Field-level validation, independent of the database. */
     public List<String> validate(Cardholder ch) {
