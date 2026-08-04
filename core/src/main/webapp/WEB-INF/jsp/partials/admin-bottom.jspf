@@ -4,5 +4,41 @@
 
 <%-- Desenlace de la última operación, si lo hubo. Se pinta solo. --%>
 <%@ include file="/WEB-INF/jsp/partials/result-modal.jspf" %>
+
+<script>
+    /*
+      Bloquea el desplazamiento del fondo mientras haya cualquier modal abierto.
+
+      Va aquí, al final del cascarón, y no dentro del script de cada modal: hay
+      siete repartidos por las pantallas, cada uno con su propio abrir y cerrar,
+      y colgar de ellos dos líneas más significaría acordarse siete veces —y
+      otra vez con el octavo—. Observando el DOM, cualquier modal presente y
+      visible cuenta, lo abra quien lo abra.
+    */
+    (function () {
+        var root = document.documentElement;
+
+        function anyOpen() {
+            var scrims = document.querySelectorAll(".modal-scrim");
+            for (var i = 0; i < scrims.length; i++) {
+                if (!scrims[i].hidden) return true;
+            }
+            return false;
+        }
+
+        function sync() { root.classList.toggle("is-modal-open", anyOpen()); }
+
+        // childList porque el modal de resultado se borra al cerrarse, y
+        // attributes porque los de formulario sólo se ocultan con [hidden].
+        new MutationObserver(sync).observe(document.body, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ["hidden"]
+        });
+
+        sync();
+    })();
+</script>
 </body>
 </html>

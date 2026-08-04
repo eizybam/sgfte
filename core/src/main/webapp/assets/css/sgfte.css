@@ -1021,6 +1021,21 @@ textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: v
 
 .modal-scrim[hidden] { display: none; }
 
+/*
+  Con un modal abierto, el fondo no se mueve.
+
+  El velo ya es `fixed` y se queda quieto —eso está comprobado, incluso bajo el
+  `zoom` del cascarón—, pero la página de detrás seguía desplazándose, y contra
+  un fondo que corre el modal parece que te persigue. Bloquear el desplazamiento
+  mientras hay uno abierto es además lo que se espera de un modal: lo de atrás
+  está inerte hasta que decidas.
+
+  En html y en body porque la barra puede colgar de cualquiera de los dos según
+  el navegador.
+*/
+html.is-modal-open,
+html.is-modal-open body { overflow: hidden; }
+
 .modal {
     width: 557px;
     max-width: 100%;
