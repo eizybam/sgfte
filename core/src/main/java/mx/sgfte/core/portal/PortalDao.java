@@ -205,4 +205,43 @@ public class PortalDao {
             throw new RuntimeException("Error reading the month's movement", e);
         }
     }
+
+    /**
+     * Recent movements of ONE account, if this cardholder owns it.
+     *
+     * The ownership check is part of the WHERE and not a separate query: an
+     * account id in the URL cannot be swapped for somebody else's and still
+     * return rows.
+     */
+    public List<PortalActivity> findAccountActivity(long cardholderId, long accountId, int limit) {
+        String sql = "SELECT m.movement_type, m.description, cat.name AS purpose, "
+                   + "       m.amount, m.created_at "
+                   + "  FROM account_movement m "
+                   + "  JOIN account  a   ON a.id = m.account_id "
+                   + "  JOIN category cat ON cat.id = a.category_id "
+                   + " WHERE a.cardholder_id = ? AND a.id = ? "
+                   + " ORDER BY m.created_at DESC, m.id DESC "
+                   + " FETCH FIRST ? ROWS ONLY";
+        List<PortalActivity> rows = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            ps.setLong(2, accountId);
+            ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Timestamp at = rs.getTimestamp("created_at");
+                    rows.add(new PortalActivity(
+                            rs.getString("movement_type"),
+                            rs.getString("description"),
+                            rs.getString("purpose"),
+                            rs.getBigDecimal("amount"),
+                            at == null ? null : at.toLocalDateTime()));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading the account activity", e);
+        }
+    }
 }

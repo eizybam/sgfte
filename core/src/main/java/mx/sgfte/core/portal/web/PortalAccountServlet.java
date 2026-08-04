@@ -40,13 +40,33 @@ public class PortalAccountServlet extends HttpServlet {
         try {
             PortalAccount account = portalService.myAccount(cardholderId, accountId);
             req.setAttribute("account", account);
-            req.setAttribute("cards", portalService.cardsOf(cardholderId, accountId));
-            req.setAttribute("movements", portalService.movementsOf(cardholderId, accountId));
+            /*
+              Como mucho dos tarjetas: una física y una digital, que es la regla
+              del negocio y desde V6 también la del índice. Se eligen aquí y no
+              en el JSP para que la vista NO pueda recibir una tercera: aunque
+              quedaran datos viejos de antes del índice, la pantalla no se
+              descuadra.
+             */
+            java.util.List<mx.sgfte.core.cards.Card> cards =
+                    portalService.cardsOf(cardholderId, accountId);
+            req.setAttribute("physicalCard", firstActiveOfType(cards, "PHYSICAL"));
+            req.setAttribute("digitalCard", firstActiveOfType(cards, "DIGITAL"));
+
+            req.setAttribute("activity", portalService.accountActivity(cardholderId, accountId));
         } catch (AccountNotOwnedException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         req.getRequestDispatcher("/WEB-INF/jsp/app/cuenta.jsp").forward(req, resp);
+    }
+
+    /** The account's active card of that type, or null if it has none. */
+    private mx.sgfte.core.cards.Card firstActiveOfType(
+            java.util.List<mx.sgfte.core.cards.Card> cards, String type) {
+        return cards.stream()
+                .filter(c -> type.equals(c.getCardType()) && "ACTIVE".equals(c.getStatus()))
+                .findFirst()
+                .orElse(null);
     }
 }

@@ -8,9 +8,13 @@
 --
 -- Este archivo es el esquema CANÓNICO: crea la base desde cero, ya con todo lo
 -- que fueron añadiendo las migraciones. Si ya tienes una base creada, NO uses
--- este archivo: aplica en orden V1, V2, V3 y V3a, que es para lo que están.
---   · V2 → employee_code y department en cardholder, y su secuencia.
---   · V3 → ledger de la concentradora (+ V3a corrige su fila de apertura).
+-- este archivo: aplica las V en orden, que es para lo que están.
+--   · V2  → employee_code y department en cardholder, y su secuencia.
+--   · V3  → ledger de la concentradora (+ V3a corrige su fila de apertura).
+--   · V4  → severidad, módulo y origen en la bitácora (+ V4a repara bases
+--           creadas con la versión de este archivo que se quedó sin ellas).
+--   · V5  → descripción y color propio en las categorías.
+--   · V6  → una tarjeta activa de cada tipo por cuenta.
 -- ============================================================
 
 -- ── Limpieza para desarrollo (re-ejecutar). Descomenta si necesitas recrear.
@@ -141,6 +145,18 @@ CREATE TABLE card (
                       CONSTRAINT fk_card_account FOREIGN KEY (account_id) REFERENCES account(id),
                       CONSTRAINT chk_card_type   CHECK (card_type IN ('PHYSICAL', 'DIGITAL')),
                       CONSTRAINT chk_card_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'BLOCKED'))
+);
+
+-- Como mucho UNA tarjeta activa de cada tipo por cuenta: una física y una
+-- digital. Índice único y no CHECK, porque un CHECK sólo ve la fila que se
+-- inserta y aquí hay que mirar las hermanas.
+--
+-- El CASE lo limita a las ACTIVAS: en Oracle una entrada con todas sus columnas
+-- en NULL no se indexa, así que las canceladas quedan fuera y reponer una
+-- tarjeta perdida —invalidar y expedir otra— sigue siendo posible.
+CREATE UNIQUE INDEX uq_card_active_type ON card (
+    CASE WHEN status = 'ACTIVE' THEN account_id END,
+    CASE WHEN status = 'ACTIVE' THEN card_type  END
 );
 
 -- ============================================================

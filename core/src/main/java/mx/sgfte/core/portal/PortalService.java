@@ -126,4 +126,8 @@ public class PortalService {
                 .multiply(java.math.BigDecimal.valueOf(100))
                 .divide(opening, 1, java.math.RoundingMode.HALF_UP);
     }
+
+    public List<PortalActivity> accountActivity(long cardholderId, long accountId) {
+        return portalDao.findAccountActivity(cardholderId, accountId, 8);
+    }
 }

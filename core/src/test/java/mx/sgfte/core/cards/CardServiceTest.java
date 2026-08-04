@@ -22,9 +22,21 @@ class CardServiceTest {
         boolean accountActive = true;
         boolean invalidateSucceeds = true;
         final List<Card> inserted = new ArrayList<>();
+        /*
+          Las tarjetas que la cuenta YA tiene. Vacía por defecto.
+
+          Hay que redefinir findByAccount aunque el test no lo llame: si no, la
+          llamada cae en el CardDao de verdad y el test abre una conexión a
+          Oracle. Un test que necesita la base para pasar no es un test unitario,
+          y falla por motivos que no tienen que ver con lo que comprueba.
+         */
+        final List<Card> existing = new ArrayList<>();
 
         @Override
         public boolean isAccountActive(long accountId) { return accountActive; }
+
+        @Override
+        public List<Card> findByAccount(long accountId) { return existing; }
 
         @Override
         public long insert(Card card) {
@@ -103,5 +115,39 @@ class CardServiceTest {
     void invalidatingAnAlreadyInactiveCardIsReported() {
         dao.invalidateSucceeds = false;
         assertThrows(ValidationException.class, () -> service.invalidate(5L));
+    }
+
+    // ---- Una tarjeta activa de cada tipo por cuenta (V6) --------------------
+
+    @Test
+    void rejectsASecondActiveCardOfTheSameType() {
+        dao.existing.add(new Card(1L, "PHYSICAL", "**** **** **** 1111"));
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.issue(1L, "PHYSICAL"));
+
+        assertTrue(e.getErrors().get(0).contains("ya tiene una tarjeta física activa"));
+        assertTrue(dao.inserted.isEmpty(), "no debe insertarse nada");
+    }
+
+    @Test
+    void allowsTheOtherTypeWhenOneAlreadyExists() {
+        dao.existing.add(new Card(1L, "PHYSICAL", "**** **** **** 1111"));
+
+        service.issue(1L, "DIGITAL");
+
+        assertEquals("DIGITAL", dao.inserted.get(0).getCardType());
+    }
+
+    /** Perder una tarjeta y reponerla tiene que seguir siendo posible. */
+    @Test
+    void allowsReissuingWhenThePreviousOneWasInvalidated() {
+        Card cancelled = new Card(1L, "PHYSICAL", "**** **** **** 1111");
+        cancelled.setStatus("INACTIVE");
+        dao.existing.add(cancelled);
+
+        service.issue(1L, "PHYSICAL");
+
+        assertEquals("PHYSICAL", dao.inserted.get(0).getCardType());
     }
 }

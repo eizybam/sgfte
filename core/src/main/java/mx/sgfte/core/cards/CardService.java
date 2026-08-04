@@ -28,6 +28,19 @@ public class CardService {
         if (!dao.isAccountActive(accountId)) {
             throw new ValidationException(List.of("La cuenta no existe o está inactiva"));
         }
+        /*
+          Una cuenta tiene como mucho una tarjeta activa de cada tipo. Quien lo
+          garantiza de verdad es el índice uq_card_active_type (V6); esto está
+          aquí para que el admin lea por qué no se pudo en vez de un ORA-00001.
+         */
+        boolean repeated = dao.findByAccount(accountId).stream()
+                .anyMatch(c -> cardType.equals(c.getCardType()) && "ACTIVE".equals(c.getStatus()));
+        if (repeated) {
+            throw new ValidationException(List.of(
+                    "Esta cuenta ya tiene una tarjeta "
+                    + ("PHYSICAL".equals(cardType) ? "física" : "digital")
+                    + " activa. Invalida la actual antes de expedir otra."));
+        }
         return dao.insert(new Card(accountId, cardType, generateMaskedPan()));
     }
 
