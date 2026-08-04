@@ -24,6 +24,9 @@ import java.util.List;
  */
 public class TransferService {
 
+    private final mx.sgfte.core.notifications.NotificationService notificationService =
+            new mx.sgfte.core.notifications.NotificationService();
+
     private final TransferDao transferDao;
     private final AccountDao accountDao;
     private final MovementDao movementDao;
@@ -69,7 +72,7 @@ public class TransferService {
                 movementDao.insert(conn, new Movement(destId, "TRANSFER_IN", amount, sourceId, text));
 
                 conn.commit();
-                
+
             } catch (RuntimeException | SQLException e) {
                 conn.rollback();
                 if (e instanceof RuntimeException) throw (RuntimeException) e;
@@ -78,5 +81,9 @@ public class TransferService {
         } catch (SQLException e) {
             throw new RuntimeException("Error opening/closing the transfer transaction", e);
         }
+
+        // Sólo se avisa a QUIEN RECIBE: el que envía ya sabe que envió, porque
+        // acaba de hacerlo y ve la tarjeta de confirmación.
+        notificationService.moneyReceived(destId, sourceId, amount, description);
     }
 }
