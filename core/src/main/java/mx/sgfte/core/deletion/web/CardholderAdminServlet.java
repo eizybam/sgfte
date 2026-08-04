@@ -82,13 +82,13 @@ public class CardholderAdminServlet extends HttpServlet {
             audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + cardholderId, req);
 
             mx.sgfte.core.shared.web.OperationResult.success("Empleado eliminado",
-                            "Sus saldos volvieron a la Concentradora",
+                            "Los fondos regresaron a la Concentradora",
                             "REINTEGRACIÓN CONFIRMADA",
-                            "Se invalidaron sus tarjetas y el saldo de sus cuentas se reintegró a la Cuenta Concentradora.")
+                            "El saldo se devolvió a la Cuenta Concentradora y sus tarjetas quedaron invalidadas.")
                     .detail("Empleado", "Nº " + cardholderId)
                     .when(java.time.LocalDateTime.now())
                     .secondary("Ver empleados", "/admin/empleados")
-                    .primary("Ver concentradora", "/admin/concentradora")
+                    .primary("Ver Concentradora", "/admin/concentradora")
                     .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());

@@ -51,13 +51,20 @@ public class PortalTransferServlet extends HttpServlet {
             portalService.transfer(cardholderId, sourceId, destId, amount,
                     req.getParameter("description"));
 
-            mx.sgfte.core.shared.web.OperationResult.success("¡Transferencia enviada!",
-                            "El saldo ya está en la cuenta de tu compañero",
-                            "TRANSFERENCIA CONFIRMADA",
-                            "Sólo se transfiere entre cuentas del mismo propósito.")
-                    .amount("Monto transferido", amount)
-                    .detail("Concepto", req.getParameter("description"))
+            // Copia del marco "Transferencia Exitosa - Screen" (2169:410).
+            mx.sgfte.core.shared.web.OperationResult.success("¡Transferencia exitosa!",
+                            "Tu transferencia se realizó correctamente",
+                            "TRANSACCIÓN CONFIRMADA",
+                            "Los fondos se enviaron a una cuenta del mismo propósito.")
+                    .amount("Monto enviado", amount)
+                    .detail("Cuenta destino", peerLabel(cardholderId, destId))
                     .when(java.time.LocalDateTime.now())
+                    /*
+                      El marco añade "ID Transacción · 023477". No existe: una
+                      transferencia escribe dos movimientos y el servicio no
+                      devuelve ningún identificador único de la operación. Se
+                      omite en vez de enseñar un número inventado.
+                     */
                     .secondary("Volver al inicio", "/app/home")
                     .primary("Ver mi cuenta", "/app/cuenta?id=" + sourceId)
                     .flash(req.getSession());
@@ -65,18 +72,24 @@ public class PortalTransferServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/app/home");
             return;
         } catch (ValidationException e) {
+            // Copia del marco "Transferencia Rechazada" (2074:266).
             mx.sgfte.core.shared.web.OperationResult.rejected("Transferencia rechazada",
                             "La operación no pudo completarse",
                             String.join(" ", e.getErrors()))
-                    .amount("Monto solicitado", amount)
+                    .amount("Monto enviado", amount)
+                    .detail("Cuenta origen", myLabel(cardholderId, sourceId))
+                    .detail("Cuenta destino", peerLabel(cardholderId, destId))
                     .when(java.time.LocalDateTime.now())
                     .secondary("Volver al inicio", "/app/home")
-                    .primary("Reintentar", "/app/transferencia"
-                            + (sourceId == null ? "" : "?sourceId=" + sourceId))
+                    .primary("Reintentar", "/app/home")
                     .flash(req.getSession());
 
-            resp.sendRedirect(req.getContextPath() + "/app/transferencia"
-                    + (sourceId == null ? "" : "?sourceId=" + sourceId));
+            /*
+              Directo al panel, NO a /app/transferencia: esa ruta ya sólo
+              redirige aquí, y ResultFlashFilter habría consumido la tarjeta en
+              ese GET intermedio —que no pinta nada— dejándola sin enseñar.
+             */
+            resp.sendRedirect(req.getContextPath() + "/app/home");
             return;
         } catch (AccountNotOwnedException e) {
             // Tampered sourceId. Say nothing specific about it.
@@ -86,4 +99,25 @@ public class PortalTransferServlet extends HttpServlet {
     }
 
     /** Loads both dropdowns and shows the form. */
+
+    /** Cómo se lee una cuenta propia en la tarjeta de resultado. */
+    private String myLabel(long cardholderId, Long accountId) {
+        if (accountId == null) return null;
+        return portalService.myAccounts(cardholderId).stream()
+                .filter(a -> a.getId() == accountId)
+                .map(a -> a.getPurpose() + " · " + a.getAccountNumber())
+                .findFirst()
+                .orElse(null);
+    }
+
+    /** Y cómo se lee la del compañero, buscándola entre los destinos elegibles. */
+    private String peerLabel(long cardholderId, Long accountId) {
+        if (accountId == null) return null;
+        return portalService.peersByAccount(cardholderId).values().stream()
+                .flatMap(java.util.List::stream)
+                .filter(p -> p.getAccountId() == accountId)
+                .map(mx.sgfte.core.portal.PeerOption::getLabel)
+                .findFirst()
+                .orElse(null);
+    }
 }

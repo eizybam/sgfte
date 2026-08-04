@@ -92,13 +92,13 @@ public class AccountAdminServlet extends HttpServlet {
             // La reintegración es lo importante del desenlace: el dinero no
             // desaparece con la cuenta, vuelve a la Concentradora.
             mx.sgfte.core.shared.web.OperationResult.success("Cuenta eliminada",
-                            "El saldo volvió a la Concentradora",
+                            "Los fondos regresaron a la Concentradora",
                             "REINTEGRACIÓN CONFIRMADA",
-                            "Sus tarjetas quedaron invalidadas y el saldo se reintegró a la Cuenta Concentradora.")
+                            "El saldo se devolvió a la Cuenta Concentradora y sus tarjetas quedaron invalidadas.")
                     .detail("Cuenta", "Nº " + accountId)
                     .when(java.time.LocalDateTime.now())
                     .secondary("Ver cuentas", "/admin/cuentas")
-                    .primary("Ver concentradora", "/admin/concentradora")
+                    .primary("Ver Concentradora", "/admin/concentradora")
                     .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
