@@ -49,7 +49,7 @@ public class LogsServlet extends HttpServlet {
         req.setAttribute("modules", auditLogDao.distinctModules());
         req.setAttribute("q", search);
         req.setAttribute("sev", severity == null ? "" : severity);
-        req.setAttribute("mod", module == null ? "" : module);
+        req.setAttribute("moduleFilter", module == null ? "" : module);
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/logs.jsp").forward(req, resp);
     }

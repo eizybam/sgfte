@@ -32,7 +32,7 @@
 <c:set var="baseUrl" value="${ctx}/admin/logs"/>
 <c:set var="qParam"   value="${empty q ? '' : '&q='.concat(q)}"/>
 <c:set var="sevParam" value="${empty sev ? '' : '&sev='.concat(sev)}"/>
-<c:set var="modParam" value="${empty mod ? '' : '&mod='.concat(mod)}"/>
+<c:set var="modParam" value="${empty moduleFilter ? '' : '&mod='.concat(moduleFilter)}"/>
 
 <div class="toolbar">
     <form class="search" method="get" action="${baseUrl}">
@@ -40,7 +40,7 @@
         <input class="input" type="search" name="q" value="${fn:escapeXml(q)}"
                placeholder="Buscar por usuario, origen o evento" aria-label="Buscar en la bitácora">
         <c:if test="${not empty sev}"><input type="hidden" name="sev" value="${sev}"></c:if>
-        <c:if test="${not empty mod}"><input type="hidden" name="mod" value="${mod}"></c:if>
+        <c:if test="${not empty moduleFilter}"><input type="hidden" name="mod" value="${moduleFilter}"></c:if>
     </form>
 
     <nav class="segmented" aria-label="Nivel">
@@ -58,10 +58,10 @@
     <label class="pill">
         <span>Módulo ·</span>
         <select class="pill__select" onchange="location.href=this.value;" aria-label="Filtrar por módulo">
-            <option value="${baseUrl}?page=1${qParam}${sevParam}" ${empty mod ? 'selected' : ''}>TODOS</option>
+            <option value="${baseUrl}?page=1${qParam}${sevParam}" ${empty moduleFilter ? 'selected' : ''}>TODOS</option>
             <c:forEach var="m" items="${modules}">
                 <option value="${baseUrl}?page=1&mod=${m}${qParam}${sevParam}"
-                        ${mod == m ? 'selected' : ''}>${fn:escapeXml(m)}</option>
+                        ${moduleFilter == m ? 'selected' : ''}>${fn:escapeXml(m)}</option>
             </c:forEach>
         </select>
         <svg class="pill__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
@@ -117,7 +117,7 @@
             <tr>
                 <td colspan="6" class="table__empty">
                     <c:choose>
-                        <c:when test="${empty q and empty sev and empty mod}">
+                        <c:when test="${empty q and empty sev and empty moduleFilter}">
                             La bitácora está vacía. Se irá llenando conforme se opere el sistema.
                         </c:when>
                         <c:otherwise>No hay eventos que coincidan con el filtro.</c:otherwise>
