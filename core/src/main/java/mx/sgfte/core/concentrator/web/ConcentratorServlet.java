@@ -32,7 +32,9 @@ public class ConcentratorServlet extends HttpServlet {
             throws ServletException, IOException {
         BigDecimal amount = parseAmount(req.getParameter("amount"));
         try {
-            service.fund(amount);
+            // Quién fondea queda en el ledger; antes esta operación no dejaba rastro.
+            Object user = req.getSession().getAttribute("user");
+            service.fund(amount, user == null ? null : String.valueOf(user));
             req.setAttribute("success", "Concentradora fondeada correctamente.");
         } catch (ValidationException e) {
             req.setAttribute("errors", e.getErrors());

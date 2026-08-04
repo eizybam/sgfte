@@ -1849,7 +1849,244 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 }
 
 /* ==========================================================================
-   19 · Responsive
+   19 · Analíticas · marco Figma "Analitica - Admin (v2)" (2029:6)
+   --------------------------------------------------------------------------
+   Las gráficas van en CSS puro (rejilla + alturas en %) y la dona en un
+   conic-gradient, como el pastel de la Vista Global. Sin librería: no hay paso
+   de compilación de JS en el proyecto y una dependencia externa sería lo único
+   de la pantalla que no funciona sin red.
+   ========================================================================== */
+
+/*
+  ---- Cabecera con acciones ------------------------------------------------
+  Las acciones van posicionadas, no en la misma fila flex: en el marco el
+  subtítulo corre por DEBAJO de los botones y ocupa todo el ancho. Metiéndolo
+  en una fila con ellos se partía en dos líneas.
+*/
+.an-head { position: relative; margin-bottom: 30px; }
+/* Sólo el título esquiva los botones; el subtítulo pasa por debajo, a lo ancho */
+.an-head .page-title { padding-right: 620px; }
+.an-head__actions { position: absolute; top: 8px; right: 0; display: flex; align-items: center; gap: var(--sp-3); }
+
+.an-head .page-title { font-size: 48px; }
+.an-head .page-subtitle { margin-top: 18px; font-size: 22px; }
+
+/* Botón de exportar: 226 × 46 con 8 de radio, del marco */
+.btn--export { width: 226px; height: 46px; padding: 10px; gap: 10px; font-weight: 700; }
+.btn--export svg { width: 18px; height: 18px; flex: 0 0 18px; }
+
+/* ---- Selector de periodo -------------------------------------------------- */
+.period {
+    display: flex;
+    gap: 0;
+    height: 46px;
+    padding: 3px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.period__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--sgfte-pink-text);
+    text-decoration: none;
+}
+
+.period__item.is-active {
+    background: var(--sgfte-primary);
+    font-weight: 600;
+    color: var(--sgfte-primary-text);
+}
+
+/* ---- Rejilla de la pantalla ---------------------------------------------- */
+.an-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+.an-grid { display: grid; grid-template-columns: minmax(0, 668fr) minmax(0, 340fr); gap: 24px; margin-top: 24px; }
+
+.an-card {
+    padding: 21px 23px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+}
+
+.an-card__title { margin: 0; font-weight: 500; font-size: 22px; color: var(--sgfte-white); }
+.an-card__sub   { margin: 10px 0 0; font-size: 14px; color: var(--sgfte-pink-text); }
+.an-card__head  { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); }
+.an-card__note  { font-weight: 500; font-size: 13px; color: var(--sgfte-muted); }
+
+/* ---- Tarjeta KPI ---------------------------------------------------------- */
+.an-kpi { position: relative; height: 150px; padding: 17px 19px; }
+.an-kpi__label {
+    margin: 0;
+    padding-right: 30px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--sgfte-pink-text);
+}
+.an-kpi__icon { position: absolute; top: 19px; right: 19px; width: 20px; height: 20px; color: var(--sgfte-pink-text); }
+
+.an-kpi__value {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 18px 0 0;
+    font-weight: 600;
+    font-size: 30px;
+    color: var(--sgfte-cream);
+}
+.an-kpi__currency { font-weight: 400; font-size: 14px; color: var(--sgfte-pink-strong); }
+
+.an-kpi__delta { position: absolute; left: 19px; bottom: 22px; margin: 0; font-weight: 500; font-size: 13px; }
+.an-kpi__delta--up   { color: #8ab33a; }
+.an-kpi__delta--down { color: #ff9d8f; }
+.an-kpi__delta--flat { color: var(--sgfte-muted); }
+
+/* ---- Gráfica de barras ---------------------------------------------------- */
+.chart { position: relative; height: 208px; margin-top: 22px; padding-left: 50px; }
+
+/*
+  Las líneas guía y sus rótulos se dibujan con un pseudo-elemento por línea a
+  través de una lista, no con un fondo repetido, para que cada una pueda llevar
+  su cifra al lado.
+*/
+.chart__grid { position: absolute; inset: 0 0 22px 50px; }
+.chart__line { position: absolute; left: 0; right: 0; height: 1px; background: rgba(169, 138, 128, 0.25); }
+.chart__tick {
+    position: absolute;
+    right: calc(100% + 10px);
+    transform: translateY(-50%);
+    font-family: var(--sgfte-font-mono);
+    font-size: 10px;
+    color: var(--sgfte-muted);
+    white-space: nowrap;
+}
+
+.chart__bars {
+    position: absolute;
+    inset: 0 0 22px 50px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+}
+
+.chart__col { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+
+.chart__bar {
+    width: 24px;
+    min-height: 2px;
+    border-radius: 4px 4px 0 0;
+    background: rgba(195, 65, 0, 0.82);
+}
+
+.chart__bar.is-latest { background: #e8631f; }
+
+/* Fuera del área de barras: cae en la franja de 22px reservada abajo */
+.chart__label {
+    position: absolute;
+    bottom: -18px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 10px;
+    color: var(--sgfte-muted);
+    white-space: nowrap;
+}
+
+.chart__col.is-latest .chart__label { color: var(--sgfte-salmon); }
+
+/* La actividad semanal usa barras más anchas y en ámbar */
+.chart--week .chart__bar { width: 34px; background: rgba(254, 185, 107, 0.78); }
+.chart--week .chart__bar.is-latest { background: var(--sgfte-accent); }
+
+/* ---- Dona ----------------------------------------------------------------- */
+.donut-row { display: flex; align-items: center; gap: 22px; margin-top: 22px; }
+
+.donut {
+    position: relative;
+    flex: 0 0 150px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+/* El agujero: un círculo del color del panel encima del degradado cónico */
+.donut::after {
+    content: "";
+    position: absolute;
+    inset: 26px;
+    border-radius: 50%;
+    background: #1b1a19;
+}
+
+.donut__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.donut__total { font-weight: 600; font-size: 22px; color: var(--sgfte-white); }
+.donut__caption { margin-top: 6px; font-size: 11px; color: var(--sgfte-pink-text); }
+
+.donut-legend { flex: 1 1 auto; display: flex; flex-direction: column; gap: 24px; }
+.donut-legend__row { display: flex; align-items: center; gap: 8px; }
+.donut-legend__swatch { flex: 0 0 14px; width: 14px; height: 14px; border-radius: 4px; }
+.donut-legend__name { flex: 1 1 auto; font-size: 14px; color: var(--sgfte-cream); }
+.donut-legend__pct { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-pink-text); }
+
+/* ---- Top cuentas por gasto ------------------------------------------------ */
+.top-list { display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
+.top-list__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); }
+.top-list__name { font-weight: 500; font-size: 14px; color: var(--sgfte-cream); }
+.top-list__amount { font-family: var(--sgfte-font-mono); font-size: 13px; color: var(--sgfte-pink-text); }
+.top-list__track { height: 8px; margin-top: 8px; border-radius: 4px; background: var(--sgfte-line); overflow: hidden; }
+.top-list__fill { height: 100%; border-radius: 4px; }
+
+/* ---- Transferencias P2P ---------------------------------------------------- */
+.p2p { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-4); margin-top: 24px; }
+
+.p2p__amount { display: flex; align-items: baseline; gap: 8px; margin: 14px 0 0; font-weight: 600; font-size: 28px; color: var(--sgfte-cream); }
+.p2p__note { margin: 14px 0 0; font-size: 13px; color: var(--sgfte-muted); }
+
+.p2p__bar { display: flex; height: 18px; margin-top: 18px; border-radius: 9px; overflow: hidden; }
+.p2p__seg { height: 100%; }
+
+.p2p__legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.p2p__item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cfc4be; }
+.p2p__dot { width: 10px; height: 10px; border-radius: 3px; }
+
+.an-empty { margin: var(--sp-4) 0; text-align: center; color: var(--sgfte-muted); font-size: 14px; }
+
+@media (max-width: 1180px) {
+    .an-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .an-grid { grid-template-columns: 1fr; }
+    .p2p { grid-template-columns: 1fr; }
+    .an-head .page-title { padding-right: 0; }
+    .an-head__actions { position: static; margin-top: var(--sp-3); flex-wrap: wrap; }
+}
+
+@media (max-width: 860px) {
+    .an-kpis { grid-template-columns: 1fr; }
+    .an-head .page-title { font-size: 32px; }
+    .an-head .page-subtitle { font-size: 18px; margin-top: 8px; }
+    .period { width: 100%; }
+    .period__item { flex: 1 1 0; width: auto; font-size: 12px; }
+    .btn--export { width: 100%; }
+    .donut-row { flex-wrap: wrap; }
+}
+
+/* ==========================================================================
+   20 · Responsive
    ========================================================================== */
 
 /*

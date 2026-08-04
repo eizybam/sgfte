@@ -21,10 +21,14 @@ class ConcentratorServiceTest {
 
     private static class FakeConcentratorDao extends ConcentratorDao {
         BigDecimal funded;
+        String actor;
         BigDecimal balance = new BigDecimal("1000000.00");
 
         @Override
-        public void fund(BigDecimal amount) { this.funded = amount; }
+        public void fund(BigDecimal amount, String actor) {
+            this.funded = amount;
+            this.actor = actor;
+        }
 
         @Override
         public ConcentratorAccount findSingleton() {
