@@ -23,6 +23,10 @@ public class ConcentratorServlet extends HttpServlet {
 
     private final AuditLogService audit = new AuditLogService();
 
+    /** Leídos por AdminHomeServlet para reabrir el modal si falló. */
+    public static final String FLASH_ERRORS = "fundErrors";
+    public static final String FLASH_AMOUNT = "fundAmount";
+
     private final ConcentratorService service = new ConcentratorService();
 
     @Override
@@ -32,19 +36,27 @@ public class ConcentratorServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         BigDecimal amount = parseAmount(req.getParameter("amount"));
+        String method = req.getParameter("method");
+
+        jakarta.servlet.http.HttpSession session = req.getSession();
         try {
-            // Quién fondea queda en el ledger; antes esta operación no dejaba rastro.
-            Object user = req.getSession().getAttribute("user");
+            Object user = session.getAttribute("user");
             service.fund(amount, user == null ? null : String.valueOf(user));
-            req.setAttribute("success", "Concentradora fondeada correctamente.");
-            audit.record(AuditEvent.CONCENTRATOR_FUNDED, "$" + amount, req);
+            session.setAttribute("success", "Concentradora fondeada correctamente.");
+
+            // El método de fondeo va en la bitácora, no en el ledger: es contexto
+            // operativo, no un hecho financiero. El ledger guarda el importe y el
+            // saldo resultante, que es lo que tiene que cuadrar.
+            audit.record(AuditEvent.CONCENTRATOR_FUNDED,
+                    (method == null || method.isBlank() ? "" : method + " · ") + "$" + amount, req);
         } catch (ValidationException e) {
-            req.setAttribute("errors", e.getErrors());
+            session.setAttribute(FLASH_ERRORS, e.getErrors());
+            session.setAttribute(FLASH_AMOUNT, req.getParameter("amount"));
         }
-        render(req, resp);
+        // Redirect y no forward: fondear mueve dinero, refrescar no debe repetirlo.
+        resp.sendRedirect(req.getContextPath() + "/admin/home");
     }
 
     private void render(HttpServletRequest req, HttpServletResponse resp)

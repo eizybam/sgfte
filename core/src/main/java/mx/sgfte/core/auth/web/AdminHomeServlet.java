@@ -62,10 +62,16 @@ public class AdminHomeServlet extends HttpServlet {
         HttpSession session = req.getSession(false);
         if (session == null) return;
 
-        for (String key : new String[]{DispersionServlet.FLASH_SUCCESS,
-                                       DispersionServlet.FLASH_ERRORS,
-                                       DispersionServlet.FLASH_ACCOUNT,
-                                       DispersionServlet.FLASH_AMOUNT}) {
+        String[] keys = {
+                DispersionServlet.FLASH_SUCCESS,
+                DispersionServlet.FLASH_ERRORS,
+                DispersionServlet.FLASH_ACCOUNT,
+                DispersionServlet.FLASH_AMOUNT,
+                // Del fondeo: si falló, su modal se reabre con lo tecleado.
+                mx.sgfte.core.concentrator.web.ConcentratorServlet.FLASH_ERRORS,
+                mx.sgfte.core.concentrator.web.ConcentratorServlet.FLASH_AMOUNT,
+        };
+        for (String key : keys) {
             Object value = session.getAttribute(key);
             if (value != null) {
                 req.setAttribute(key, value);
