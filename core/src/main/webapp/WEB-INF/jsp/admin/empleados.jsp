@@ -8,10 +8,8 @@
   Misma mecánica que Gestión de Cuentas: filtros y página en la URL, paginador
   de enlaces, tabla canónica.
 
-  Dos columnas del marco no tienen dato detrás y se resuelven aquí, no en la
-  base: el departamento bajo el nombre (se muestra el correo, que es el otro
-  dato identificativo real) y el código tipo "AM84920" de la columna ID (se
-  muestra la clave primaria).
+  El departamento y el código de empleado llegaron con la migración V2; antes
+  esta tabla enseñaba el correo y la clave primaria en su lugar.
 --%>
 <c:set var="pageTitle" value="Empleados"/>
 <c:set var="pageSubtitle" value="Gestion de tarjetahabientes de la empresa"/>
@@ -27,6 +25,7 @@
 <c:set var="baseUrl" value="${ctx}/admin/empleados"/>
 <c:set var="qParam"      value="${empty q ? '' : '&q='.concat(q)}"/>
 <c:set var="statusParam" value="${empty status ? '' : '&status='.concat(status)}"/>
+<c:set var="deptParam"   value="${empty dept ? '' : '&dept='.concat(dept)}"/>
 
 <div class="toolbar">
     <form class="search" method="get" action="${baseUrl}">
@@ -34,29 +33,31 @@
         <input class="input" type="search" name="q" value="${fn:escapeXml(q)}"
                placeholder="Buscar por nombre o ID de empleado" aria-label="Buscar empleados">
         <c:if test="${not empty status}"><input type="hidden" name="status" value="${status}"></c:if>
+        <c:if test="${not empty dept}"><input type="hidden" name="dept" value="${dept}"></c:if>
     </form>
 
     <nav class="segmented" aria-label="Estado">
         <a class="segmented__item ${empty status ? 'is-active' : ''}"
-           href="${baseUrl}?page=1${qParam}">Todos</a>
+           href="${baseUrl}?page=1${qParam}${deptParam}">Todos</a>
         <a class="segmented__item ${status == 'ACTIVE' ? 'is-active' : ''}"
-           href="${baseUrl}?page=1&status=ACTIVE${qParam}">Activos</a>
+           href="${baseUrl}?page=1&status=ACTIVE${qParam}${deptParam}">Activos</a>
         <a class="segmented__item ${status == 'INACTIVE' ? 'is-active' : ''}"
-           href="${baseUrl}?page=1&status=INACTIVE${qParam}">Inactivos</a>
+           href="${baseUrl}?page=1&status=INACTIVE${qParam}${deptParam}">Inactivos</a>
     </nav>
 
-    <%--
-      El filtro por departamento del marco no tiene sobre qué filtrar: no existe
-      la columna. Se deja a la vista, inerte y explicado, en lugar de fingir que
-      funciona o de quitarlo del diseño.
-    --%>
-    <span class="pill is-inert" title="Requiere un campo de departamento en el catálogo de empleados">
+    <%-- Las opciones salen de los departamentos en uso, así que la lista crece
+         sola cuando existan más de uno. --%>
+    <label class="pill">
         <span>Departamento ·</span>
-        <select class="pill__select" disabled aria-label="Filtrar por departamento (no disponible)">
-            <option>TODOS</option>
+        <select class="pill__select" onchange="location.href=this.value;" aria-label="Filtrar por departamento">
+            <option value="${baseUrl}?page=1${qParam}${statusParam}" ${empty dept ? 'selected' : ''}>TODOS</option>
+            <c:forEach var="d" items="${departments}">
+                <option value="${baseUrl}?page=1&dept=${d}${qParam}${statusParam}"
+                        ${dept == d ? 'selected' : ''}>${fn:escapeXml(d)}</option>
+            </c:forEach>
         </select>
         <svg class="pill__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
-    </span>
+    </label>
 
     <span class="toolbar__count">
         <fmt:formatNumber value="${total}" type="number" groupingUsed="true"/>
@@ -81,9 +82,9 @@
             <tr>
                 <td>
                     <span class="staff-name">${fn:escapeXml(e.fullName)}</span>
-                    <span class="staff-sub">${fn:escapeXml(e.email)}</span>
+                    <span class="staff-sub">${fn:escapeXml(e.department)}</span>
                 </td>
-                <td class="mono">${e.id}</td>
+                <td class="mono">${fn:escapeXml(e.employeeCode)}</td>
                 <%-- El marco rellena con cero a dos dígitos: 02, 01, 07 --%>
                 <td class="num"><fmt:formatNumber value="${e.accountCount}" minIntegerDigits="2"/></td>
                 <td class="num">${e.cardCount}</td>
@@ -109,7 +110,7 @@
 <c:if test="${pageCount > 1}">
     <nav class="pager" aria-label="Paginación">
         <a class="pager__item ${page == 1 ? 'is-disabled' : ''}"
-           href="${baseUrl}?page=${page - 1}${qParam}${statusParam}" aria-label="Anterior">
+           href="${baseUrl}?page=${page - 1}${qParam}${statusParam}${deptParam}" aria-label="Anterior">
             <svg aria-hidden="true"><use href="#i-prev"/></svg>
         </a>
 
@@ -118,13 +119,13 @@
 
         <c:forEach var="p" begin="${from}" end="${to}">
             <a class="pager__item ${p == page ? 'is-current' : ''}"
-               href="${baseUrl}?page=${p}${qParam}${statusParam}">${p}</a>
+               href="${baseUrl}?page=${p}${qParam}${statusParam}${deptParam}">${p}</a>
         </c:forEach>
 
         <c:if test="${to < pageCount}"><span class="pager__item pager__gap">…</span></c:if>
 
         <a class="pager__item ${page == pageCount ? 'is-disabled' : ''}"
-           href="${baseUrl}?page=${page + 1}${qParam}${statusParam}" aria-label="Siguiente">
+           href="${baseUrl}?page=${page + 1}${qParam}${statusParam}${deptParam}" aria-label="Siguiente">
             <svg aria-hidden="true"><use href="#i-next"/></svg>
         </a>
     </nav>

@@ -44,20 +44,23 @@ public class CardholderAdminServlet extends HttpServlet {
 
         String search = trimToNull(req.getParameter("q"));
         String status = normalizeStatus(req.getParameter("status"));
+        String department = trimToNull(req.getParameter("dept"));
 
-        int total = cardholderDao.countForAdmin(search, status);
+        int total = cardholderDao.countForAdmin(search, status, department);
         int pageCount = Math.max(1, (int) Math.ceil(total / (double) PAGE_SIZE));
         int page = clamp(parsePage(req.getParameter("page")), pageCount);
 
-        List<CardholderAdminRow> rows =
-                cardholderDao.findForAdmin(search, status, (page - 1) * PAGE_SIZE, PAGE_SIZE);
+        List<CardholderAdminRow> rows = cardholderDao.findForAdmin(
+                search, status, department, (page - 1) * PAGE_SIZE, PAGE_SIZE);
 
         req.setAttribute("rows", rows);
         req.setAttribute("total", total);
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
+        req.setAttribute("departments", cardholderDao.distinctDepartments());
         req.setAttribute("q", search);
         req.setAttribute("status", status == null ? "" : status);
+        req.setAttribute("dept", department == null ? "" : department);
 
         consumeFlash(req);
 

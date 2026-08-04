@@ -5,27 +5,26 @@ import java.math.BigDecimal;
 /**
  * One line of the "Gestor de empleados" table (Figma 287:104).
  *
- * The frame also shows a department under the name and a code like "AM84920" in
- * the ID column. Neither exists: `cardholder` holds only names, email, phone and
- * status. The email stands in for the second line — it is the one other
- * identifying detail the table can show — and the ID column carries the real
- * primary key. Both are noted in the view.
+ * employeeCode and department landed with V2; before that the view had to fall
+ * back to the primary key and the email, which is no longer the case.
  */
 public class CardholderAdminRow {
 
     private final long id;
     private final String fullName;
-    private final String email;
+    private final String employeeCode;
+    private final String department;
     private final int accountCount;
     private final int cardCount;
     private final BigDecimal totalFunds;
     private final String status;
 
-    public CardholderAdminRow(long id, String fullName, String email, int accountCount,
-                              int cardCount, BigDecimal totalFunds, String status) {
+    public CardholderAdminRow(long id, String fullName, String employeeCode, String department,
+                              int accountCount, int cardCount, BigDecimal totalFunds, String status) {
         this.id = id;
         this.fullName = fullName;
-        this.email = email;
+        this.employeeCode = employeeCode;
+        this.department = department;
         this.accountCount = accountCount;
         this.cardCount = cardCount;
         this.totalFunds = totalFunds;
@@ -34,7 +33,8 @@ public class CardholderAdminRow {
 
     public long getId() { return id; }
     public String getFullName() { return fullName; }
-    public String getEmail() { return email; }
+    public String getEmployeeCode() { return employeeCode; }
+    public String getDepartment() { return department; }
     public int getAccountCount() { return accountCount; }
     public int getCardCount() { return cardCount; }
     public BigDecimal getTotalFunds() { return totalFunds; }
