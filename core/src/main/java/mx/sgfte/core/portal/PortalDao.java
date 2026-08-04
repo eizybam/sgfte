@@ -138,4 +138,71 @@ public class PortalDao {
                 rs.getBigDecimal("balance"),
                 rs.getInt("active_cards"));
     }
+
+    /**
+     * Recent movements across EVERY account this cardholder owns, newest first.
+     *
+     * Joined through account so ownership is part of the query and not a check
+     * the caller has to remember: there is no way to call this and get somebody
+     * else's movements.
+     *
+     * Ordered by created_at AND id — movements written in one transaction share
+     * a timestamp, and without the tie-break the rows shuffle between loads.
+     */
+    public List<PortalActivity> findRecentActivity(long cardholderId, int limit) {
+        String sql = "SELECT m.movement_type, m.description, cat.name AS purpose, "
+                   + "       m.amount, m.created_at "
+                   + "  FROM account_movement m "
+                   + "  JOIN account  a   ON a.id = m.account_id "
+                   + "  JOIN category cat ON cat.id = a.category_id "
+                   + " WHERE a.cardholder_id = ? "
+                   + " ORDER BY m.created_at DESC, m.id DESC "
+                   + " FETCH FIRST ? ROWS ONLY";
+        List<PortalActivity> rows = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Timestamp at = rs.getTimestamp("created_at");
+                    rows.add(new PortalActivity(
+                            rs.getString("movement_type"),
+                            rs.getString("description"),
+                            rs.getString("purpose"),
+                            rs.getBigDecimal("amount"),
+                            at == null ? null : at.toLocalDateTime()));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading the cardholder's activity", e);
+        }
+    }
+
+    /**
+     * Net movement across this cardholder's accounts since the 1st of the month.
+     *
+     * The balance at the start of the month is not stored anywhere, so the card
+     * works backwards: today's total minus what moved this month. Inflows count
+     * positive and outflows negative, which is what makes the subtraction give
+     * the opening figure.
+     */
+    public java.math.BigDecimal netThisMonth(long cardholderId) {
+        String sql = "SELECT NVL(SUM(CASE WHEN m.movement_type IN ('DEPOSIT', 'TRANSFER_IN') "
+                   + "                    THEN m.amount ELSE -m.amount END), 0) "
+                   + "  FROM account_movement m "
+                   + "  JOIN account a ON a.id = m.account_id "
+                   + " WHERE a.cardholder_id = ? "
+                   + "   AND m.created_at >= TRUNC(SYSDATE, 'MM')";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getBigDecimal(1) : java.math.BigDecimal.ZERO;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error reading the month's movement", e);
+        }
+    }
 }

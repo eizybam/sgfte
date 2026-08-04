@@ -35,4 +35,7 @@ public class PortalAccount {
     public String getPurpose() { return purpose; }
     public BigDecimal getBalance() { return balance; }
     public int getActiveCards() { return activeCards; }
+
+    /** Sprite id for the card's icon, chosen from the purpose. */
+    public String getIcon() { return PortalIcons.forPurpose(purpose); }
 }

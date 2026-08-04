@@ -66,9 +66,22 @@ public class LoginServlet extends HttpServlet {
             old.invalidate();
         }
         HttpSession session = req.getSession(true);
-        session.setAttribute("user", new SessionUser(
+        SessionUser principal = new SessionUser(
                 user.getId(), user.getFullName(), user.getEmail(),
-                user.getRole(), user.getCardholderId()));
+                user.getRole(), user.getCardholderId());
+
+        // El código de empleado lo enseña la cabecera del portal en todas sus
+        // pantallas; se resuelve aquí para no consultarlo en cada petición.
+        if (user.getCardholderId() != null) {
+            try {
+                new mx.sgfte.core.users.CardholderDao().findDetail(user.getCardholderId())
+                        .ifPresent(d -> principal.setEmployeeCode(d.getEmployeeCode()));
+            } catch (RuntimeException e) {
+                // Entrar no puede fallar por no poder pintar un código.
+                System.err.println("[LOGIN] no se pudo leer el código de empleado: " + e.getMessage());
+            }
+        }
+        session.setAttribute("user", principal);
         session.setMaxInactiveInterval(30 * 60); // 30 minutes
 
         audit.record(AuditEvent.LOGIN_OK, "Rol: " + user.getRole(),

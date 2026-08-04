@@ -2488,7 +2488,299 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 
 /* ==========================================================================
-   23 · Responsive
+   23 · Portal del tarjetahabiente · marco 64:4
+   ========================================================================== */
+
+.portal-body { background: var(--sgfte-bg); }
+
+.pshell { display: flex; flex-direction: column; min-height: var(--app-h, 100vh); }
+
+/* La cabecera mide lo mismo que en el admin. Allí la altura se la da la fila
+   de la rejilla; aquí no hay rejilla, así que se pide explícitamente o el
+   contenido subiría 37px respecto al marco. */
+.pshell .app-header { flex: 0 0 auto; height: var(--sgfte-header-h); }
+
+/* 108 = del borde inferior de la cabecera (115) al primer bloque (223). */
+.pmain { flex: 1 1 auto; padding: 108px 32px 40px 24px; }
+
+/* Pie: regla a todo lo ancho y el aviso legal, como en el marco. */
+.pfoot {
+    margin-top: auto;
+    padding: 18px 24px 22px;
+    border-top: 1px solid var(--sgfte-rule);
+}
+.pfoot p { margin: 0; font-size: 10px; line-height: 24px; color: #fff; }
+
+/*
+  Tres columnas: 235 + 765 + 307. Los huecos del marco no son iguales (34 a la
+  izquierda del centro, 43 a la derecha), así que van como margen del centro en
+  vez de como `gap`, que los igualaría.
+*/
+.pgrid { display: flex; align-items: flex-start; }
+
+/*
+  min-width:0 en las tres columnas.
+
+  Un elemento flex tiene min-width:auto, que vale su tamaño min-content y GANA
+  al flex-basis: como los rótulos de la actividad van en nowrap, su min-content
+  empujaba la columna de 307 hasta 371 y se salía de los 1440. El basis no es
+  un máximo si no se desactiva ese mínimo automático.
+*/
+.pgrid > * { min-width: 0; }
+
+.prail { flex: 0 0 235px; }
+.pcenter { flex: 0 0 765px; margin: 0 43px 0 34px; }
+.pactivity { flex: 0 0 307px; }
+
+/* ---- Balance total ------------------------------------------------------- */
+.pbalance {
+    padding: 19px;
+    background: #211e1d;
+    border: 1px solid #463e3b;
+    border-radius: 12px;
+}
+
+.pbalance__label {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--sgfte-pink-text);
+}
+
+.pbalance__figure {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 16px 0 0;
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 1;
+    color: #fff;
+}
+
+.pbalance__currency { font-weight: 400; font-size: 14px; color: #ffb3a7; }
+.pbalance__delta { margin: 30px 0 0; font-size: 14px; color: var(--sgfte-accent); }
+/* Una bajada no puede ir del mismo color que una subida. */
+.pbalance__delta--down { color: var(--sgfte-error); }
+
+/* ---- Accesos rápidos ---------------------------------------------------- */
+.pquick__title {
+    margin: 62px 0 0 18px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--sgfte-pink-text);
+}
+
+.pquick { display: flex; flex-direction: column; gap: 22px; margin: 28px 0 0 18px; }
+
+.pquick__item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 20px;
+    line-height: 28px;
+    color: #fff;
+    text-decoration: none;
+}
+
+.pquick__item svg { display: block; flex: 0 0 auto; color: var(--sgfte-pink-text); }
+.pquick__item:hover { color: var(--sgfte-accent); }
+.pquick__item:hover svg { color: var(--sgfte-accent); }
+
+/* ---- Saludo -------------------------------------------------------------- */
+.pwelcome {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1.1;
+    color: var(--sgfte-cream);
+}
+
+.plead { margin: 16px 0 0; font-weight: 500; font-size: 20px; color: var(--sgfte-pink-text); }
+
+/* ---- Panel de cuentas ---------------------------------------------------- */
+/*
+  El único bloque de la pantalla que se desplaza.
+
+  Es una columna de tres filas donde sólo la de en medio crece y desborda, así
+  que el título y los botones se quedan donde están y las tarjetas pasan por
+  detrás. La altura es fija (535 en el marco) para que el panel no se estire con
+  el número de cuentas: si se estirara, no habría nada que desplazar.
+*/
+.paccounts {
+    display: flex;
+    flex-direction: column;
+    height: 535px;
+    margin-top: 30px;
+    background: #131010;
+    border: 1px solid rgba(254, 185, 107, 0.9);
+    border-radius: 12px;
+}
+
+.paccounts__head { flex: 0 0 auto; padding: 30px 42px 0; }
+
+.paccounts__head h2 {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--sgfte-cream);
+}
+
+/* min-height:0 es lo que permite encoger a un hijo flex por debajo de su
+   contenido; sin él la rejilla empuja el panel y el scroll nunca aparece. */
+.paccounts__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 104px 8px;
+}
+
+/* Dos columnas de 244 con 68 de separación, como el marco. */
+.paccounts__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 244px);
+    gap: 40px 68px;
+}
+
+.pcard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 224px;
+    padding: 28px 0 0;
+    background: #211e1d;
+    border: 1px solid #463e3b;
+    border-radius: 20px;
+    text-decoration: none;
+}
+
+.pcard:hover { border-color: rgba(254, 185, 107, 0.9); }
+.pcard__icon { display: block; color: var(--sgfte-pink-text); }
+
+.pcard__purpose {
+    margin-top: 27px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--sgfte-pink-text);
+}
+
+.pcard__amount {
+    margin-top: 8px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 24px;
+    line-height: 24px;
+    color: #fff;
+}
+
+.pcard__currency { margin-top: 4px; font-size: 14px; color: #ffb3a7; }
+
+.paccounts__empty {
+    padding: 60px 0;
+    text-align: center;
+    font-size: 15px;
+    color: var(--sgfte-muted);
+}
+
+/* El pie repite el fondo del panel para tapar lo que pasa por detrás. */
+.paccounts__foot {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    gap: 41px;
+    padding: 20px 0 24px;
+    background: #131010;
+    border-top: 1px solid var(--sgfte-rule);
+    border-radius: 0 0 12px 12px;
+}
+
+/*
+  Botón de dos renglones con el icono al lado (2372:568).
+
+  nowrap para que la única partición sea la del <br> que trae el texto: sin él
+  "Transferir a compañero" se rompía además por el espacio y salían tres
+  renglones en un botón dibujado para dos.
+*/
+.btn--stacked { align-items: center; line-height: 1.25; white-space: nowrap; }
+
+/* ---- Actividad reciente -------------------------------------------------- */
+.pactivity {
+    padding: 22px 26px 24px;
+    background: #211e1d;
+    border: 1px solid #463e3b;
+    border-radius: 20px;
+}
+
+.pactivity__head { display: flex; align-items: center; justify-content: space-between; }
+
+.pactivity__title {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--sgfte-pink-text);
+}
+
+.pactivity__filter { display: block; color: var(--sgfte-pink-text); }
+.pactivity__list { list-style: none; margin: 30px 0 0; padding: 0; }
+
+.pact { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.pact + .pact { margin-top: 26px; }
+
+/* Cuadrito con borde ámbar del marco, 25x29 */
+.pact__icon {
+    display: flex;
+    flex: 0 0 25px;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 29px;
+    background: #131010;
+    border: 1px solid rgba(254, 185, 107, 0.9);
+    border-radius: 4px;
+    color: var(--sgfte-pink-text);
+}
+
+.pact__text { flex: 1 1 auto; min-width: 0; }
+
+/* El nombre del comercio puede ser largo; el marco lo corta con puntos
+   suspensivos ("Taquería los chaparrit...") en vez de partirlo en dos. */
+.pact__label {
+    display: block;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--sgfte-cream);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pact__label--in { color: rgba(254, 185, 107, 0.9); }
+
+.pact__when {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(255, 179, 167, 0.75);
+    /* "23 mayo, 10:30am" cabe justo; sin esto parte en dos y desnivela la fila. */
+    white-space: nowrap;
+}
+
+.pact__amount { flex: 0 0 auto; font-size: 14px; color: #fff; white-space: nowrap; }
+.pact__amount--in { color: rgba(254, 185, 107, 0.9); }
+
+
+/* ==========================================================================
+   24 · Responsive
    ========================================================================== */
 
 /*

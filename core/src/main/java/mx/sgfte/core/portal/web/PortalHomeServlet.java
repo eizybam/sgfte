@@ -29,8 +29,12 @@ public class PortalHomeServlet extends HttpServlet {
         long cardholderId = PortalSupport.cardholderId(req);
 
         List<PortalAccount> accounts = portalService.myAccounts(cardholderId);
+        java.math.BigDecimal total = portalService.totalBalance(accounts);
+
         req.setAttribute("accounts", accounts);
-        req.setAttribute("total", portalService.totalBalance(accounts));
+        req.setAttribute("total", total);
+        req.setAttribute("activity", portalService.recentActivity(cardholderId));
+        req.setAttribute("monthChange", portalService.monthChangePercent(cardholderId, total));
 
         req.getRequestDispatcher("/WEB-INF/jsp/app/home.jsp").forward(req, resp);
     }

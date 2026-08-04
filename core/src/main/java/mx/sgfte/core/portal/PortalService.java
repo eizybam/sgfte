@@ -105,4 +105,25 @@ public class PortalService {
             throw new AccountNotOwnedException(cardholderId, accountId);
         }
     }
+
+    /** The "ACTIVIDAD RECIENTE" panel: eight rows fit the frame. */
+    public List<PortalActivity> recentActivity(long cardholderId) {
+        return portalDao.findRecentActivity(cardholderId, 8);
+    }
+
+    /**
+     * "+2.4% vs mes anterior": how the total compares with the 1st of the month.
+     *
+     * Returns null —rendered as a dash— when there is nothing to compare
+     * against. With an opening balance of zero every change is infinite, and a
+     * card that reports "+∞%" is worse than one that admits it cannot say.
+     */
+    public java.math.BigDecimal monthChangePercent(long cardholderId, java.math.BigDecimal total) {
+        if (total == null) return null;
+        java.math.BigDecimal opening = total.subtract(portalDao.netThisMonth(cardholderId));
+        if (opening.signum() <= 0) return null;
+        return total.subtract(opening)
+                .multiply(java.math.BigDecimal.valueOf(100))
+                .divide(opening, 1, java.math.RoundingMode.HALF_UP);
+    }
 }

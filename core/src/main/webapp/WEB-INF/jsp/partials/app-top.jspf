@@ -1,15 +1,22 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%--
-  Cabecera compartida del área del tarjetahabiente.
+  Cascarón del área del tarjetahabiente · marco Figma "Vista principal de
+  Tarjetahabiente" (64:4).
 
-  Uso: la página fija pageTitle con c:set, incluye este fragmento y cierra con
-  app-bottom.jspf. Mira app/home.jsp como ejemplo de referencia.
+  La cabecera es la misma pieza que la del admin —mismo alto, mismos 85px entre
+  enlaces, mismo bloque de usuario y misma regla inferior—, así que reutiliza
+  .app-header y sólo cambia a dónde apuntan los enlaces. Lo que no tiene es
+  panel lateral: aquí el contenido ocupa las tres columnas del marco.
+
+  Uso: la página fija pageTitle y activeNav con c:set, incluye este fragmento y
+  cierra con app-bottom.jspf.
 
   NO escribas directivas de include dentro de un comentario JSP aquí: Jasper
   las ejecuta igual (parseFileDirectives no respeta los comentarios) y si el
   ejemplo apunta a este archivo, se incluye a sí mismo → StackOverflowError.
 --%>
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,38 +25,61 @@
     <title>${pageTitle} · SGFTE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
-    <%-- Ver AssetsVersionListener: ?v= invalida la caché en cada despliegue. --%>
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/assets/css/sgfte.css?v=${applicationScope.assetsVersion}">
+    <script>
+        /* Mismo escalado que el área de administración: el lienzo del prototipo
+           es fijo de 1440x1024 y se encoge entero con `zoom` en vez de reflujar.
+           Ver el comentario largo en admin-top.jspf. */
+        (function () {
+            var DESIGN_WIDTH = 1440, MIN_ZOOM = 0.6, root = document.documentElement;
+
+            function fit() {
+                var zoom = Math.max(MIN_ZOOM, Math.min(1, window.innerWidth / DESIGN_WIDTH));
+                root.style.zoom = zoom;
+                root.style.setProperty("--app-h", (window.innerHeight / zoom) + "px");
+            }
+
+            fit();
+            window.addEventListener("resize", fit);
+        })();
+    </script>
 </head>
-<body>
+<body class="portal-body">
 <%@ include file="/WEB-INF/jsp/partials/icons.jspf" %>
 
-<div class="portal">
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
-    <div class="portal-nav">
-        <div class="portal-nav__brand">
-            <span class="portal-nav__mark">SGFTE</span>
-            <span class="portal-nav__who">${sessionScope.user.fullName}</span>
-        </div>
-        <nav class="portal-nav__links">
-            <a href="${pageContext.request.contextPath}/app/home">Mis cuentas</a>
-            <a href="${pageContext.request.contextPath}/app/transferencia">Transferir</a>
-            <form method="post" action="${pageContext.request.contextPath}/logout">
-                <button type="submit" class="btn btn--secondary" style="padding:6px 12px; font-size:13px;">
-                    Cerrar sesión
+<div class="pshell">
+
+    <header class="app-header">
+        <nav class="app-header__nav">
+            <a class="app-header__link ${activeNav == 'home' ? 'is-active' : ''}"
+               href="${ctx}/app/home">Dashboard</a>
+            <a class="app-header__link ${activeNav == 'movements' ? 'is-active' : ''}"
+               href="${ctx}/app/movimientos">Movimientos</a>
+            <a class="app-header__link ${activeNav == 'notifications' ? 'is-active' : ''}"
+               href="${ctx}/app/notificaciones">Notificaciones</a>
+        </nav>
+
+        <div class="app-header__user">
+            <a href="${ctx}/app/home" title="Ajustes">
+                <img class="app-header__gear" src="${ctx}/assets/img/icons/settings.png" alt="Ajustes">
+            </a>
+            <%--
+              El bloque de usuario cierra sesión, igual que en el admin. El ID
+              que enseña el marco ("AD38NDW2") es el código de empleado, no el
+              id de la fila: es el que el empleado reconoce como suyo.
+            --%>
+            <form method="post" action="${ctx}/logout">
+                <button type="submit" class="app-header__who" title="Cerrar sesión">
+                    <span class="app-header__name">${fn:escapeXml(sessionScope.user.fullName)}</span>
+                    <span class="app-header__id">ID: ${fn:escapeXml(sessionScope.user.employeeCode)}</span>
                 </button>
             </form>
-        </nav>
-    </div>
-
-    <c:if test="${not empty success}">
-        <div class="alert alert--ok">${success}</div>
-    </c:if>
-    <c:if test="${not empty errors}">
-        <div class="alert alert--error">
-            <ul><c:forEach var="e" items="${errors}"><li>${e}</li></c:forEach></ul>
         </div>
-    </c:if>
+    </header>
+
+    <main class="pmain">

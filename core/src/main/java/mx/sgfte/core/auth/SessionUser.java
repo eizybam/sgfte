@@ -13,6 +13,13 @@ public class SessionUser implements Serializable {
     private final String email;      // identifica de forma única a quien actúa
     private final String role;
     private final Long cardholderId;     // cardholder.id — NULL for admins
+    /*
+      El código que el empleado reconoce como suyo ("DJE0077"), no el id de la
+      fila. Lo enseña la cabecera del portal en cada pantalla, así que se
+      resuelve una vez al entrar en vez de una consulta por petición. NULL para
+      administradores, que no son tarjetahabientes.
+     */
+    private String employeeCode;
 
     public SessionUser(long id, String fullName, String email, String role, Long cardholderId) {
         this.id = id;
@@ -35,6 +42,9 @@ public class SessionUser implements Serializable {
      * from reading someone else's accounts by editing the URL.
      */
     public Long getCardholderId() { return cardholderId; }
+
+    public String getEmployeeCode() { return employeeCode; }
+    public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
 
     /**
      * True when this session belongs to an administrator.
