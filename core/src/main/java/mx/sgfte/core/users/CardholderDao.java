@@ -85,6 +85,44 @@ public class CardholderDao {
         }
     }
 
+    /**
+     * Header and profile summary for one cardholder, in a single read.
+     *
+     * The totals are scalar subqueries for the same reason as the listing:
+     * joining through account to card multiplies the rows and would inflate the
+     * balance.
+     */
+    public java.util.Optional<CardholderDetail> findDetail(long cardholderId) {
+        String sql = "SELECT ch.id, ch.employee_code, ch.first_name, ch.last_name, "
+                   + "       ch.email, ch.department, ch.status, "
+                   + "  (SELECT NVL(SUM(a.balance), 0) FROM account a "
+                   + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS total_balance, "
+                   + "  (SELECT COUNT(*) FROM account a "
+                   + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS active_accounts, "
+                   + "  (SELECT COUNT(*) FROM card k JOIN account ka ON ka.id = k.account_id "
+                   + "    WHERE ka.cardholder_id = ch.id AND k.status = 'ACTIVE') AS card_count "
+                   + "FROM cardholder ch WHERE ch.id = ?";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return java.util.Optional.empty();
+                return java.util.Optional.of(new CardholderDetail(
+                        rs.getLong("id"),
+                        rs.getString("employee_code"),
+                        rs.getString("first_name") + " " + rs.getString("last_name"),
+                        rs.getString("email"),
+                        rs.getString("department"),
+                        rs.getString("status"),
+                        rs.getBigDecimal("total_balance"),
+                        rs.getInt("active_accounts"),
+                        rs.getInt("card_count")));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading cardholder detail", e);
+        }
+    }
+
     /** Shared WHERE so the page query and the count can never drift apart. */
     private void appendFilters(StringBuilder sql, List<Object> params,
                                String search, String status, String department) {

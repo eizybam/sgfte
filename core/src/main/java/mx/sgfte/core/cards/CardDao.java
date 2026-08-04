@@ -100,6 +100,38 @@ public class CardDao {
         }
     }
 
+    /**
+     * Every card belonging to one cardholder, across all of their accounts.
+     *
+     * The frame's "Tarjetas vinculadas" panel is about the person, not about a
+     * single account, so the join goes through account rather than filtering by
+     * account_id.
+     */
+    public List<Card> findByCardholder(long cardholderId) {
+        String sql = "SELECT k.id, k.account_id, k.card_type, k.masked_pan, k.status "
+                   + "FROM card k JOIN account a ON a.id = k.account_id "
+                   + "WHERE a.cardholder_id = ? ORDER BY k.status, k.id";
+        List<Card> cards = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Card card = new Card();
+                    card.setId(rs.getLong("id"));
+                    card.setAccountId(rs.getLong("account_id"));
+                    card.setCardType(rs.getString("card_type"));
+                    card.setMaskedPan(rs.getString("masked_pan"));
+                    card.setStatus(rs.getString("status"));
+                    cards.add(card);
+                }
+            }
+            return cards;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading cards of cardholder", e);
+        }
+    }
+
     /** True if the account exists and is ACTIVE (so we don't issue cards to dead accounts). */
     public boolean isAccountActive(long accountId) {
         String sql = "SELECT 1 FROM account WHERE id = ? AND status = 'ACTIVE'";

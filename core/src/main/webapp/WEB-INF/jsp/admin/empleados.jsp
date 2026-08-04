@@ -81,7 +81,7 @@
         <c:forEach var="e" items="${rows}">
             <tr>
                 <td>
-                    <span class="staff-name">${fn:escapeXml(e.fullName)}</span>
+                    <a class="staff-name" href="${ctx}/admin/empleado?id=${e.id}">${fn:escapeXml(e.fullName)}</a>
                     <span class="staff-sub">${fn:escapeXml(e.email)}</span>
                 </td>
                 <td class="mono">${fn:escapeXml(e.employeeCode)}</td>

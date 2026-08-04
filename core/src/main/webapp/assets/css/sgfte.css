@@ -1554,6 +1554,10 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 
 .balance__actions .btn { width: 190px; }
 
+/* El detalle de tarjetahabiente usa botones de 160x48 y 37 de separación */
+.balance__actions--narrow { top: 37px; right: 25px; gap: 37px; }
+.balance__actions--narrow .btn { width: 160px; height: 48px; padding: 0; font-weight: 700; font-size: 15px; }
+
 /* ---- Tarjetas vinculadas ------------------------------------------------- */
 .linked { padding: 23px 23px 24px; }
 .linked__list { display: flex; flex-direction: column; gap: 14px; margin: 22px 0 0; }
@@ -1673,6 +1677,8 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 
 .state-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .state-badge--done { background: rgba(108, 192, 112, 0.15); color: var(--sgfte-ok); }
+/* Estado apagado: gris, para lo inactivo o dado de baja */
+.state-badge--off  { background: rgba(169, 138, 128, 0.14); color: var(--sgfte-mono-muted); }
 
 .moves__empty { padding: var(--sp-5) 0; text-align: center; color: var(--sgfte-muted); font-size: 14px; }
 

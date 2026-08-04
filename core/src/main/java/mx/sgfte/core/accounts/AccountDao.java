@@ -35,6 +35,7 @@ public class AccountDao {
                 + "       ch.first_name || ' ' || ch.last_name AS holder, "
                 + "       cat.name AS purpose, "
                 + "       " + mx.sgfte.core.categories.CategoryDao.PURPOSE_COLOR_SQL + " AS purpose_color, "
+                + "       a.balance, "
                 + "       (SELECT COUNT(*) FROM card c "
                 + "         WHERE c.account_id = a.id AND c.status = 'ACTIVE') AS active_cards "
                 + "FROM account a "
@@ -60,6 +61,7 @@ public class AccountDao {
                             rs.getString("purpose"),
                             rs.getInt("purpose_color"),
                             rs.getInt("active_cards"),
+                            rs.getBigDecimal("balance"),
                             rs.getString("status")));
                 }
             }
@@ -119,6 +121,43 @@ public class AccountDao {
     private void bind(PreparedStatement ps, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             ps.setObject(i + 1, params.get(i));
+        }
+    }
+
+    /**
+     * Every account of one cardholder, for the "Detalle de Tarjetahabiente"
+     * panel. Inactive ones are included: the frame lists them with their state
+     * rather than hiding them, which is what makes the panel an audit of the
+     * person rather than just a list of what still works.
+     */
+    public List<AccountRow> findByCardholder(long cardholderId) {
+        String sql = "SELECT a.id, a.account_number, a.status, a.balance, "
+                   + "       ch.first_name || ' ' || ch.last_name AS holder, "
+                   + "       cat.name AS purpose, "
+                   + "       " + mx.sgfte.core.categories.CategoryDao.PURPOSE_COLOR_SQL + " AS purpose_color, "
+                   + "       (SELECT COUNT(*) FROM card c "
+                   + "         WHERE c.account_id = a.id AND c.status = 'ACTIVE') AS active_cards "
+                   + "FROM account a "
+                   + "JOIN cardholder ch ON ch.id = a.cardholder_id "
+                   + "JOIN category  cat ON cat.id = a.category_id "
+                   + "WHERE a.cardholder_id = ? "
+                   + "ORDER BY a.status, cat.name";
+        List<AccountRow> rows = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(new AccountRow(
+                            rs.getLong("id"), rs.getString("account_number"),
+                            rs.getString("holder"), rs.getString("purpose"),
+                            rs.getInt("purpose_color"), rs.getInt("active_cards"),
+                            rs.getBigDecimal("balance"), rs.getString("status")));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading accounts of cardholder", e);
         }
     }
 
