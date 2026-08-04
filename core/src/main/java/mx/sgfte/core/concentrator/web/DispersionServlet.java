@@ -79,14 +79,14 @@ public class DispersionServlet extends HttpServlet {
     }
 
     /**
-     * Where to land after dispersing. The account detail screen opens the same
-     * modal, and bouncing back to the dashboard from there would lose the
-     * admin's place.
+     * Where to land after dispersing. Three screens open this same modal, and
+     * bouncing them all back to the dashboard would lose the admin's place.
      *
-     * Only an account id is accepted, never a URL, so this cannot be turned into
-     * an open redirect.
+     * Never a URL: only an account id or the literal "concentradora", so the
+     * parameter cannot be turned into an open redirect.
      */
     private String backTo(HttpServletRequest req) {
+        if ("concentradora".equals(req.getParameter("returnTo"))) return "/admin/concentradora";
         Long detailId = parseId(req.getParameter("returnToAccount"));
         return detailId == null ? "/admin/home" : "/admin/cuenta?id=" + detailId;
     }

@@ -144,4 +144,94 @@ public class ConcentratorDao {
             throw new RuntimeException("Error reading the Concentrator history", e);
         }
     }
+
+    /**
+     * The last movements of the ledger, newest first.
+     *
+     * Ordered by created_at AND id: two movements inside the same transaction
+     * share a timestamp to the millisecond, and without the tie-break the two
+     * rows could swap places between one page load and the next.
+     */
+    public java.util.List<ConcentratorMovement> findRecent(int limit) {
+        return query("SELECT id, movement_type, amount, balance_after, actor, created_at "
+                   + "FROM concentrator_movement "
+                   + "ORDER BY created_at DESC, id DESC FETCH FIRST ? ROWS ONLY",
+                     ps -> ps.setInt(1, limit));
+    }
+
+    /** Same, restricted to one movement_type — the reintegrations panel. */
+    public java.util.List<ConcentratorMovement> findRecentByType(String type, int limit) {
+        return query("SELECT id, movement_type, amount, balance_after, actor, created_at "
+                   + "FROM concentrator_movement WHERE movement_type = ? "
+                   + "ORDER BY created_at DESC, id DESC FETCH FIRST ? ROWS ONLY",
+                     ps -> { ps.setString(1, type); ps.setInt(2, limit); });
+    }
+
+    /**
+     * Month-to-date figures for the summary panel.
+     *
+     * TRUNC(SYSDATE, 'MM') is the first of the current month, matching what the
+     * rest of the app calls "el mes". The SUMs use NVL so an empty month reads
+     * $0.00 instead of null, but the last reintegration stays null on purpose:
+     * "never" has to render as a dash, not as a date.
+     */
+    public ConcentratorSummary summary() {
+        String sql = """
+                SELECT NVL(SUM(CASE WHEN movement_type = 'DISPERSION'
+                                     AND created_at >= TRUNC(SYSDATE, 'MM')
+                                    THEN amount END), 0) AS dispersed,
+                       COUNT(CASE WHEN created_at >= TRUNC(SYSDATE, 'MM')
+                                  THEN 1 END)            AS movements,
+                       MAX(CASE WHEN movement_type = 'REINTEGRATION'
+                                THEN created_at END)     AS last_reintegration,
+                       NVL(SUM(CASE WHEN movement_type = 'REINTEGRATION'
+                                     AND created_at >= TRUNC(SYSDATE, 'MM')
+                                    THEN amount END), 0) AS reintegrated
+                  FROM concentrator_movement
+                """;
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) {
+                return new ConcentratorSummary(BigDecimal.ZERO, 0, null, BigDecimal.ZERO);
+            }
+            java.sql.Timestamp last = rs.getTimestamp("last_reintegration");
+            return new ConcentratorSummary(
+                    rs.getBigDecimal("dispersed"),
+                    rs.getInt("movements"),
+                    last == null ? null : last.toLocalDateTime(),
+                    rs.getBigDecimal("reintegrated"));
+        } catch (SQLException e) {
+            throw new RuntimeException("Error reading the Concentrator summary", e);
+        }
+    }
+
+    /** Shared plumbing for the two ledger listings above. */
+    private java.util.List<ConcentratorMovement> query(String sql, StatementBinder binder) {
+        java.util.List<ConcentratorMovement> movements = new java.util.ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            binder.bind(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Timestamp at = rs.getTimestamp("created_at");
+                    movements.add(new ConcentratorMovement(
+                            rs.getLong("id"),
+                            rs.getString("movement_type"),
+                            rs.getBigDecimal("amount"),
+                            rs.getBigDecimal("balance_after"),
+                            rs.getString("actor"),
+                            at == null ? null : at.toLocalDateTime()));
+                }
+            }
+            return movements;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error reading the Concentrator ledger", e);
+        }
+    }
+
+    @FunctionalInterface
+    private interface StatementBinder {
+        void bind(PreparedStatement ps) throws SQLException;
+    }
 }

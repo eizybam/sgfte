@@ -20,7 +20,14 @@
 <div class="vista-grid">
 
     <section class="conc">
-        <p class="conc__label">CUENTA CONCENTRADORA</p>
+        <%--
+          La etiqueta del marco es texto plano, pero /admin/concentradora no
+          tenía ni un solo enlace de entrada: la pantalla del ledger existía y no
+          se podía llegar a ella. Es el sitio natural desde donde abrirla.
+        --%>
+        <a class="conc__label conc__label--link" href="${ctx}/admin/concentradora">
+            CUENTA CONCENTRADORA <span aria-hidden="true">›</span>
+        </a>
 
         <p class="conc__amount">
             <span class="conc__figure">$<fmt:formatNumber value="${concentratorBalance}"

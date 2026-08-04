@@ -843,6 +843,12 @@ textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: v
     color: var(--sgfte-pink-text);
 }
 
+/* Enlace al detalle de la concentradora: mismo texto, con su chevrón */
+.conc__label--link { display: inline-block; text-decoration: none; }
+.conc__label--link span { margin-left: 6px; opacity: 0.6; }
+.conc__label--link:hover { color: var(--sgfte-cream); }
+.conc__label--link:hover span { opacity: 1; }
+
 /* La divisa se alinea por LÍNEA BASE con la cifra, como en el prototipo. */
 .conc__amount {
     display: flex;
@@ -1560,6 +1566,10 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .balance__actions--narrow { top: 37px; right: 25px; gap: 37px; }
 .balance__actions--narrow .btn { width: 160px; height: 48px; padding: 0; font-weight: 700; font-size: 15px; }
 
+/* La concentradora, botones de 186x46 más separados (37 y 122 en el marco) */
+.balance__actions--conc { top: 37px; right: 28px; gap: 39px; }
+.balance__actions--conc .btn { width: 186px; height: 46px; padding: 0; font-weight: 700; font-size: 16px; }
+
 /* ---- Tarjetas vinculadas ------------------------------------------------- */
 .linked { padding: 23px 23px 24px; }
 .linked__list { display: flex; flex-direction: column; gap: 14px; margin: 22px 0 0; }
@@ -1683,6 +1693,9 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .state-badge--off  { background: rgba(169, 138, 128, 0.14); color: var(--sgfte-mono-muted); }
 
 .moves__empty { padding: var(--sp-5) 0; text-align: center; color: var(--sgfte-muted); font-size: 14px; }
+
+/* Enlace dibujado por el marco pero sin destino todavía: se ve, no se pulsa. */
+.is-pending { opacity: 0.4; cursor: default; }
 
 /* ---- Resumen del mes ----------------------------------------------------- */
 .month { padding: 23px 25px 0 23px; }
