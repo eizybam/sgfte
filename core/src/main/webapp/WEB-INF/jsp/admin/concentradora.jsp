@@ -14,7 +14,11 @@
   Trae su propia cabecera, así que desactiva la del cascarón con hidePageHead.
 --%>
 <c:set var="pageTitle" value="Cuenta Concentradora"/>
-<c:set var="activeNav" value="overview"/>
+<%--
+  El marco subraya "Dashboard" porque se dibujó cuando la Concentradora no
+  tenía sitio propio en la cabecera. Ahora lo tiene, así que se marca ella.
+--%>
+<c:set var="activeNav" value="concentrator"/>
 <c:set var="hidePageHead" value="true"/>
 <c:set var="mainClass" value="app-main--flush"/>
 <%@ include file="/WEB-INF/jsp/partials/admin-top.jspf" %>

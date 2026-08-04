@@ -69,8 +69,16 @@
                href="${ctx}/admin/home">Dashboard</a>
             <a class="app-header__link ${activeNav == 'analytics' ? 'is-active' : ''}"
                href="${ctx}/admin/dashboard">Analíticas</a>
-            <a class="app-header__link ${activeNav == 'notifications' ? 'is-active' : ''}"
-               href="${ctx}/admin/logs">Notificaciones</a>
+            <%--
+              El marco dibuja aquí "Notificaciones", pero esa pantalla no se
+              construyó —para el admin repite lo que ya cuenta la bitácora— y el
+              hueco había quedado apuntando a /admin/logs: una etiqueta que
+              mentía sobre su destino, y encima duplicaba "Registros e historial"
+              del lateral. La Concentradora sí necesitaba una entrada de primer
+              nivel, así que ocupa el sitio.
+            --%>
+            <a class="app-header__link ${activeNav == 'concentrator' ? 'is-active' : ''}"
+               href="${ctx}/admin/concentradora">Concentradora</a>
         </nav>
 
         <div class="app-header__user">

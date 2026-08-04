@@ -843,12 +843,6 @@ textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: v
     color: var(--sgfte-pink-text);
 }
 
-/* Enlace al detalle de la concentradora: mismo texto, con su chevrón */
-.conc__label--link { display: inline-block; text-decoration: none; }
-.conc__label--link span { margin-left: 6px; opacity: 0.6; }
-.conc__label--link:hover { color: var(--sgfte-cream); }
-.conc__label--link:hover span { opacity: 1; }
-
 /* La divisa se alinea por LÍNEA BASE con la cifra, como en el prototipo. */
 .conc__amount {
     display: flex;
