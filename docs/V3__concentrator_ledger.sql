@@ -40,13 +40,25 @@ END;
 /
 
 -- ---------------------------------------------------------------------------
--- Fila de apertura: fija el saldo de hoy como punto de partida.
+-- Fila de apertura: el saldo con el que arranca el registro.
 --
--- Sin ella, la primera comparación "vs periodo anterior" no tendría contra qué
--- medir y saldría como si la concentradora hubiera arrancado en cero.
+-- Va FECHADA EN EL PASADO, no con SYSTIMESTAMP, y esto es lo importante: el
+-- saldo "de hace un periodo" se busca como el último movimiento ANTERIOR al
+-- inicio de la ventana. Una fila de apertura fechada hoy nunca es anterior a
+-- ninguna ventana, así que no serviría de base para ninguna comparación —
+-- saldría un guion para siempre.
+--
+-- 400 días cubre de sobra la ventana más larga del selector (12 meses).
+--
+-- De paso evita un detalle molesto: created_at es TIMESTAMP sin zona, y
+-- SYSTIMESTAMP se guarda con la hora de pared de LA SESIÓN. Si esta migración
+-- se corre desde un cliente en UTC y la aplicación escribe en hora local, las
+-- filas quedan desfasadas entre sí. Con la apertura en el pasado, ese desfase
+-- deja de importar.
 -- ---------------------------------------------------------------------------
-INSERT INTO concentrator_movement (movement_type, amount, balance_after, actor)
-SELECT 'FUNDING', GREATEST(balance, 0.01), balance, 'migración V3'
+INSERT INTO concentrator_movement (movement_type, amount, balance_after, actor, created_at)
+SELECT 'FUNDING', GREATEST(balance, 0.01), balance, 'saldo inicial',
+       SYSDATE - 400
   FROM concentrator_account
  WHERE singleton = 'Y';
 

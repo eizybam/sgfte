@@ -1,5 +1,6 @@
 package mx.sgfte.core.analytics;
 
+import mx.sgfte.core.categories.CategoryDao;
 import mx.sgfte.core.shared.db.Db;
 
 import java.math.BigDecimal;
@@ -174,15 +175,28 @@ public class AnalyticsDao {
      * with three accounts should appear once with their total, not three times.
      */
     public List<Object[]> topSpenders(LocalDateTime from, LocalDateTime to, int limit) {
-        String sql = "SELECT ch.first_name || ' ' || ch.last_name AS holder, "
-                   + "       SUM(m.amount) AS total, "
-                   + "       MIN(MOD(DENSE_RANK() OVER (ORDER BY cat.id) - 1, 4) + 1) AS color "
-                   + "FROM account_movement m "
-                   + "JOIN account    a   ON a.id = m.account_id "
-                   + "JOIN cardholder ch  ON ch.id = a.cardholder_id "
-                   + "JOIN category   cat ON cat.id = a.category_id "
-                   + "WHERE m.movement_type = 'DEPOSIT' AND m.created_at >= ? AND m.created_at < ? "
-                   + "GROUP BY ch.id, ch.first_name, ch.last_name "
+        /*
+          El color se calcula en una consulta interna, fila a fila, y sólo
+          después se agrupa. Meterlo dentro del agregado del mismo bloque —como
+          estaba— dejaba una subconsulta correlacionada con `cat`, que no está
+          en el GROUP BY; así queda fuera de duda.
+
+          MIN(color): un tarjetahabiente puede tener cuentas de varios
+          propósitos y la barra sólo pinta uno. Se toma el primero del catálogo
+          para que no cambie entre recargas.
+        */
+        String sql = "SELECT holder, SUM(amount) AS total, MIN(color) AS color FROM ( "
+                   + "  SELECT ch.id AS holder_id, "
+                   + "         ch.first_name || ' ' || ch.last_name AS holder, "
+                   + "         m.amount AS amount, "
+                   + "         " + CategoryDao.PURPOSE_COLOR_SQL + " AS color "
+                   + "  FROM account_movement m "
+                   + "  JOIN account    a   ON a.id = m.account_id "
+                   + "  JOIN cardholder ch  ON ch.id = a.cardholder_id "
+                   + "  JOIN category   cat ON cat.id = a.category_id "
+                   + "  WHERE m.movement_type = 'DEPOSIT' "
+                   + "    AND m.created_at >= ? AND m.created_at < ? "
+                   + ") GROUP BY holder_id, holder "
                    + "ORDER BY total DESC "
                    + "FETCH FIRST ? ROWS ONLY";
         List<Object[]> rows = new ArrayList<>();
