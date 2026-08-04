@@ -27,7 +27,7 @@ public class CardholderDao {
                                                  int offset, int limit) {
         StringBuilder sql = new StringBuilder(
                   "SELECT ch.id, ch.first_name, ch.last_name, ch.status, "
-                + "       ch.employee_code, ch.department, "
+                + "       ch.employee_code, ch.email, "
                 + "  (SELECT COUNT(*) FROM account a "
                 + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS accounts, "
                 + "  (SELECT COUNT(*) FROM card k JOIN account ka ON ka.id = k.account_id "
@@ -55,7 +55,7 @@ public class CardholderDao {
                             rs.getLong("id"),
                             rs.getString("first_name") + " " + rs.getString("last_name"),
                             rs.getString("employee_code"),
-                            rs.getString("department"),
+                            rs.getString("email"),
                             rs.getInt("accounts"),
                             rs.getInt("cards"),
                             rs.getBigDecimal("funds"),

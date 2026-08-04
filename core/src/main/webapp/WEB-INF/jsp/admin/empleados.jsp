@@ -8,8 +8,8 @@
   Misma mecánica que Gestión de Cuentas: filtros y página en la URL, paginador
   de enlaces, tabla canónica.
 
-  El departamento y el código de empleado llegaron con la migración V2; antes
-  esta tabla enseñaba el correo y la clave primaria en su lugar.
+  Bajo el nombre va el CORREO, no el departamento que pinta el marco: identifica
+  mejor a la persona en una lista, y el departamento ya se filtra desde la barra.
 --%>
 <c:set var="pageTitle" value="Empleados"/>
 <c:set var="pageSubtitle" value="Gestion de tarjetahabientes de la empresa"/>
@@ -82,7 +82,7 @@
             <tr>
                 <td>
                     <span class="staff-name">${fn:escapeXml(e.fullName)}</span>
-                    <span class="staff-sub">${fn:escapeXml(e.department)}</span>
+                    <span class="staff-sub">${fn:escapeXml(e.email)}</span>
                 </td>
                 <td class="mono">${fn:escapeXml(e.employeeCode)}</td>
                 <%-- El marco rellena con cero a dos dígitos: 02, 01, 07 --%>
