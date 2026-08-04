@@ -32,7 +32,7 @@
     <form class="search" method="get" action="${baseUrl}">
         <svg class="search__icon" width="18" height="18" aria-hidden="true"><use href="#i-search"/></svg>
         <input class="input" type="search" name="q" value="${fn:escapeXml(q)}"
-               placeholder="Buscar por titular o ID de cuenta" aria-label="Buscar cuentas">
+               placeholder="Buscar por titular, ID de cuenta o empleado" aria-label="Buscar cuentas">
         <c:if test="${not empty status}"><input type="hidden" name="status" value="${status}"></c:if>
         <c:if test="${not empty purpose}"><input type="hidden" name="purpose" value="${purpose}"></c:if>
     </form>
