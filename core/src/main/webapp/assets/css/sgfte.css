@@ -2872,7 +2872,12 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
   Zona de las tarjetas. Con dos se solapan (posición absoluta); con una sola
   ocupa el ancho entero, que es lo que pidió el diseño corregido.
 */
-.pcards { position: relative; height: 228px; margin: 42px 45px 0; }
+/*
+  Los márgenes salen del marco: la tarjeta de delante ocupa de 138 a 366 desde
+  el borde del panel y la regla del pie está en 489. Sin el margen inferior la
+  caja medía justo lo que la tarjeta y la regla quedaba pegada a su borde.
+*/
+.pcards { position: relative; height: 228px; margin: 68px 45px 123px; }
 .pcards--one { height: 228px; }
 
 /* El radio real desaparece pero sigue en el DOM: es lo que recuerda cuál está
