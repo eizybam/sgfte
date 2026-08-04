@@ -1346,9 +1346,10 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .issue-summary__list { margin: 0; padding: 0; }
 
 /* Filas cada 32px, empezando 26px bajo el rótulo */
+/* Mismo criterio que .month__row: centrado dentro de la banda, no baseline. */
 .issue-summary__row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--sp-2);
     height: 32px;
@@ -1686,9 +1687,14 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .month { padding: 23px 25px 0 23px; }
 .month__list { margin: 0; padding: 0; }
 
+/*
+  align-items: center, no baseline. Con baseline el texto se pega al ARRIBA de
+  la banda de 56px —queda pegado a la línea de la fila anterior y con todo el
+  hueco debajo—, que es justo lo que no se quiere entre dos divisores.
+*/
 .month__row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--sp-2);
     height: 56px;
