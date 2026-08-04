@@ -1822,6 +1822,7 @@ select.register__input { appearance: none; cursor: pointer; }
 select.register__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
 
 .register__chevron { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-placeholder); }
+.register__search  { flex: 0 0 18px; width: 18px; height: 18px; margin-right: 10px; color: var(--sgfte-placeholder); }
 
 /* Fila de dos campos, con la misma proporción 288:336 del marco */
 .register__row { display: flex; gap: 20px; }

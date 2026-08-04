@@ -15,11 +15,10 @@
 <c:set var="pageSubtitle" value="Administra las cuentas y su dispersion de fondos"/>
 <c:set var="activeNav" value="accounts"/>
 <c:set var="pageAction">
-    <a class="btn btn--primary btn--hero btn--stacked"
-       href="${pageContext.request.contextPath}/accounts">
+    <button type="button" class="btn btn--primary btn--hero btn--stacked" data-open-create>
         <img src="${pageContext.request.contextPath}/assets/img/icons/plus.png" alt="">
         Crear<br>cuenta
-    </a>
+    </button>
 </c:set>
 <%@ include file="/WEB-INF/jsp/partials/admin-top.jspf" %>
 
@@ -126,5 +125,132 @@
         </a>
     </nav>
 </c:if>
+
+
+<%--
+  Modal "Crear cuenta" (Figma 288:28). Antes era la página /accounts; ahora esa
+  ruta sólo procesa el alta y vuelve aquí.
+
+  El identificador no se teclea: lo genera AccountService con el prefijo del
+  propósito y un sufijo aleatorio. Como el sufijo se decide al guardar, el campo
+  va en sólo lectura y muestra el prefijo en vivo; el código definitivo aparece
+  en la tabla al recargar.
+--%>
+<c:set var="createFailed" value="${not empty createErrors}"/>
+
+<div class="modal-scrim" id="create-modal" ${createFailed ? '' : 'hidden'}>
+    <div class="modal modal--form" role="dialog" aria-modal="true" aria-labelledby="create-title">
+        <h2 class="modal__title" id="create-title">Crear cuenta</h2>
+        <div class="modal__rule"></div>
+
+        <c:if test="${createFailed}">
+            <div class="alert alert--error modal__alert" style="margin: var(--sp-3) 40px 0;">
+                <ul><c:forEach var="e" items="${createErrors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>
+
+        <form class="modal__body" method="post" action="${ctx}/accounts">
+
+            <label class="register__label" for="cardholderId">Tarjetahabiente</label>
+            <div class="register__control">
+                <svg class="register__search" width="18" height="18" aria-hidden="true"><use href="#i-search"/></svg>
+                <%--
+                  El marco dibuja un buscador libre, pero el valor tiene que
+                  resolverse a UN empleado concreto, así que es un selector.
+                --%>
+                <select class="register__input" id="cardholderId" name="cardholderId" required>
+                    <option value="" disabled ${empty createHolder ? 'selected' : ''}>Selecciona al empleado</option>
+                    <c:forEach var="h" items="${cardholders}">
+                        <option value="${h.id}" ${createHolder == h.id ? 'selected' : ''}>${fn:escapeXml(h.firstName)} ${fn:escapeXml(h.lastName)}</option>
+                    </c:forEach>
+                </select>
+                <svg class="register__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </div>
+
+            <label class="register__label" for="categoryId">Propósito</label>
+            <div class="register__control">
+                <select class="register__input" id="categoryId" name="categoryId" required>
+                    <option value="" disabled ${empty createCategory ? 'selected' : ''}>Seleccionar propósito</option>
+                    <c:forEach var="cat" items="${categories}">
+                        <option value="${cat.id}" data-name="${fn:escapeXml(cat.name)}"
+                                ${createCategory == cat.id ? 'selected' : ''}>${fn:escapeXml(cat.name)}</option>
+                    </c:forEach>
+                </select>
+                <svg class="register__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </div>
+
+            <label class="register__label" for="accountNumber">Identificador de cuenta</label>
+            <div class="register__control">
+                <input class="register__input" type="text" id="accountNumber" readonly tabindex="-1"
+                       placeholder="Se genera al crear"
+                       title="Se genera solo: prefijo del propósito + sufijo aleatorio">
+            </div>
+
+            <p class="register__note">
+                <svg width="18" height="18" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>La cuenta se crea sin tarjetas y con saldo inicial $0.00; los fondos
+                    se asignan después por dispersión desde la Concentradora.</span>
+            </p>
+
+            <div class="register__actions">
+                <button type="button" class="btn btn--secondary" data-close-create>Cancelar</button>
+                <button type="submit" class="btn btn--primary">Crear cuenta</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("create-modal");
+        var purpose = document.getElementById("categoryId");
+        var number = document.getElementById("accountNumber");
+        var holder = document.getElementById("cardholderId");
+        var lastFocused = null;
+
+        // Mismo criterio que AccountService.prefixFrom: tres primeras letras del
+        // propósito, sin acentos y en mayúsculas.
+        function prefixOf(name) {
+            var letters = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                              .replace(/[^A-Za-z]/g, "").toUpperCase();
+            if (letters.length < 3) letters += "XXX";
+            return letters.slice(0, 3);
+        }
+
+        function preview() {
+            var opt = purpose.selectedOptions[0];
+            var name = opt && opt.dataset ? opt.dataset.name : null;
+            // El sufijo lo decide el servidor al guardar, así que aquí van puntos.
+            number.value = name ? prefixOf(name) + "-•••••" : "";
+        }
+
+        function open() {
+            lastFocused = document.activeElement;
+            scrim.hidden = false;
+            holder.focus();
+        }
+
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        document.querySelectorAll("[data-open-create]").forEach(function (b) {
+            b.addEventListener("click", open);
+        });
+        document.querySelectorAll("[data-close-create]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        purpose.addEventListener("change", preview);
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+
+        preview();
+        if (!scrim.hidden) holder.focus();
+    })();
+</script>
 
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

@@ -44,6 +44,8 @@ public class AccountAdminServlet extends HttpServlet {
     private final AccountDao accountDao = new AccountDao();
     private final CategoryDao categoryDao = new CategoryDao();
     private final AuditLogService audit = new AuditLogService();
+    private final mx.sgfte.core.users.CardholderDao cardholderDao =
+            new mx.sgfte.core.users.CardholderDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -65,6 +67,7 @@ public class AccountAdminServlet extends HttpServlet {
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
         req.setAttribute("categories", categoryDao.findAllActive());
+        req.setAttribute("cardholders", cardholderDao.findAllActive());
 
         // Se devuelven para que el buscador, el segmentado y la píldora vuelvan
         // a dibujarse con lo que el admin eligió.
@@ -97,7 +100,14 @@ public class AccountAdminServlet extends HttpServlet {
     private void consumeFlash(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         if (session == null) return;
-        for (String key : new String[]{FLASH_SUCCESS, FLASH_ERRORS}) {
+        String[] keys = {
+                FLASH_SUCCESS, FLASH_ERRORS,
+                // Del alta de cuenta: si falló, el modal se reabre con lo elegido.
+                mx.sgfte.core.accounts.web.AccountServlet.FLASH_ERRORS,
+                mx.sgfte.core.accounts.web.AccountServlet.FLASH_HOLDER,
+                mx.sgfte.core.accounts.web.AccountServlet.FLASH_CATEGORY,
+        };
+        for (String key : keys) {
             Object value = session.getAttribute(key);
             if (value != null) {
                 req.setAttribute(key, value);
