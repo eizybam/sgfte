@@ -44,22 +44,47 @@ public class PortalTransferServlet extends HttpServlet {
         Long destId = PortalSupport.parseId(req.getParameter("destId"));
         BigDecimal amount = PortalSupport.parseAmount(req.getParameter("amount"));
 
+        /*
+          Post/redirect/get. Antes reenviaba, así que recargar reintentaba la
+          transferencia —en una pantalla que mueve dinero—. El desenlace viaja
+          en la sesión y lo pinta la tarjeta de resultado.
+         */
         try {
             portalService.transfer(cardholderId, sourceId, destId, amount,
                     req.getParameter("description"));
-            req.setAttribute("success", "Transferencia realizada.");
-            // Clear the source so the form comes back blank after a success and
-            // a page refresh can't repeat the amount by accident.
-            sourceId = null;
+
+            mx.sgfte.core.shared.web.OperationResult.success("¡Transferencia enviada!",
+                            "El saldo ya está en la cuenta de tu compañero",
+                            "TRANSFERENCIA CONFIRMADA",
+                            "Sólo se transfiere entre cuentas del mismo propósito.")
+                    .amount("Monto transferido", amount)
+                    .detail("Concepto", req.getParameter("description"))
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Volver al inicio", "/app/home")
+                    .primary("Ver mi cuenta", "/app/cuenta?id=" + sourceId)
+                    .flash(req.getSession());
+
+            resp.sendRedirect(req.getContextPath() + "/app/home");
+            return;
         } catch (ValidationException e) {
-            req.setAttribute("errors", e.getErrors());
+            mx.sgfte.core.shared.web.OperationResult.rejected("Transferencia rechazada",
+                            "La operación no pudo completarse",
+                            String.join(" ", e.getErrors()))
+                    .amount("Monto solicitado", amount)
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Volver al inicio", "/app/home")
+                    .primary("Reintentar", "/app/transferencia"
+                            + (sourceId == null ? "" : "?sourceId=" + sourceId))
+                    .flash(req.getSession());
+
+            resp.sendRedirect(req.getContextPath() + "/app/transferencia"
+                    + (sourceId == null ? "" : "?sourceId=" + sourceId));
+            return;
         } catch (AccountNotOwnedException e) {
             // Tampered sourceId. Say nothing specific about it.
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-
-        render(req, resp, sourceId);
     }
 
     /** Loads both dropdowns and shows the form. */

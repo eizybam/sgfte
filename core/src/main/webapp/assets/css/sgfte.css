@@ -3015,3 +3015,106 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
     line-height: 24px;
     color: var(--sgfte-accent);
 }
+
+
+/* ==========================================================================
+   26 · Transferencia del portal · marco 111:2
+   ========================================================================== */
+
+/* Pantalla de tarea: sin cabecera ni menú, la tarjeta centrada y nada más. */
+.xfer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: var(--app-h, 100vh);
+    padding: 96px 24px 48px;
+}
+
+.xfer__title {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1;
+    letter-spacing: 3px;
+    color: #fff;
+}
+
+.xfer__lead {
+    max-width: 432px;
+    margin: 56px 0 0;
+    font-size: 19px;
+    line-height: 24px;
+    letter-spacing: 3px;
+    text-align: center;
+    color: var(--sgfte-pink-text);
+}
+
+/* 544x664 en el marco, con los campos de 392 centrados dentro. */
+.xfer__card {
+    width: 544px;
+    max-width: 100%;
+    margin-top: 88px;
+    padding: 40px 76px;
+    background: rgba(169, 138, 128, 0.1);
+    border-radius: 10px;
+}
+
+.xfer__label {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 24px;
+    letter-spacing: 3px;
+    color: var(--sgfte-pink-text);
+}
+
+/* Bloques de 112px: etiqueta (24) + 8 + campo (48) y 32 hasta el siguiente. */
+.xfer__label + .xfer__control { margin-top: 8px; }
+.xfer__control + .xfer__label { margin-top: 32px; }
+
+/*
+  Sin radio, igual que los campos del modal de dispersión: el marco no redondea
+  estos recuadros aunque el estándar del proyecto pida r8 en los inputs.
+*/
+.xfer__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 20px;
+    background: var(--sgfte-bg);
+    border: 1px solid #594139;
+}
+
+.xfer__control--area { height: 80px; align-items: stretch; padding: 12px 20px; }
+.xfer__control:focus-within { border-color: var(--sgfte-accent); }
+
+.xfer__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 22px;
+    line-height: 24px;
+    color: var(--sgfte-cream);
+    /* El desplegable trae su propia flecha; se usa la del prototipo. */
+    appearance: none;
+}
+
+.xfer__input::placeholder { color: rgba(169, 138, 128, 0.5); }
+.xfer__input:disabled { color: rgba(169, 138, 128, 0.5); cursor: not-allowed; }
+.xfer__control--area .xfer__input { padding-top: 2px; resize: none; line-height: 26px; }
+
+.xfer__icon { flex: 0 0 auto; color: var(--sgfte-pink-text); }
+.xfer__chev { flex: 0 0 auto; color: var(--sgfte-pink-text); pointer-events: none; }
+
+/* Cancelar a la izquierda y Confirmar a la derecha, como en el marco. */
+.xfer__actions { display: flex; gap: 20px; margin-top: 56px; }
+.xfer__actions .btn { flex: 1 1 0; padding-left: 0; padding-right: 0; }
