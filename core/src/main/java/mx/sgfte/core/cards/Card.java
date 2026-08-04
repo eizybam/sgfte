@@ -11,6 +11,8 @@ public class Card {
     private String cardType;   // PHYSICAL | DIGITAL
     private String maskedPan;  // e.g. "**** **** **** 4821"
     private String status;     // ACTIVE | INACTIVE | BLOCKED
+    private java.time.LocalDate issuedAt;
+    private java.time.LocalDate expiresAt;
 
     public Card() {}
 
@@ -31,4 +33,23 @@ public class Card {
     public void setMaskedPan(String maskedPan) { this.maskedPan = maskedPan; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public java.time.LocalDate getIssuedAt() { return issuedAt; }
+    public void setIssuedAt(java.time.LocalDate issuedAt) { this.issuedAt = issuedAt; }
+
+    public java.time.LocalDate getExpiresAt() { return expiresAt; }
+    public void setExpiresAt(java.time.LocalDate expiresAt) { this.expiresAt = expiresAt; }
+
+    /*
+      "05/27": el formato que llevan impreso las tarjetas y el que piden los
+      marcos, tanto en la cara ("VÁLIDA HASTA") como en el detalle.
+     */
+    private static final java.time.format.DateTimeFormatter MM_YY =
+            java.time.format.DateTimeFormatter.ofPattern("MM/yy");
+
+    public String getIssuedLabel()  { return issuedAt  == null ? "—" : MM_YY.format(issuedAt); }
+    public String getExpiresLabel() { return expiresAt == null ? "—" : MM_YY.format(expiresAt); }
+
+    public boolean isPhysical() { return "PHYSICAL".equals(cardType); }
+    public String getTypeLabel() { return isPhysical() ? "Física" : "Digital"; }
 }

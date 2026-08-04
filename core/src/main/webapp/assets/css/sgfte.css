@@ -3321,3 +3321,99 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 .hist-pager__item.is-current { background: var(--sgfte-primary); border-color: var(--sgfte-primary); color: #fff; }
 .hist-pager__item.is-disabled { opacity: 0.4; pointer-events: none; }
 .hist-pager__item.is-gap { border-color: transparent; }
+
+
+/* ==========================================================================
+   28 · Detalle de tarjeta · marco 285:47
+   ========================================================================== */
+
+/* 557 de ancho en el marco, con la cabecera separada por una regla. */
+.cardx { width: 557px; padding: 0 0 40px; background: #231f1d; }
+
+.cardx__head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 99px;
+    border-bottom: 1px solid var(--sgfte-rule);
+}
+
+.cardx__title {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: 3px;
+    color: #fff;
+}
+
+.cardx__close {
+    position: absolute;
+    top: 23px;
+    right: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: #c6b7b1;
+    border: 0;
+    color: #231f1d;
+    cursor: pointer;
+}
+
+.cardx__close:hover { background: #fff; }
+
+.cardx__body { display: flex; flex-direction: column; align-items: center; padding: 64px 66px 0; }
+
+/* La cara de la tarjeta aquí no se mueve ni se pulsa: es una ilustración. */
+.tarjeta--still {
+    position: static;
+    width: 425px;
+    height: 228px;
+    opacity: 1;
+    cursor: default;
+    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
+}
+
+.tarjeta--still .tarjeta__pan { visibility: visible; }
+
+/* Bloque de datos: 425 de ancho, filas separadas por línea. */
+.cardx__rows {
+    width: 425px;
+    margin: 49px 0 0;
+    padding: 16px 28px 0;
+    background: #1d1b1a;
+    border: 1px solid #2b2a28;
+    border-radius: 8px;
+}
+
+.cardx__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding: 18px 0;
+    border-bottom: 1px solid #2b2a28;
+}
+
+.cardx__row:last-child { border-bottom: 0; }
+
+.cardx__row dt { font-weight: 500; font-size: 14px; color: var(--sgfte-pink-text); }
+.cardx__row dd { display: flex; align-items: center; gap: 10px; margin: 0; }
+
+.cardx__mono { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-cream); }
+
+.cardx__tag {
+    padding: 5px 11px 5px 9px;
+    background: rgba(195, 65, 0, 0.18);
+    border-radius: 4px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    color: #ffb59b;
+}

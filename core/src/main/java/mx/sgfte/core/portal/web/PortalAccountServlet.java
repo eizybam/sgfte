@@ -49,8 +49,17 @@ public class PortalAccountServlet extends HttpServlet {
              */
             java.util.List<mx.sgfte.core.cards.Card> cards =
                     portalService.cardsOf(cardholderId, accountId);
-            req.setAttribute("physicalCard", firstActiveOfType(cards, "PHYSICAL"));
-            req.setAttribute("digitalCard", firstActiveOfType(cards, "DIGITAL"));
+            /*
+              Como mucho dos, y la física primero: es la que el marco pone
+              delante. Se entrega ya ordenada para que el JSP recorra una lista
+              en vez de repetir el mismo bloque dos veces con nombres distintos.
+             */
+            java.util.List<mx.sgfte.core.cards.Card> shown = new java.util.ArrayList<>();
+            var physical = firstActiveOfType(cards, "PHYSICAL");
+            var digital = firstActiveOfType(cards, "DIGITAL");
+            if (physical != null) shown.add(physical);
+            if (digital != null) shown.add(digital);
+            req.setAttribute("cards", shown);
 
             req.setAttribute("activity", portalService.accountActivity(cardholderId, accountId));
 

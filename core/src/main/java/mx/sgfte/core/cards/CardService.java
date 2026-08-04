@@ -8,6 +8,14 @@ import java.util.List;
 /** Card logic: issue a card for an account, invalidate a card. */
 public class CardService {
 
+    /**
+     * Vigencia de una tarjeta nueva, en años.
+     *
+     * Es una convención de la empresa, no una ley, así que vive aquí y no
+     * repartida por las consultas: cambiarla es cambiar esta línea.
+     */
+    public static final int VALIDITY_YEARS = 4;
+
     private static final SecureRandom RANDOM = new SecureRandom();
     private final CardDao dao;
 
@@ -41,7 +49,9 @@ public class CardService {
                     + ("PHYSICAL".equals(cardType) ? "física" : "digital")
                     + " activa. Invalida la actual antes de expedir otra."));
         }
-        return dao.insert(new Card(accountId, cardType, generateMaskedPan()));
+        Card card = new Card(accountId, cardType, generateMaskedPan());
+        card.setExpiresAt(java.time.LocalDate.now().plusYears(VALIDITY_YEARS));
+        return dao.insert(card);
     }
 
     public void invalidate(long cardId) {

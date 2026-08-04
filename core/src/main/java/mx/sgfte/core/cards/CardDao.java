@@ -13,12 +13,14 @@ import java.util.List;
 public class CardDao {
 
     public long insert(Card card) {
-        String sql = "INSERT INTO card (account_id, card_type, masked_pan) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO card (account_id, card_type, masked_pan, expires_at) "
+                   + "VALUES (?, ?, ?, ?)";
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, new String[]{"id"})) {
             ps.setLong(1, card.getAccountId());
             ps.setString(2, card.getCardType());
             ps.setString(3, card.getMaskedPan());
+            ps.setDate(4, java.sql.Date.valueOf(card.getExpiresAt()));
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) return keys.getLong(1);
@@ -31,7 +33,7 @@ public class CardDao {
 
     /** All cards of an account (for the account view). */
     public List<Card> findByAccount(long accountId) {
-        String sql = "SELECT id, account_id, card_type, masked_pan, status "
+        String sql = "SELECT id, account_id, card_type, masked_pan, status, created_at, expires_at "
                 + "FROM card WHERE account_id = ? ORDER BY id";
         List<Card> cards = new ArrayList<>();
         try (Connection c = Db.getConnection();
@@ -40,6 +42,8 @@ public class CardDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Card card = new Card();
+                    card.setIssuedAt(toLocalDate(rs.getTimestamp("created_at")));
+                    card.setExpiresAt(toLocalDate(rs.getDate("expires_at")));
                     card.setId(rs.getLong("id"));
                     card.setAccountId(rs.getLong("account_id"));
                     card.setCardType(rs.getString("card_type"));
@@ -108,7 +112,7 @@ public class CardDao {
      * account_id.
      */
     public List<Card> findByCardholder(long cardholderId) {
-        String sql = "SELECT k.id, k.account_id, k.card_type, k.masked_pan, k.status "
+        String sql = "SELECT k.id, k.account_id, k.card_type, k.masked_pan, k.status, k.created_at, k.expires_at "
                    + "FROM card k JOIN account a ON a.id = k.account_id "
                    + "WHERE a.cardholder_id = ? ORDER BY k.status, k.id";
         List<Card> cards = new ArrayList<>();
@@ -118,6 +122,8 @@ public class CardDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Card card = new Card();
+                    card.setIssuedAt(toLocalDate(rs.getTimestamp("created_at")));
+                    card.setExpiresAt(toLocalDate(rs.getDate("expires_at")));
                     card.setId(rs.getLong("id"));
                     card.setAccountId(rs.getLong("account_id"));
                     card.setCardType(rs.getString("card_type"));
@@ -156,5 +162,13 @@ public class CardDao {
             ps.setLong(1, accountId);
             ps.executeUpdate();
         }
+    }
+
+    /** Las dos columnas de fecha llegan con tipos distintos; una sola salida. */
+    private java.time.LocalDate toLocalDate(java.util.Date value) {
+        if (value == null) return null;
+        if (value instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        if (value instanceof java.sql.Date d) return d.toLocalDate();
+        return new java.sql.Date(value.getTime()).toLocalDate();
     }
 }

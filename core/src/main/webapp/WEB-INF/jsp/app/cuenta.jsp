@@ -20,7 +20,7 @@
 <c:set var="activeNav" value="home"/>
 <%@ include file="/WEB-INF/jsp/partials/app-top.jspf" %>
 
-<c:set var="cardCount" value="${(empty physicalCard ? 0 : 1) + (empty digitalCard ? 0 : 1)}"/>
+<c:set var="cardCount" value="${fn:length(cards)}"/>
 
 <div class="pgrid">
 
@@ -96,50 +96,26 @@
                             <input class="pcards__pick" type="radio" name="frontCard" id="front-b">
                         </c:if>
 
-                        <%-- Física primero: es la que el marco pone delante. --%>
-                        <c:if test="${not empty physicalCard}">
-                            <label class="tarjeta tarjeta--a" for="front-a">
+                        <c:forEach var="k" items="${cards}" varStatus="s">
+                            <label class="tarjeta ${s.first ? 'tarjeta--a' : 'tarjeta--b'}"
+                                   for="${s.first ? 'front-a' : 'front-b'}"
+                                   data-card="card-detail-${k.id}">
                                 <span class="tarjeta__top">
                                     <span class="tarjeta__key">TIPO DE LA TARJETA</span>
-                                    <span class="tarjeta__pill">FÍSICA</span>
+                                    <span class="tarjeta__pill">${fn:toUpperCase(k.typeLabel)}</span>
                                 </span>
                                 <span class="tarjeta__data">
                                     <span class="tarjeta__pan">
                                         <span class="tarjeta__key">NÚMERO DE TARJETA</span>
-                                        <span class="tarjeta__value">${fn:escapeXml(physicalCard.maskedPan)}</span>
+                                        <span class="tarjeta__value">${fn:escapeXml(k.maskedPan)}</span>
                                     </span>
                                     <span class="tarjeta__exp">
                                         <span class="tarjeta__key">VÁLIDA HASTA</span>
-                                        <%--
-                                          El marco escribe "05/27". La tabla card
-                                          no guarda vencimiento —id, cuenta, tipo,
-                                          PAN enmascarado, estado y alta—, así que
-                                          va un guion en vez de una fecha inventada.
-                                        --%>
-                                        <span class="tarjeta__value">—</span>
+                                        <span class="tarjeta__value">${k.expiresLabel}</span>
                                     </span>
                                 </span>
                             </label>
-                        </c:if>
-
-                        <c:if test="${not empty digitalCard}">
-                            <label class="tarjeta tarjeta--b" for="front-b">
-                                <span class="tarjeta__top">
-                                    <span class="tarjeta__key">TIPO DE LA TARJETA</span>
-                                    <span class="tarjeta__pill">DIGITAL</span>
-                                </span>
-                                <span class="tarjeta__data">
-                                    <span class="tarjeta__pan">
-                                        <span class="tarjeta__key">NÚMERO DE TARJETA</span>
-                                        <span class="tarjeta__value">${fn:escapeXml(digitalCard.maskedPan)}</span>
-                                    </span>
-                                    <span class="tarjeta__exp">
-                                        <span class="tarjeta__key">VÁLIDA HASTA</span>
-                                        <span class="tarjeta__value">—</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </c:if>
+                        </c:forEach>
                     </c:otherwise>
                 </c:choose>
             </div>
@@ -191,6 +167,112 @@
         <span class="pactivity__more is-pending" title="Pantalla pendiente">Ver historial completo</span>
     </aside>
 </div>
+
+<%--
+  Detalle de tarjeta · marco Figma "Detalle Tarjeta" (285:47).
+
+  Uno por tarjeta, porque son como mucho dos: repetir el bloque cuesta menos
+  que rellenar un modal único desde JavaScript, y así el contenido lo pinta el
+  servidor como en el resto del proyecto.
+
+  Al pulsar la tarjeta de DETRÁS se intercambian —que es lo que ya hacían los
+  radios—; al pulsar la de DELANTE, que ya enseña su cara, se abre este detalle.
+  Es lo que dice la pantalla: "da click en cualquier tarjeta para ver sus
+  detalles completos", y el detalle tiene más de lo que cabe en la cara.
+--%>
+<c:forEach var="k" items="${cards}">
+    <div class="modal-scrim" id="card-detail-${k.id}" hidden>
+        <div class="modal cardx" role="dialog" aria-modal="true" aria-labelledby="cardx-title-${k.id}">
+            <div class="cardx__head">
+                <h2 class="cardx__title" id="cardx-title-${k.id}">Detalles de tarjeta</h2>
+                <button type="button" class="cardx__close" data-close-card aria-label="Cerrar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor"
+                              stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="cardx__body">
+                <%-- La misma cara de tarjeta de la pantalla, en su tamaño grande. --%>
+                <div class="tarjeta tarjeta--still">
+                    <span class="tarjeta__top">
+                        <span class="tarjeta__key">TIPO DE LA TARJETA</span>
+                        <span class="tarjeta__pill">${fn:toUpperCase(k.typeLabel)}</span>
+                    </span>
+                    <span class="tarjeta__data">
+                        <span class="tarjeta__pan">
+                            <span class="tarjeta__key">NÚMERO DE TARJETA</span>
+                            <span class="tarjeta__value">${fn:escapeXml(k.maskedPan)}</span>
+                        </span>
+                        <span class="tarjeta__exp">
+                            <span class="tarjeta__key">VÁLIDA HASTA</span>
+                            <span class="tarjeta__value">${k.expiresLabel}</span>
+                        </span>
+                    </span>
+                </div>
+
+                <dl class="cardx__rows">
+                    <div class="cardx__row">
+                        <dt>Cuenta asociada</dt>
+                        <dd>
+                            <span class="cardx__mono">${fn:escapeXml(account.accountNumber)}</span>
+                            <span class="cardx__tag">${fn:escapeXml(account.purpose)}</span>
+                        </dd>
+                    </div>
+                    <div class="cardx__row">
+                        <dt>Tipo de tarjeta</dt>
+                        <dd><span class="cardx__mono">${k.typeLabel}</span></dd>
+                    </div>
+                    <div class="cardx__row">
+                        <dt>Fecha de emisión</dt>
+                        <dd><span class="cardx__mono">${k.issuedLabel}</span></dd>
+                    </div>
+                    <div class="cardx__row">
+                        <dt>Fecha de expiración</dt>
+                        <dd><span class="cardx__mono">${k.expiresLabel}</span></dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</c:forEach>
+
+<script>
+    (function () {
+        /*
+          La de detrás se trae al frente (eso lo hace el radio del <label>); la
+          de delante abre su detalle. Se mira el estado ANTES del clic, porque
+          pulsar el label ya habría marcado el radio.
+        */
+        var front = "front-a";
+
+        document.querySelectorAll(".pcards .tarjeta").forEach(function (card) {
+            card.addEventListener("click", function (e) {
+                var target = card.getAttribute("for");
+                if (target !== front) { front = target; return; }   // pasa al frente
+
+                e.preventDefault();
+                var modal = document.getElementById(card.dataset.card);
+                if (modal) modal.hidden = false;
+            });
+        });
+
+        function closeAll() {
+            document.querySelectorAll("[id^='card-detail-']").forEach(function (m) { m.hidden = true; });
+        }
+
+        document.querySelectorAll("[data-close-card]").forEach(function (b) {
+            b.addEventListener("click", closeAll);
+        });
+        document.querySelectorAll("[id^='card-detail-']").forEach(function (m) {
+            m.addEventListener("mousedown", function (e) { if (e.target === m) closeAll(); });
+        });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeAll();
+        });
+    })();
+</script>
 
 <%-- Se abre con esta cuenta ya elegida como origen. --%>
 <c:set var="fixedSourceId" value="${account.id}"/>

@@ -15,6 +15,7 @@
 --           creadas con la versión de este archivo que se quedó sin ellas).
 --   · V5  → descripción y color propio en las categorías.
 --   · V6  → una tarjeta activa de cada tipo por cuenta.
+--   · V7  → vencimiento de la tarjeta.
 -- ============================================================
 
 -- ── Limpieza para desarrollo (re-ejecutar). Descomenta si necesitas recrear.
@@ -142,9 +143,13 @@ CREATE TABLE card (
                       masked_pan  VARCHAR2(19),
                       status      VARCHAR2(10) DEFAULT 'ACTIVE' NOT NULL,
                       created_at  TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+                      -- Vigencia: cuatro años desde la emisión. La regla vive en
+                      -- CardService.VALIDITY_YEARS; aquí sólo se guarda el resultado.
+                      expires_at  DATE NOT NULL,
                       CONSTRAINT fk_card_account FOREIGN KEY (account_id) REFERENCES account(id),
                       CONSTRAINT chk_card_type   CHECK (card_type IN ('PHYSICAL', 'DIGITAL')),
-                      CONSTRAINT chk_card_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'BLOCKED'))
+                      CONSTRAINT chk_card_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'BLOCKED')),
+                      CONSTRAINT chk_card_expiry CHECK (expires_at > created_at)
 );
 
 -- Como mucho UNA tarjeta activa de cada tipo por cuenta: una física y una

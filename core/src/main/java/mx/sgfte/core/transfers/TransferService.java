@@ -3,6 +3,7 @@ package mx.sgfte.core.transfers;
 import mx.sgfte.core.accounts.AccountDao;
 import mx.sgfte.core.movements.Movement;
 import mx.sgfte.core.movements.MovementDao;
+import mx.sgfte.core.notifications.NotificationService;
 import mx.sgfte.core.shared.db.Db;
 import mx.sgfte.core.users.ValidationException;
 
@@ -68,6 +69,7 @@ public class TransferService {
                 movementDao.insert(conn, new Movement(destId, "TRANSFER_IN", amount, sourceId, text));
 
                 conn.commit();
+                
             } catch (RuntimeException | SQLException e) {
                 conn.rollback();
                 if (e instanceof RuntimeException) throw (RuntimeException) e;
