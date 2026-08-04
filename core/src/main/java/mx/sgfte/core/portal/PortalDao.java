@@ -244,4 +244,44 @@ public class PortalDao {
             throw new RuntimeException("Error loading the account activity", e);
         }
     }
+
+    /**
+     * Every account this cardholder could transfer to, grouped by purpose.
+     *
+     * One query for the whole modal instead of one per account. The transfer
+     * form is a pop-up now, so it cannot reload the page when the source
+     * changes: it needs all the eligible destinations up front and filters them
+     * on the spot. With no connection pool, N queries would be N round trips on
+     * every dashboard load.
+     *
+     * Same two guards as findPeersForTransfer: never your own accounts, and only
+     * purposes you actually hold — the P2P rule is same-category.
+     */
+    public java.util.Map<Long, List<PeerOption>> findPeersByCategory(long cardholderId) {
+        String sql = "SELECT a.category_id, a.id, a.account_number, c.first_name, c.last_name "
+                   + "  FROM account a "
+                   + "  JOIN cardholder c ON c.id = a.cardholder_id "
+                   + " WHERE a.status = 'ACTIVE' "
+                   + "   AND a.cardholder_id <> ? "
+                   + "   AND a.category_id IN (SELECT s.category_id FROM account s "
+                   + "                          WHERE s.cardholder_id = ? AND s.status = 'ACTIVE') "
+                   + " ORDER BY c.last_name, c.first_name";
+        java.util.Map<Long, List<PeerOption>> byCategory = new java.util.LinkedHashMap<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            ps.setLong(2, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String label = rs.getString("last_name") + ", " + rs.getString("first_name")
+                                 + " · " + rs.getString("account_number");
+                    byCategory.computeIfAbsent(rs.getLong("category_id"), k -> new ArrayList<>())
+                              .add(new PeerOption(rs.getLong("id"), label));
+                }
+            }
+            return byCategory;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading the transfer destinations", e);
+        }
+    }
 }

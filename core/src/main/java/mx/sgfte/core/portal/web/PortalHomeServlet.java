@@ -36,6 +36,10 @@ public class PortalHomeServlet extends HttpServlet {
         req.setAttribute("activity", portalService.recentActivity(cardholderId));
         req.setAttribute("monthChange", portalService.monthChangePercent(cardholderId, total));
 
+        // Lo que necesita el modal de transferencia, que vive en esta pantalla.
+        req.setAttribute("myAccounts", accounts);
+        req.setAttribute("peersByAccount", portalService.peersByAccount(cardholderId));
+
         req.getRequestDispatcher("/WEB-INF/jsp/app/home.jsp").forward(req, resp);
     }
 }

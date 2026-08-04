@@ -3021,44 +3021,41 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
    26 · Transferencia del portal · marco 111:2
    ========================================================================== */
 
-/* Pantalla de tarea: sin cabecera ni menú, la tarjeta centrada y nada más. */
-.xfer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: var(--app-h, 100vh);
-    padding: 96px 24px 48px;
+/*
+  El marco lo dibuja como pantalla completa, pero es un pop-up: se abre sobre el
+  panel o sobre la vista de cuenta. Entra sólo la tarjeta; el título y el
+  subtítulo que el marco pone ENCIMA del recuadro pasan dentro, como en el resto
+  de modales del proyecto.
+*/
+.xfer__card {
+    width: 544px;
+    max-width: 100%;
+    padding: 36px 76px 40px;
+    background: #231f1d;
+    border-radius: 10px;
 }
 
-.xfer__title {
-    margin: 0;
+.xfer__modal-title {
+    padding-top: 0;
     font-family: var(--sgfte-font-title);
     font-weight: 700;
-    font-size: 46px;
+    font-size: 34px;
     line-height: 1;
     letter-spacing: 3px;
+    text-align: center;
     color: #fff;
 }
 
-.xfer__lead {
-    max-width: 432px;
-    margin: 56px 0 0;
-    font-size: 19px;
-    line-height: 24px;
-    letter-spacing: 3px;
+.xfer__modal-lead {
+    margin: 22px 0 34px;
+    font-size: 15px;
+    line-height: 22px;
+    letter-spacing: 1.5px;
     text-align: center;
     color: var(--sgfte-pink-text);
 }
 
-/* 544x664 en el marco, con los campos de 392 centrados dentro. */
-.xfer__card {
-    width: 544px;
-    max-width: 100%;
-    margin-top: 88px;
-    padding: 40px 76px;
-    background: rgba(169, 138, 128, 0.1);
-    border-radius: 10px;
-}
+.xfer__note { margin: 10px 0 0; font-size: 13px; color: var(--sgfte-warn); }
 
 .xfer__label {
     display: block;
@@ -3072,7 +3069,14 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 /* Bloques de 112px: etiqueta (24) + 8 + campo (48) y 32 hasta el siguiente. */
 .xfer__label + .xfer__control { margin-top: 8px; }
-.xfer__control + .xfer__label { margin-top: 32px; }
+/*
+  .xfer__note va tambien: el aviso de "ningún compañero..." se sienta entre el
+  campo de destino y la etiqueta siguiente, y la adyacencia de CSS mira el DOM,
+  no lo que se pinta. Aunque el aviso esté oculto rompía la regla de arriba y
+  MONTO se pegaba al desplegable.
+*/
+.xfer__control + .xfer__label,
+.xfer__note + .xfer__label { margin-top: 32px; }
 
 /*
   Sin radio, igual que los campos del modal de dispersión: el marco no redondea

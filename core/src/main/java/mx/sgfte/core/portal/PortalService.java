@@ -130,4 +130,23 @@ public class PortalService {
     public List<PortalActivity> accountActivity(long cardholderId, long accountId) {
         return portalDao.findAccountActivity(cardholderId, accountId, 8);
     }
+
+    /**
+     * Eligible destinations keyed by MY account id, ready for the pop-up.
+     *
+     * The DAO groups by category because that is what the rule keys on; this
+     * re-keys by account so the form can look up destinations directly from the
+     * source the employee picked.
+     */
+    public java.util.Map<Long, List<PeerOption>> peersByAccount(long cardholderId) {
+        java.util.Map<Long, List<PeerOption>> byCategory =
+                portalDao.findPeersByCategory(cardholderId);
+
+        java.util.Map<Long, List<PeerOption>> byAccount = new java.util.LinkedHashMap<>();
+        for (PortalAccount account : myAccounts(cardholderId)) {
+            byAccount.put(account.getId(),
+                    byCategory.getOrDefault(account.getCategoryId(), List.of()));
+        }
+        return byAccount;
+    }
 }

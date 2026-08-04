@@ -59,10 +59,10 @@
                 <h1 class="pwelcome">Cuenta ${fn:escapeXml(account.accountNumber)}</h1>
                 <p class="plead">Administra las tarjetas asignadas a tu cuenta de ${fn:escapeXml(account.purpose)}.</p>
             </div>
-            <a class="btn btn--primary btn--hero btn--stacked" href="${ctx}/app/transferencia?sourceId=${account.id}">
+            <button type="button" class="btn btn--primary btn--hero btn--stacked" data-open-transfer>
                 <svg width="24" height="24" aria-hidden="true"><use href="#i-arrows"/></svg>
                 <span>Transferir<br>a compañero</span>
-            </a>
+            </button>
         </div>
 
         <div class="paccounts pcards-panel">
@@ -191,5 +191,9 @@
         <span class="pactivity__more is-pending" title="Pantalla pendiente">Ver historial completo</span>
     </aside>
 </div>
+
+<%-- Se abre con esta cuenta ya elegida como origen. --%>
+<c:set var="fixedSourceId" value="${account.id}"/>
+<%@ include file="/WEB-INF/jsp/partials/transfer-modal.jspf" %>
 
 <%@ include file="/WEB-INF/jsp/partials/app-bottom.jspf" %>

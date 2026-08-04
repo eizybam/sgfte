@@ -1,6 +1,5 @@
 package mx.sgfte.core.portal.web;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,15 +29,14 @@ public class PortalTransferServlet extends HttpServlet {
 
     private final PortalService portalService = new PortalService();
 
+    /** El formulario es un modal del panel; aquí no hay pantalla que pintar. */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        render(req, resp, PortalSupport.parseId(req.getParameter("sourceId")));
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.sendRedirect(req.getContextPath() + "/app/home");
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         long cardholderId = PortalSupport.cardholderId(req);
         Long sourceId = PortalSupport.parseId(req.getParameter("sourceId"));
         Long destId = PortalSupport.parseId(req.getParameter("destId"));
@@ -88,17 +86,4 @@ public class PortalTransferServlet extends HttpServlet {
     }
 
     /** Loads both dropdowns and shows the form. */
-    private void render(HttpServletRequest req, HttpServletResponse resp, Long sourceId)
-            throws ServletException, IOException {
-        long cardholderId = PortalSupport.cardholderId(req);
-
-        req.setAttribute("myAccounts", portalService.myAccounts(cardholderId));
-        req.setAttribute("selectedSourceId", sourceId);
-        if (sourceId != null) {
-            List<?> peers = portalService.peersFor(cardholderId, sourceId);
-            req.setAttribute("peers", peers);
-        }
-
-        req.getRequestDispatcher("/WEB-INF/jsp/app/transferencia.jsp").forward(req, resp);
-    }
 }

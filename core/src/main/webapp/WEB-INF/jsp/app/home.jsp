@@ -111,10 +111,10 @@
             </div>
 
             <div class="paccounts__foot">
-                <a class="btn btn--primary btn--hero btn--stacked" href="${ctx}/app/transferencia">
+                <button type="button" class="btn btn--primary btn--hero btn--stacked" data-open-transfer>
                     <svg width="24" height="24" aria-hidden="true"><use href="#i-arrows"/></svg>
                     <span>Transferir<br>a compañero</span>
-                </a>
+                </button>
                 <%-- Deshabilitado, no enlazado a ninguna parte: la pantalla de
                      Movimientos todavía no existe y /app/cuenta necesita un id.
                      Un botón apagado dice eso mejor que un enlace roto. --%>
@@ -160,5 +160,7 @@
         </c:choose>
     </aside>
 </div>
+
+<%@ include file="/WEB-INF/jsp/partials/transfer-modal.jspf" %>
 
 <%@ include file="/WEB-INF/jsp/partials/app-bottom.jspf" %>
