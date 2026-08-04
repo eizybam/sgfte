@@ -15,7 +15,19 @@ package mx.sgfte.core.notifications;
 final class MailConfig {
 
     static final String HOST = env("SGFTE_MAIL_HOST", "smtp.gmail.com");
-    static final int PORT = Integer.parseInt(env("SGFTE_MAIL_PORT", "587"));
+
+    /*
+      465 con SSL directo, y no 587 con STARTTLS.
+
+      El 587 quedó descartado a la vista de los hechos: en la red donde corre
+      esto la conexión TCP abre pero la negociación de STARTTLS no recibe
+      respuesta y muere por tiempo agotado. El 465 cifra desde el saludo, así
+      que no hay negociación intermedia que filtrar.
+
+      Para volver al otro transporte: SGFTE_MAIL_PORT=587 y SGFTE_MAIL_SSL=false.
+     */
+    static final int PORT = Integer.parseInt(env("SGFTE_MAIL_PORT", "465"));
+    static final boolean SSL = Boolean.parseBoolean(env("SGFTE_MAIL_SSL", "true"));
     static final String USERNAME = env("SGFTE_MAIL_USER", "sgftenotification@gmail.com");
     static final String PASSWORD = env("SGFTE_MAIL_PASSWORD", "ikvb xwxn xdbc jdqt");
     static final boolean AUTH = Boolean.parseBoolean(env("SGFTE_MAIL_AUTH", "true"));

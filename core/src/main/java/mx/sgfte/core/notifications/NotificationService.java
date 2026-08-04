@@ -129,9 +129,12 @@ public class NotificationService {
             emailSender.send(to, subject, body);
             auditLogService.record(AuditEvent.NOTIFICATION, subject + " -> " + to, "system", null);
         } catch (MessagingException | RuntimeException e) {
-            System.err.println("[NOTIFY][ERROR] No se pudo enviar a " + to + ": " + e.getMessage());
+            // La causa real y no sólo "Could not convert socket to TLS", que no
+            // dice si fue la red, el certificado o la contraseña.
+            String why = EmailSender.explain(e);
+            System.err.println("[NOTIFY][ERROR] No se pudo enviar a " + to + ": " + why);
             auditLogService.record(AuditEvent.NOTIFICATION,
-                    subject + " -> " + to + " [FALLÓ: " + e.getMessage() + "]", "system", null);
+                    subject + " -> " + to + " [FALLÓ: " + why + "]", "system", null);
         }
     }
 }
