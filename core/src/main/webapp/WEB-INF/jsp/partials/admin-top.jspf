@@ -118,6 +118,15 @@
                 <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-accounts.png" alt="">
                 <span>Gestión de<br>cuentas</span>
             </a>
+            <%-- Justo después de "Gestión de cuentas" porque es su catálogo: el
+                 filtro "Propósito" de esa pantalla es literalmente esta tabla.
+                 Va con icono del sprite y no PNG como sus vecinos: no existe un
+                 nav-categories.png y el marco (2036:6) no asigna ninguno. --%>
+            <a class="app-side__link ${activeNav == 'categories' ? 'is-active' : ''}"
+               href="${ctx}/admin/categorias">
+                <svg class="app-side__icon" width="42" height="42" aria-hidden="true"><use href="#i-categories"/></svg>
+                <span>Categorías</span>
+            </a>
             <%-- El marco de "Vista de Logs" marca este ítem como activo, así que
                  apunta a la bitácora. El historial de movimientos por cuenta
                  vive en /admin/historial, todavía sin pantalla propia. --%>

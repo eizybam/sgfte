@@ -29,6 +29,13 @@ public enum AuditEvent {
     ACCOUNT_CREATED (Severity.INFO, Module.CUENTAS, "Cuenta creada"),
     ACCOUNT_DELETED (Severity.CRIT, Module.CUENTAS, "Cuenta eliminada"),
 
+    // --- Catálogo de propósitos (categorías) ---
+    // Retirar es ALERTA y no INFO: no rompe nada de lo existente, pero cambia lo
+    // que se puede crear a partir de ese momento, y eso conviene que se vea.
+    CATEGORY_CREATED   (Severity.INFO,   Module.CUENTAS, "Categoría creada"),
+    CATEGORY_RETIRED   (Severity.ALERTA, Module.CUENTAS, "Categoría retirada"),
+    CATEGORY_ACTIVATED (Severity.INFO,   Module.CUENTAS, "Categoría reactivada"),
+
     // --- Tarjetas ---
     CARD_ISSUED      (Severity.INFO, Module.TARJETAS, "Nueva tarjeta asignada"),
     CARD_INVALIDATED (Severity.CRIT, Module.TARJETAS, "Tarjeta invalidada"),

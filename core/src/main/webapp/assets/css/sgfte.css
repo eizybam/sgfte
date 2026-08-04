@@ -73,10 +73,17 @@
       no de una aproximación: son los mismos que usan los cuadros de la leyenda.
       El orden es el de balanceByPurpose() — saldo mayor primero.
     */
+    /* Paleta de propósitos: los siete colores del modal "Nueva categoría"
+       (2041:155), en su mismo orden. Los cuatro primeros son los que ya se
+       usaban cuando el color se derivaba de la posición en el catálogo; del 5
+       al 7 sólo existen desde que se elige a mano (V5). */
     --sgfte-purpose-1:     #637719;   /* gasolina  */
     --sgfte-purpose-2:     #195b77;   /* viajes    */
     --sgfte-purpose-3:     #771934;   /* comida    */
     --sgfte-purpose-4:     #531977;   /* viáticos  */
+    --sgfte-purpose-5:     #c34100;   /* naranja de marca */
+    --sgfte-purpose-6:     #feb96b;   /* ámbar     */
+    --sgfte-purpose-7:     #6b7280;   /* gris      */
 
     /* Forma */
     --sgfte-radius:        8px;
@@ -674,6 +681,11 @@ textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: v
 .badge--p2 { background: rgba(25, 91, 119, 0.30);  color: #6ac4e6; }
 .badge--p3 { background: rgba(119, 25, 52, 0.30);  color: #ff9db4; }
 .badge--p4 { background: rgba(83, 25, 119, 0.30);  color: #c9a2f0; }
+/* El texto es una versión clara del propio color: sobre el fondo al 30% los
+   tres nuevos no llegaban a contraste legible usando el color plano. */
+.badge--p5 { background: rgba(195, 65, 0, 0.30);   color: #ffa877; }
+.badge--p6 { background: rgba(254, 185, 107, 0.28); color: #ffd6a3; }
+.badge--p7 { background: rgba(107, 114, 128, 0.34); color: #c3c9d4; }
 
 /* ==========================================================================
    9 · Avisos
@@ -1487,6 +1499,9 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .purpose-pill--p2 { background: rgba(25, 91, 119, 0.13);  border-color: rgba(25, 91, 119, 0.4);  color: var(--sgfte-purpose-2); }
 .purpose-pill--p3 { background: rgba(119, 25, 52, 0.13);  border-color: rgba(119, 25, 52, 0.4);  color: var(--sgfte-purpose-3); }
 .purpose-pill--p4 { background: rgba(83, 25, 119, 0.13);  border-color: rgba(83, 25, 119, 0.4);  color: var(--sgfte-purpose-4); }
+.purpose-pill--p5 { background: rgba(195, 65, 0, 0.13);   border-color: rgba(195, 65, 0, 0.4);   color: #ffa877; }
+.purpose-pill--p6 { background: rgba(254, 185, 107, 0.13); border-color: rgba(254, 185, 107, 0.4); color: var(--sgfte-purpose-6); }
+.purpose-pill--p7 { background: rgba(107, 114, 128, 0.15); border-color: rgba(107, 114, 128, 0.45); color: #c3c9d4; }
 
 .detail-head__meta { margin: 12px 0 0; font-weight: 500; font-size: 18px; color: var(--sgfte-pink-text); }
 .detail-head__meta .crumbs__sep { color: var(--sgfte-muted); }
@@ -2166,8 +2181,188 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
     .btn--logs { width: 100%; padding: 10px; }
 }
 
+
 /* ==========================================================================
-   21 · Responsive
+   21 · Categorías · marco 2036:6 y modal 2041:155
+   ========================================================================== */
+
+/*
+  Columnas del marco: los encabezados caen en 28 / 320 / 640 / 748 / 912 dentro
+  de una tarjeta de 1032. Como .table-card mete 27px de relleno a cada lado, el
+  ancho útil es 978 y no 1032 — sumar los 1032 hacía que la tabla se saliera.
+*/
+.table--categories .col-cat        { width: 292px; }
+.table--categories .col-desc       { width: 320px; }
+.table--categories .col-accounts   { width: 108px; }
+.table--categories .col-dispersed  { width: 164px; }
+.table--categories .col-state      { width: 94px; }
+
+/* Filas de 92px en el marco: 108 -> 200 -> 292 */
+.table--categories td { height: 92px; }
+
+/*
+  Todo a la izquierda: en 2036:6 cada encabezado arranca justo donde arranca su
+  columna, y el contenido de la fila va debajo. Es distinto de la tabla de
+  cuentas, que sí centra, así que se limita a este modificador.
+*/
+.table--categories th,
+.table--categories td { text-align: left; }
+
+/*
+  Encabezados de 12px y no los 20px de .table: en el marco "DISPERSIÓN TOTAL"
+  mide 116px y su columna 164, así que cabe holgado. A 20px medía ~190 y, como
+  .table th no parte la línea, se metía encima de ESTADO.
+*/
+.table--categories th { font-size: 12px; letter-spacing: 0.4px; }
+
+.cat-cell { display: flex; align-items: center; gap: 12px; }
+
+/* Cuadro de color de 36x36: es la única pista visual del color elegido, así
+   que va del propio --sgfte-purpose-N y no de una clase por categoría. */
+.cat-swatch {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+}
+
+.cat-name { display: block; font-weight: 600; font-size: 15px; color: var(--sgfte-cream); }
+.cat-kind { display: block; margin-top: 4px; font-size: 13px; color: var(--sgfte-muted); }
+
+.cat-desc { font-size: 14px; color: #cfc4be; }
+.cat-desc--empty { color: var(--sgfte-muted); font-style: italic; }
+
+/* El badge ESTADO es el interruptor: no hay borrar, sólo retirar y reactivar. */
+.cat-toggle {
+    border: 1px solid transparent;
+    background: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.cat-toggle:hover .badge { filter: brightness(1.25); }
+.cat-toggle:focus-visible { outline: 2px solid var(--sgfte-accent); outline-offset: 3px; border-radius: 20px; }
+
+.cat-count { margin: 22px 0 0; font-size: 14px; color: var(--sgfte-muted); }
+
+/* ---- El modal de categorías titula distinto ------------------------------ */
+/*
+  2041:155 pone el título a la izquierda, en 24px, con un subtítulo debajo —no
+  centrado y en versalitas como los modales de dinero—, y sus campos sí llevan
+  radio 8 y fondo propio. Va como modificador para no tocar "Crear cuenta",
+  que sigue su propio marco.
+*/
+.modal--stack { width: 540px; padding: 0 0 37px; }
+
+.modal--stack .modal__title {
+    padding: 37px 39px 0;
+    font-family: var(--sgfte-font-body);
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-align: left;
+    color: var(--sgfte-cream);
+}
+
+.modal__lead { margin: 12px 0 0; padding: 0 39px; font-size: 14px; color: var(--sgfte-muted); }
+
+.modal--stack .modal__body { padding: 0 39px; }
+
+.modal--stack .modal__label {
+    margin-top: 28px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0;
+    color: var(--sgfte-pink-text);
+}
+
+.modal--stack .register__control {
+    height: 52px;
+    margin-top: 10px;
+    padding: 0 17px;
+    background: #2b2a28;
+    border: 1px solid rgba(89, 65, 57, 0.5);
+    border-radius: 8px;
+}
+
+.modal--stack .register__input { font-size: 16px; }
+.modal--stack .register__input::placeholder { color: var(--sgfte-muted); }
+.modal--stack .register__actions { margin-top: 36px; }
+.modal--stack .register__actions .btn:first-child { width: 150px; }
+.modal--stack .register__actions .btn:last-child  { flex: 1 1 auto; }
+
+/* ---- Paleta del modal ---------------------------------------------------- */
+.swatches { display: flex; gap: 14px; margin-top: 10px; }
+
+/* El radio real se oculta pero SIGUE en el DOM: así el grupo se recorre con
+   las flechas y el formulario envía el color sin JavaScript de por medio. */
+.swatch__input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.swatch__box {
+    display: block;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* El anillo del marco: 46x46 con 2px de borde alrededor del cuadro de 38. */
+.swatch__input:checked + .swatch__box {
+    /* El hueco del anillo va del color del propio modal (rgba(30,28,27,.97)),
+       no de --sgfte-bg: sobre el panel se vería un recuadro más oscuro. */
+    box-shadow: 0 0 0 4px #1e1c1b, 0 0 0 6px var(--sgfte-primary-text);
+}
+
+.swatch__input:focus-visible + .swatch__box {
+    /* El hueco del anillo va del color del propio modal (rgba(30,28,27,.97)),
+       no de --sgfte-bg: sobre el panel se vería un recuadro más oscuro. */
+    box-shadow: 0 0 0 4px #1e1c1b, 0 0 0 6px var(--sgfte-accent);
+}
+
+/* ---- Interruptor ACTIVA del modal ---------------------------------------- */
+.switch { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.switch__input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.switch__track {
+    position: relative;
+    display: block;
+    width: 48px;
+    height: 28px;
+    border-radius: 14px;
+    background: rgba(169, 138, 128, 0.28);
+    cursor: pointer;
+    transition: background 120ms ease;
+}
+
+.switch__track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--sgfte-cream);
+    transition: transform 120ms ease;
+}
+
+.switch__input:checked + .switch__track { background: var(--sgfte-primary); }
+.switch__input:checked + .switch__track::after { transform: translateX(20px); }
+.switch__input:focus-visible + .switch__track { outline: 2px solid var(--sgfte-accent); outline-offset: 3px; }
+
+.switch__label { font-weight: 500; font-size: 15px; color: var(--sgfte-cream); }
+
+
+/* ==========================================================================
+   22 · Responsive
    ========================================================================== */
 
 /*
