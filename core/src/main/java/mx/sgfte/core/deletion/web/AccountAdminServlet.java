@@ -1,5 +1,7 @@
 package mx.sgfte.core.deletion.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -41,6 +43,7 @@ public class AccountAdminServlet extends HttpServlet {
     private final DeletionService deletionService = new DeletionService();
     private final AccountDao accountDao = new AccountDao();
     private final CategoryDao categoryDao = new CategoryDao();
+    private final AuditLogService audit = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -83,6 +86,7 @@ public class AccountAdminServlet extends HttpServlet {
             deletionService.deleteAccount(accountId);
             session.setAttribute(FLASH_SUCCESS,
                     "Cuenta eliminada. Su saldo se reintegró a la Concentradora.");
+            audit.record(AuditEvent.ACCOUNT_DELETED, "Cuenta " + accountId, req);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
         }

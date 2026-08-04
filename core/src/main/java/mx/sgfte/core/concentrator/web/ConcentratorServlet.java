@@ -1,5 +1,7 @@
 package mx.sgfte.core.concentrator.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,6 +21,8 @@ import java.math.BigDecimal;
 @WebServlet("/admin/concentradora")
 public class ConcentratorServlet extends HttpServlet {
 
+    private final AuditLogService audit = new AuditLogService();
+
     private final ConcentratorService service = new ConcentratorService();
 
     @Override
@@ -36,6 +40,7 @@ public class ConcentratorServlet extends HttpServlet {
             Object user = req.getSession().getAttribute("user");
             service.fund(amount, user == null ? null : String.valueOf(user));
             req.setAttribute("success", "Concentradora fondeada correctamente.");
+            audit.record(AuditEvent.CONCENTRATOR_FUNDED, "$" + amount, req);
         } catch (ValidationException e) {
             req.setAttribute("errors", e.getErrors());
         }

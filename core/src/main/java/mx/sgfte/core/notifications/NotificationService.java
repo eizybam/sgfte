@@ -1,5 +1,6 @@
 package mx.sgfte.core.notifications;
 
+import mx.sgfte.core.audit.AuditEvent;
 import mx.sgfte.core.audit.AuditLogService;
 
 /**
@@ -14,6 +15,6 @@ public class NotificationService {
     public void send(String to, String subject, String body) {
         // TODO (siguiente iteración): enviar email real con JavaMail.
         System.out.println("[NOTIFY] to=" + to + " | " + subject + " | " + body);
-        auditLogService.record("NOTIFICATION", subject + " -> " + to, "system");
+        auditLogService.record(AuditEvent.NOTIFICATION, subject + " -> " + to, "system", null);
     }
 }

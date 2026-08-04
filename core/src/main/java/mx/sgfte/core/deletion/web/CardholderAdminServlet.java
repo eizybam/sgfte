@@ -1,5 +1,7 @@
 package mx.sgfte.core.deletion.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -37,6 +39,7 @@ public class CardholderAdminServlet extends HttpServlet {
 
     private final DeletionService deletionService = new DeletionService();
     private final CardholderDao cardholderDao = new CardholderDao();
+    private final AuditLogService audit = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -78,6 +81,7 @@ public class CardholderAdminServlet extends HttpServlet {
             deletionService.deleteCardholder(cardholderId);
             session.setAttribute(FLASH_SUCCESS,
                     "Tarjetahabiente eliminado. Saldos reintegrados y tarjetas invalidadas.");
+            audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + cardholderId, req);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
         }

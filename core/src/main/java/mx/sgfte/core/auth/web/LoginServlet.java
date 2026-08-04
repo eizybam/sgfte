@@ -1,5 +1,7 @@
 package mx.sgfte.core.auth.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,6 +22,8 @@ import java.util.Optional;
  */
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
+
+    private final AuditLogService audit = new AuditLogService();
 
     private final AuthService authService = new AuthService();
 
@@ -45,6 +49,9 @@ public class LoginServlet extends HttpServlet {
 
         Optional<AppUser> authed = authService.authenticate(email, password);
         if (authed.isEmpty()) {
+            // Se registra ANTES de responder: un intento fallido es justo lo que
+            // hay que poder rastrear después.
+            audit.record(AuditEvent.LOGIN_FAILED, "Correo: " + email, email, req.getRemoteAddr());
             req.setAttribute("error", "Credenciales inválidas.");
             req.setAttribute("email", email);   // keep what they typed
             forwardToForm(req, resp);
@@ -62,6 +69,9 @@ public class LoginServlet extends HttpServlet {
         session.setAttribute("user", new SessionUser(
                 user.getId(), user.getFullName(), user.getRole(), user.getCardholderId()));
         session.setMaxInactiveInterval(30 * 60); // 30 minutes
+
+        audit.record(AuditEvent.LOGIN_OK, "Rol: " + user.getRole(),
+                     user.getFullName(), req.getRemoteAddr());
 
         resp.sendRedirect(req.getContextPath() + Role.homeFor(user.getRole()));
     }

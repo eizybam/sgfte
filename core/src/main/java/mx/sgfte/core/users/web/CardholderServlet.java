@@ -1,5 +1,7 @@
 package mx.sgfte.core.users.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +34,7 @@ public class CardholderServlet extends HttpServlet {
     public static final String FLASH_EMAIL  = "registerEmail";
 
     private final CardholderService service = new CardholderService();
+    private final AuditLogService audit = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -49,6 +52,7 @@ public class CardholderServlet extends HttpServlet {
         try {
             service.registerFromFullName(fullName, email, department);
             session.setAttribute("success", "Empleado registrado.");
+            audit.record(AuditEvent.CARDHOLDER_CREATED, fullName + " · " + email, req);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
             session.setAttribute(FLASH_NAME, fullName);

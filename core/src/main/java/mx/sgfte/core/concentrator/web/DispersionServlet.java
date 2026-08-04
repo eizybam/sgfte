@@ -1,5 +1,7 @@
 package mx.sgfte.core.concentrator.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,6 +41,7 @@ public class DispersionServlet extends HttpServlet {
     public static final String FLASH_SUCCESS = "success";
 
     private final DispersionService dispersionService = new DispersionService();
+    private final AuditLogService audit = new AuditLogService();
 
     /** The form is a modal now; there is nothing to show on its own. */
     @Override
@@ -61,9 +64,14 @@ public class DispersionServlet extends HttpServlet {
         try {
             dispersionService.disperse(accountId, amount, description);
             session.setAttribute(FLASH_SUCCESS, "Dispersión aplicada. El saldo se sumó a la cuenta.");
+            audit.record(AuditEvent.DISPERSION,
+                    "Cuenta " + accountId + " · $" + amount, req);
         } catch (ValidationException e) {
             keepForRetry(session, e.getErrors(), rawAccountId, rawAmount);
         } catch (InsufficientFundsException e) {
+            // Saldo insuficiente es ALERTA, no un error cualquiera: dice que
+            // alguien intentó mover dinero que no había.
+            audit.record(AuditEvent.DISPERSION_REJECTED, e.getMessage(), req);
             keepForRetry(session, List.of(e.getMessage()), rawAccountId, rawAmount);
         }
 

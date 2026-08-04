@@ -2086,7 +2086,54 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 }
 
 /* ==========================================================================
-   20 · Responsive
+   20 · Logs y Auditoría · marco Figma "Vista de Logs" (253:43)
+   ========================================================================== */
+
+/*
+  Anchos renormalizados, no copiados: en el marco las seis columnas suman
+  1144px dentro de una tabla de 1010, así que la última se sale y "FECHA/HORA"
+  no le cabe a su propio encabezado. Se reparte el ancho real dando a cada
+  columna lo que su contenido y su título necesitan, con ORIGEN quedándose el
+  sobrante como en el diseño.
+*/
+.table--logs .col-when   { width: 15%; }
+.table--logs .col-level  { width: 10.5%; }
+.table--logs .col-action { width: 20.5%; }
+.table--logs .col-user   { width: 15%; }
+.table--logs .col-module { width: 13%; }
+.table--logs .col-origin { width: 26%; }
+
+/* Esta tabla alinea a la IZQUIERDA, no al centro como la canónica */
+.table--logs th,
+.table--logs td { text-align: left; }
+
+/* Fecha y hora en dos líneas dentro de la misma celda */
+.log-when { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
+.log-when span { display: block; }
+
+.log-user   { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-tan); }
+.log-origin { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
+
+/*
+  Badge de severidad. INFO reutiliza el naranja de la marca —no el verde de
+  "correcto"— porque aquí no significa éxito, sino "suceso normal".
+*/
+.sev { display: inline-flex; }
+.sev--info   { background: rgba(195, 65, 0, 0.18);  color: var(--sgfte-salmon); }
+.sev--alerta { background: rgba(254, 185, 107, 0.15); color: var(--sgfte-accent); }
+.sev--crit   { background: rgba(255, 180, 171, 0.16); color: var(--sgfte-error); }
+
+/* Botón de exportar de esta pantalla: 28px de icono y 60 de padding lateral */
+.btn--logs { padding: 10px 60px; gap: 10px; font-weight: 700; color: var(--sgfte-white); }
+.btn--logs svg { width: 28px; height: 28px; flex: 0 0 28px; }
+
+@media (max-width: 860px) {
+    .table--logs { min-width: 900px; }
+    .btn--logs { width: 100%; padding: 10px; }
+}
+
+/* ==========================================================================
+   21 · Responsive
    ========================================================================== */
 
 /*

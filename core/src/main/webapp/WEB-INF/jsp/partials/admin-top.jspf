@@ -110,8 +110,11 @@
                 <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-accounts.png" alt="">
                 <span>Gestión de<br>cuentas</span>
             </a>
+            <%-- El marco de "Vista de Logs" marca este ítem como activo, así que
+                 apunta a la bitácora. El historial de movimientos por cuenta
+                 vive en /admin/historial, todavía sin pantalla propia. --%>
             <a class="app-side__link ${activeNav == 'logs' ? 'is-active' : ''}"
-               href="${ctx}/admin/historial">
+               href="${ctx}/admin/logs">
                 <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-history.png" alt="">
                 <span>Registros<br>e historial</span>
             </a>

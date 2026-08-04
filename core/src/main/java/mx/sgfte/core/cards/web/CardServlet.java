@@ -1,5 +1,7 @@
 package mx.sgfte.core.cards.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -38,6 +40,7 @@ public class CardServlet extends HttpServlet {
 
     private final CardService cardService = new CardService();
     private final CardDao cardDao = new CardDao();
+    private final AuditLogService audit = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -62,11 +65,15 @@ public class CardServlet extends HttpServlet {
 
         try {
             if ("invalidate".equals(action)) {
-                cardService.invalidate(parseId(req.getParameter("cardId")));
+                Long cardId = parseId(req.getParameter("cardId"));
+                cardService.invalidate(cardId);
                 session.setAttribute(FLASH_SUCCESS, "Tarjeta invalidada.");
+                audit.record(AuditEvent.CARD_INVALIDATED, "Tarjeta " + cardId, req);
             } else {
                 cardService.issue(accountId, req.getParameter("cardType"));
                 session.setAttribute(FLASH_SUCCESS, "Tarjeta expedida.");
+                audit.record(AuditEvent.CARD_ISSUED,
+                        req.getParameter("cardType") + " · cuenta " + accountId, req);
             }
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
