@@ -2,6 +2,7 @@ package mx.sgfte.core.portal;
 
 import mx.sgfte.core.shared.db.Db;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -282,6 +283,141 @@ public class PortalDao {
             return byCategory;
         } catch (SQLException e) {
             throw new RuntimeException("Error loading the transfer destinations", e);
+        }
+    }
+
+    // ---- Historial de movimientos (Figma 109:4) -----------------------------
+
+    /**
+     * Builds the WHERE shared by the page, the count and the totals of the
+     * history screen, so the three can never disagree about what is being shown.
+     *
+     * The ownership clause is first and is not optional: every query on this
+     * screen is scoped to the accounts this cardholder owns.
+     */
+    private void appendHistoryFilters(StringBuilder sql, List<Object> params, long cardholderId,
+                                      String search, String direction, Long accountId, String period) {
+        sql.append(" WHERE a.cardholder_id = ? ");
+        params.add(cardholderId);
+
+        if (search != null && !search.isBlank()) {
+            sql.append(" AND (UPPER(m.description) LIKE ? OR UPPER(a.account_number) LIKE ? "
+                     + "      OR UPPER(cat.name) LIKE ?) ");
+            String like = "%" + search.trim().toUpperCase() + "%";
+            params.add(like); params.add(like); params.add(like);
+        }
+        if ("IN".equals(direction)) {
+            sql.append(" AND m.movement_type IN ('DEPOSIT', 'TRANSFER_IN') ");
+        } else if ("OUT".equals(direction)) {
+            sql.append(" AND m.movement_type NOT IN ('DEPOSIT', 'TRANSFER_IN') ");
+        }
+        if (accountId != null) {
+            sql.append(" AND a.id = ? ");
+            params.add(accountId);
+        }
+        // TODOS no añade nada: es el filtro de fecha desactivado.
+        switch (period == null ? "" : period) {
+            case "HOY" -> sql.append(" AND m.created_at >= TRUNC(SYSDATE) ");
+            case "7D"  -> sql.append(" AND m.created_at >= TRUNC(SYSDATE) - 7 ");
+            case "30D" -> sql.append(" AND m.created_at >= TRUNC(SYSDATE) - 30 ");
+            default    -> { }
+        }
+    }
+
+    public List<PortalMovementRow> findHistory(long cardholderId, String search, String direction,
+                                               Long accountId, String period, int offset, int limit) {
+        StringBuilder sql = new StringBuilder(
+                  "SELECT m.movement_type, m.description, cat.name AS purpose, "
+                + "       a.account_number, r.account_number AS related_number, "
+                + "       m.amount, m.created_at "
+                + "  FROM account_movement m "
+                + "  JOIN account  a   ON a.id = m.account_id "
+                + "  JOIN category cat ON cat.id = a.category_id "
+                + "  LEFT JOIN account r ON r.id = m.related_account_id ");
+        List<Object> params = new ArrayList<>();
+        appendHistoryFilters(sql, params, cardholderId, search, direction, accountId, period);
+        sql.append(" ORDER BY m.created_at DESC, m.id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add(offset); params.add(limit);
+
+        List<PortalMovementRow> rows = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bindAll(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Timestamp at = rs.getTimestamp("created_at");
+                    rows.add(new PortalMovementRow(
+                            rs.getString("movement_type"), rs.getString("description"),
+                            rs.getString("purpose"), rs.getString("account_number"),
+                            rs.getString("related_number"), rs.getBigDecimal("amount"),
+                            at == null ? null : at.toLocalDateTime()));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading the movement history", e);
+        }
+    }
+
+    public int countHistory(long cardholderId, String search, String direction,
+                            Long accountId, String period) {
+        StringBuilder sql = new StringBuilder(
+                  "SELECT COUNT(*) FROM account_movement m "
+                + "  JOIN account  a   ON a.id = m.account_id "
+                + "  JOIN category cat ON cat.id = a.category_id ");
+        List<Object> params = new ArrayList<>();
+        appendHistoryFilters(sql, params, cardholderId, search, direction, accountId, period);
+
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bindAll(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error counting the movement history", e);
+        }
+    }
+
+    /**
+     * "Total Gastado" y "Total Recibido" de las dos tarjetas de arriba.
+     *
+     * Salen de la MISMA consulta filtrada que la tabla —dos sumas condicionales
+     * en una pasada—, así que las cifras siempre corresponden a lo que se está
+     * viendo. Calcularlas aparte invitaría a que dejaran de cuadrar en cuanto
+     * alguien tocara un filtro.
+     */
+    public BigDecimal[] historyTotals(long cardholderId, String search, String direction,
+                                      Long accountId, String period) {
+        StringBuilder sql = new StringBuilder(
+                  "SELECT NVL(SUM(CASE WHEN m.movement_type IN ('DEPOSIT', 'TRANSFER_IN') "
+                + "                    THEN m.amount END), 0) AS received, "
+                + "       NVL(SUM(CASE WHEN m.movement_type NOT IN ('DEPOSIT', 'TRANSFER_IN') "
+                + "                    THEN m.amount END), 0) AS spent "
+                + "  FROM account_movement m "
+                + "  JOIN account  a   ON a.id = m.account_id "
+                + "  JOIN category cat ON cat.id = a.category_id ");
+        List<Object> params = new ArrayList<>();
+        appendHistoryFilters(sql, params, cardholderId, search, direction, accountId, period);
+
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bindAll(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO };
+                return new BigDecimal[] { rs.getBigDecimal("spent"), rs.getBigDecimal("received") };
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error totalling the movement history", e);
+        }
+    }
+
+    private void bindAll(PreparedStatement ps, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            Object p = params.get(i);
+            if (p instanceof Integer n) ps.setInt(i + 1, n);
+            else if (p instanceof Long n) ps.setLong(i + 1, n);
+            else ps.setString(i + 1, String.valueOf(p));
         }
     }
 }

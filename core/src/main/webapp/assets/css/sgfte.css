@@ -3122,3 +3122,202 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 /* Cancelar a la izquierda y Confirmar a la derecha, como en el marco. */
 .xfer__actions { display: flex; gap: 20px; margin-top: 56px; }
 .xfer__actions .btn { flex: 1 1 0; padding-left: 0; padding-right: 0; }
+
+
+/* ==========================================================================
+   27 · Historial de movimientos del portal · marco 109:4
+   ========================================================================== */
+
+/* Esta pantalla no tiene columnas laterales: ocupa los 1312 del marco. */
+.pmain--wide { padding-left: 65px; padding-right: 63px; }
+
+.hist-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 40px; }
+
+.hist-title {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 48px;
+    line-height: 40px;
+    letter-spacing: -0.64px;
+    color: #fff;
+}
+
+.hist-lead { margin: 30px 0 0; font-weight: 500; font-size: 20px; line-height: 32px; color: var(--sgfte-pink-text); }
+
+/* Dos tarjetas de 261 iguales a la del balance del panel. */
+.hist-kpis { display: flex; gap: 70px; }
+.hist-kpis .pbalance { width: 261px; }
+
+/* ---- Barra de filtros ---------------------------------------------------- */
+.hist-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    margin-top: 42px;
+    padding: 0 20px 0 12px;
+    background: #1d1b1a;
+    border: 1px solid #2b2a28;
+    border-radius: 8px;
+}
+
+.hist-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 360px;
+    height: 40px;
+    padding: 0 14px;
+    background: var(--sgfte-bg);
+    border: 1px solid #594038;
+    border-radius: 8px;
+}
+
+.hist-search svg { flex: 0 0 auto; color: var(--sgfte-muted); }
+.hist-search:focus-within { border-color: var(--sgfte-accent); }
+
+.hist-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+    color: var(--sgfte-cream);
+}
+
+.hist-search input::placeholder { color: var(--sgfte-muted); }
+
+.hist-seg {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--sgfte-bg);
+    border: 1px solid #2b2a28;
+    border-radius: 999px;
+}
+
+.hist-seg__item {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    color: var(--sgfte-muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.hist-seg__item.is-active { background: rgba(195, 65, 0, 0.18); color: #ffb59b; }
+
+.hist-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 10px 16px;
+    border: 1px solid #463e3b;
+    border-radius: 999px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    color: var(--sgfte-cream);
+    white-space: nowrap;
+}
+
+/* El <select> real cubre la píldora, invisible: así el desplegable es nativo
+   y la píldora conserva el aspecto del prototipo. */
+.hist-pill select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.hist-pill svg { color: var(--sgfte-cream); }
+.hist-count { margin-left: auto; font-family: var(--sgfte-font-mono); font-size: 12px; color: var(--sgfte-muted); }
+
+/* ---- Tabla --------------------------------------------------------------- */
+.hist-card {
+    margin-top: 30px;
+    padding: 0 28px;
+    background: #1d1b1a;
+    border: 1px solid #2b2a28;
+    border-radius: 8px;
+}
+
+.hist-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+/* Anchos del marco: 165 + 275 + 170 + 200 + 185 + 125 + 136 = 1256 */
+.hist-table .c-date    { width: 165px; }
+.hist-table .c-concept { width: 275px; }
+.hist-table .c-origin  { width: 170px; }
+.hist-table .c-method  { width: 200px; }
+.hist-table .c-target  { width: 185px; }
+.hist-table .c-amount  { width: 125px; }
+.hist-table .c-state   { width: 136px; }
+
+.hist-table th {
+    height: 62px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: 0.6px;
+    text-align: center;
+    color: #a98a80;
+    border-bottom: 1px solid #2b2a28;
+    white-space: nowrap;
+}
+
+.hist-table td {
+    height: 80px;
+    padding: 18px 6px;
+    font-size: 16px;
+    text-align: center;
+    color: var(--sgfte-cream);
+    border-bottom: 1px solid #2b2a28;
+}
+
+.hist-table tbody tr:last-child td { border-bottom: 0; }
+
+.hist-date span {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.hist-concept__main { display: block; font-size: 16px; }
+.hist-concept__sub  { display: block; margin-top: 2px; font-size: 13px; color: #a1918a; }
+.mono-cell { font-family: var(--sgfte-font-mono); font-size: 14px; }
+
+.hist-amount { font-family: var(--sgfte-font-mono); font-size: 14px; }
+.hist-amount--in { color: var(--sgfte-ok); }
+
+.hist-empty { height: 120px; color: var(--sgfte-muted); font-size: 15px; }
+
+/* ---- Paginador ----------------------------------------------------------- */
+.hist-pager { display: flex; justify-content: flex-end; gap: 8px; margin-top: 13px; }
+
+.hist-pager__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #2b2a28;
+    border-radius: 4px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 14px;
+    color: #a98a80;
+    text-decoration: none;
+}
+
+.hist-pager__item.is-current { background: var(--sgfte-primary); border-color: var(--sgfte-primary); color: #fff; }
+.hist-pager__item.is-disabled { opacity: 0.4; pointer-events: none; }
+.hist-pager__item.is-gap { border-color: transparent; }
