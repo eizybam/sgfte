@@ -8,7 +8,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import mx.sgfte.core.concentrator.AccountLookupDao;
 import mx.sgfte.core.concentrator.DispersionService;
+import mx.sgfte.core.shared.web.OperationResult;
 import mx.sgfte.core.concentrator.InsufficientFundsException;
 import mx.sgfte.core.users.ValidationException;
 
@@ -42,6 +44,7 @@ public class DispersionServlet extends HttpServlet {
 
     private final DispersionService dispersionService = new DispersionService();
     private final AuditLogService audit = new AuditLogService();
+    private final AccountLookupDao accountLookupDao = new AccountLookupDao();
 
     /** The form is a modal now; there is nothing to show on its own. */
     @Override
@@ -63,16 +66,37 @@ public class DispersionServlet extends HttpServlet {
         HttpSession session = req.getSession();
         try {
             dispersionService.disperse(accountId, amount, description);
-            session.setAttribute(FLASH_SUCCESS, "Dispersión aplicada. El saldo se sumó a la cuenta.");
-            audit.record(AuditEvent.DISPERSION,
-                    "Cuenta " + accountId + " · $" + amount, req);
+            audit.record(AuditEvent.DISPERSION, "Cuenta " + accountId + " · $" + amount, req);
+
+            OperationResult.success("¡Depósito aplicado!",
+                            "El depósito se acreditó a la cuenta",
+                            "DEPÓSITO CONFIRMADO",
+                            "El saldo ya está disponible en la cuenta destino.")
+                    .amount("Monto depositado", amount)
+                    .detail("Origen", "Cuenta Concentradora")
+                    .detail("Destino", labelOf(accountId))
+                    .when(java.time.LocalDateTime.now())
+                    .primary("Ver cuenta", "/admin/cuenta?id=" + accountId)
+                    .flash(session);
         } catch (ValidationException e) {
+            // Errores de campo: se quedan dentro del formulario, con lo tecleado.
             keepForRetry(session, e.getErrors(), rawAccountId, rawAmount);
         } catch (InsufficientFundsException e) {
             // Saldo insuficiente es ALERTA, no un error cualquiera: dice que
             // alguien intentó mover dinero que no había.
             audit.record(AuditEvent.DISPERSION_REJECTED, e.getMessage(), req);
-            keepForRetry(session, List.of(e.getMessage()), rawAccountId, rawAmount);
+
+            // Y no es un fallo de formulario: no hay nada que corregir en el
+            // formulario, hay que fondear. Por eso va en la tarjeta de rechazo
+            // (2169:542) y no como aviso junto a un campo.
+            OperationResult.rejected("Depósito rechazado",
+                            "La operación no pudo completarse", e.getMessage())
+                    .amount("Monto del depósito", amount)
+                    .detail("Origen", "Cuenta Concentradora")
+                    .detail("Destino", labelOf(accountId))
+                    .when(java.time.LocalDateTime.now())
+                    .primary("Fondear Concentradora", "/admin/concentradora")
+                    .flash(session);
         }
 
         resp.sendRedirect(req.getContextPath() + backTo(req));
@@ -100,6 +124,26 @@ public class DispersionServlet extends HttpServlet {
         session.setAttribute(FLASH_ERRORS, errors);
         session.setAttribute(FLASH_ACCOUNT, rawAccountId);
         session.setAttribute(FLASH_AMOUNT, rawAmount);
+    }
+
+    /**
+     * How the destination reads on the result card: "Gasolina — Gómez, Carlos".
+     *
+     * Falls back to the id rather than failing: the operation already happened,
+     * and a card that cannot name the account is still better than a 500 on the
+     * way to showing it.
+     */
+    private String labelOf(Long accountId) {
+        if (accountId == null) return null;
+        try {
+            return accountLookupDao.findActiveForSelect().stream()
+                    .filter(a -> a.getId() == accountId)
+                    .map(a -> a.getLabel())
+                    .findFirst()
+                    .orElse("Cuenta " + accountId);
+        } catch (RuntimeException e) {
+            return "Cuenta " + accountId;
+        }
     }
 
     private Long parseId(String raw) {

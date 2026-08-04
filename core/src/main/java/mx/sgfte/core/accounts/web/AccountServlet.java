@@ -57,9 +57,18 @@ public class AccountServlet extends HttpServlet {
         Account account = new Account(cardholderId, categoryId);
         try {
             accountService.create(account, nameOf(categories, categoryId));
-            session.setAttribute("success",
-                    "Cuenta creada: " + account.getAccountNumber());
             audit.record(AuditEvent.ACCOUNT_CREATED, account.getAccountNumber(), req);
+
+            mx.sgfte.core.shared.web.OperationResult.success("¡Cuenta creada!",
+                            "La cuenta ya puede recibir dispersiones",
+                            "CUENTA REGISTRADA",
+                            "Se creó sin tarjetas y con saldo $0.00; los fondos llegan por dispersión.")
+                    .detail("Identificador", account.getAccountNumber())
+                    .detail("Propósito", nameOf(categories, categoryId))
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver cuentas", "/admin/cuentas")
+                    .primary("Ver cuenta", "/admin/cuenta?id=" + account.getId())
+                    .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
             session.setAttribute(FLASH_HOLDER, req.getParameter("cardholderId"));

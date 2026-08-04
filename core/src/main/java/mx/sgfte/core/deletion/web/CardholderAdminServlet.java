@@ -79,9 +79,17 @@ public class CardholderAdminServlet extends HttpServlet {
                 throw new ValidationException(List.of("Tarjetahabiente inválido"));
             }
             deletionService.deleteCardholder(cardholderId);
-            session.setAttribute(FLASH_SUCCESS,
-                    "Tarjetahabiente eliminado. Saldos reintegrados y tarjetas invalidadas.");
             audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + cardholderId, req);
+
+            mx.sgfte.core.shared.web.OperationResult.success("Empleado eliminado",
+                            "Sus saldos volvieron a la Concentradora",
+                            "REINTEGRACIÓN CONFIRMADA",
+                            "Se invalidaron sus tarjetas y el saldo de sus cuentas se reintegró a la Cuenta Concentradora.")
+                    .detail("Empleado", "Nº " + cardholderId)
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver empleados", "/admin/empleados")
+                    .primary("Ver concentradora", "/admin/concentradora")
+                    .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
         }

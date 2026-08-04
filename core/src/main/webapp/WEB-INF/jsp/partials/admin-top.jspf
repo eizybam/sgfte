@@ -168,9 +168,12 @@
             </div>
         </c:if>
 
-        <c:if test="${not empty success}">
-            <div class="alert alert--ok">${success}</div>
-        </c:if>
+        <%--
+          El resultado de una operación ya no es una línea de texto aquí arriba:
+          es el modal de result-modal.jspf, al final del cascarón. Se mantiene
+          `errors` porque lo sigue usando alguna pantalla para avisos de página,
+          distintos del desenlace de una operación.
+        --%>
         <c:if test="${not empty errors}">
             <div class="alert alert--error">
                 <ul><c:forEach var="e" items="${errors}"><li>${e}</li></c:forEach></ul>

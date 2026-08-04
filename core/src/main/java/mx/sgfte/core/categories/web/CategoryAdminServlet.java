@@ -68,9 +68,21 @@ public class CategoryAdminServlet extends HttpServlet {
 
         try {
             service.create(name, description, color, active);
-            session.setAttribute(FLASH_SUCCESS, "Categoría creada correctamente.");
             audit.record(AuditEvent.CATEGORY_CREATED,
                     name + (active ? "" : " (inactiva)"), req);
+
+            mx.sgfte.core.shared.web.OperationResult.success("¡Categoría creada!",
+                            "El catálogo de propósitos ya la incluye",
+                            "CATEGORÍA REGISTRADA",
+                            active
+                                ? "Ya puede elegirse al crear cuentas."
+                                : "Nace inactiva: no se ofrecerá hasta que la reactives.")
+                    .detail("Categoría", name)
+                    .detail("Descripción", description)
+                    .detail("Estado", active ? "Activa" : "Inactiva")
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver categorías", "/admin/categorias")
+                    .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
             session.setAttribute(FLASH_NAME, name);
@@ -84,11 +96,22 @@ public class CategoryAdminServlet extends HttpServlet {
         String name = req.getParameter("categoryName");
         try {
             boolean nowActive = service.toggleStatus(id);
-            session.setAttribute(FLASH_SUCCESS, nowActive
-                    ? "Categoría reactivada; vuelve a ofrecerse al crear cuentas."
-                    : "Categoría retirada; las cuentas que ya la usan no cambian.");
             audit.record(nowActive ? AuditEvent.CATEGORY_ACTIVATED : AuditEvent.CATEGORY_RETIRED,
                     name == null ? String.valueOf(id) : name, req);
+
+            mx.sgfte.core.shared.web.OperationResult.success(
+                            nowActive ? "Categoría reactivada" : "Categoría retirada",
+                            nowActive ? "Vuelve a ofrecerse al crear cuentas"
+                                      : "Deja de ofrecerse al crear cuentas",
+                            nowActive ? "REACTIVACIÓN CONFIRMADA" : "RETIRO CONFIRMADO",
+                            nowActive
+                                ? "Las cuentas que ya la usaban nunca dejaron de tenerla."
+                                : "No se borra: las cuentas que ya la usan conservan su propósito y su histórico.")
+                    .detail("Categoría", name)
+                    .detail("Estado", nowActive ? "Activa" : "Inactiva")
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver categorías", "/admin/categorias")
+                    .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
         }

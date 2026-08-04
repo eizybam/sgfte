@@ -67,13 +67,30 @@ public class CardServlet extends HttpServlet {
             if ("invalidate".equals(action)) {
                 Long cardId = parseId(req.getParameter("cardId"));
                 cardService.invalidate(cardId);
-                session.setAttribute(FLASH_SUCCESS, "Tarjeta invalidada.");
                 audit.record(AuditEvent.CARD_INVALIDATED, "Tarjeta " + cardId, req);
+
+                mx.sgfte.core.shared.web.OperationResult.success("Tarjeta invalidada",
+                                "La tarjeta ya no puede usarse",
+                                "INVALIDACIÓN CONFIRMADA",
+                                "El saldo de la cuenta no se toca; sólo se anula el plástico.")
+                        .detail("Tarjeta", "Nº " + cardId)
+                        .when(java.time.LocalDateTime.now())
+                        .secondary("Volver", "/admin/cards")
+                        .flash(session);
             } else {
                 cardService.issue(accountId, req.getParameter("cardType"));
-                session.setAttribute(FLASH_SUCCESS, "Tarjeta expedida.");
                 audit.record(AuditEvent.CARD_ISSUED,
                         req.getParameter("cardType") + " · cuenta " + accountId, req);
+
+                mx.sgfte.core.shared.web.OperationResult.success("¡Tarjeta expedida!",
+                                "La tarjeta quedó ligada a la cuenta",
+                                "EXPEDICIÓN CONFIRMADA",
+                                "Ya puede usarse con el saldo disponible de la cuenta.")
+                        .detail("Tipo", "PHYSICAL".equals(req.getParameter("cardType")) ? "Física" : "Digital")
+                        .when(java.time.LocalDateTime.now())
+                        .secondary("Expedir otra", "/admin/cards")
+                        .primary("Ver cuenta", "/admin/cuenta?id=" + accountId)
+                        .flash(session);
             }
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());

@@ -86,13 +86,23 @@ public class ConcentratorServlet extends HttpServlet {
         try {
             // El actor del ledger es el correo, igual que en la bitácora.
             service.fund(amount, AuditLogService.actorOf(req));
-            session.setAttribute("success", "Concentradora fondeada correctamente.");
 
             // El método de fondeo va en la bitácora, no en el ledger: es contexto
             // operativo, no un hecho financiero. El ledger guarda el importe y el
             // saldo resultante, que es lo que tiene que cuadrar.
             audit.record(AuditEvent.CONCENTRATOR_FUNDED,
                     (method == null || method.isBlank() ? "" : method + " · ") + "$" + amount, req);
+
+            mx.sgfte.core.shared.web.OperationResult.success("¡Fondeo aplicado!",
+                            "La Concentradora recibió los fondos",
+                            "FONDEO CONFIRMADO",
+                            "El saldo ya está disponible para dispersar.")
+                    .amount("Monto fondeado", amount)
+                    .detail("Método", method)
+                    .detail("Destino", "Cuenta Concentradora")
+                    .when(java.time.LocalDateTime.now())
+                    .primary("Ver concentradora", "/admin/concentradora")
+                    .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
             session.setAttribute(FLASH_AMOUNT, req.getParameter("amount"));

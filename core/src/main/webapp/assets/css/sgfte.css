@@ -2374,7 +2374,106 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 
 /* ==========================================================================
-   22 · Responsive
+   22 · Modal de resultado · marcos 2169:436 (éxito) y 2169:542 (rechazo)
+   ========================================================================== */
+
+/* La tarjeta del marco: 520x664, r24, sobre el velo del resto de modales. */
+.result {
+    width: 520px;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 47px 39px 37px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 24px;
+    backdrop-filter: blur(2.5px);
+    text-align: center;
+}
+
+/* El velo del resultado va más opaco que el de los formularios: detrás queda
+   la pantalla a la que volvió la redirección, y no debe competir. */
+.result-scrim { background: rgba(10, 9, 9, 0.72); }
+
+.result__icon { display: flex; justify-content: center; }
+.result__icon svg { display: block; }
+
+.result__title {
+    margin: 26px 0 0;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--sgfte-cream);
+}
+
+.result__subtitle { margin: 14px 0 0; font-size: 15px; color: #a1918a; }
+
+/* Banda de estado: 440x90 en el marco, con el punto del color del resultado. */
+.result__strip {
+    margin-top: 24px;
+    padding: 19px 21px;
+    border: 1px solid;
+    border-radius: 12px;
+    text-align: left;
+}
+
+.result--ok  .result__strip { background: rgba(56, 168, 92, 0.08); border-color: rgba(56, 168, 92, 0.25); }
+.result--bad .result__strip { background: rgba(209, 72, 54, 0.10); border-color: rgba(209, 72, 54, 0.32); }
+
+.result__strip-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.result__strip-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.result--ok  .result__strip-label { color: var(--sgfte-ok); }
+.result--bad .result__strip-label { color: #ec6a5a; }
+
+.result__strip-text { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: #cdbdb8; }
+
+/* Caja de detalle: mismas filas que el resumen de Detalle de Cuenta. */
+.result__details {
+    margin: 18px 0 0;
+    padding: 0 23px;
+    background: rgba(43, 42, 40, 0.5);
+    border: 1px solid rgba(169, 138, 128, 0.08);
+    border-radius: 12px;
+    text-align: left;
+}
+
+.result__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    /* 44px de paso en el marco: 23 -> 67 -> 111 -> 155 */
+    min-height: 44px;
+}
+
+.result__row + .result__row { border-top: 1px solid rgba(169, 138, 128, 0.08); }
+.result__row dt { font-size: 14px; color: #a1918a; }
+.result__row dd { margin: 0; font-weight: 600; font-size: 14px; color: var(--sgfte-cream); text-align: right; }
+
+/*
+  Dos botones a lo ancho de la caja.
+
+  El marco los pone en 22/269 en el éxito y en 36/283 en el rechazo, que no
+  concuerdan entre sí ni con el margen de 39 que usan la banda y el detalle. Se
+  alinean con ese margen, que es la retícula que la propia tarjeta ya sigue.
+*/
+.result__actions { display: flex; gap: 20px; margin-top: 24px; }
+.result__actions .btn { flex: 1 1 0; padding-left: 0; padding-right: 0; }
+
+
+/* ==========================================================================
+   23 · Responsive
    ========================================================================== */
 
 /*

@@ -1,5 +1,8 @@
 <%-- Cierra la estructura abierta en admin-top.jspf. --%>
     </main>
 </div>
+
+<%-- Desenlace de la última operación, si lo hubo. Se pinta solo. --%>
+<%@ include file="/WEB-INF/jsp/partials/result-modal.jspf" %>
 </body>
 </html>
