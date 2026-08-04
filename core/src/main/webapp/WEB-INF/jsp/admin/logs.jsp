@@ -108,9 +108,9 @@
                     </c:choose>
                 </td>
                 <td title="${fn:escapeXml(l.detail)}">${fn:escapeXml(l.action)}</td>
-                <td class="log-user">${fn:escapeXml(l.actor)}</td>
+                <td><span class="log-user" title="${fn:escapeXml(l.actor)}">${fn:escapeXml(l.actor)}</span></td>
                 <td>${fn:escapeXml(l.module)}</td>
-                <td class="log-origin">${fn:escapeXml(l.ipAddress)}</td>
+                <td><span class="log-origin" title="${fn:escapeXml(l.ipAddress)}">${fn:escapeXml(l.ipAddress)}</span></td>
             </tr>
         </c:forEach>
         <c:if test="${empty rows}">

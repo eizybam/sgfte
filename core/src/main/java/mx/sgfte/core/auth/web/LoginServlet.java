@@ -67,11 +67,12 @@ public class LoginServlet extends HttpServlet {
         }
         HttpSession session = req.getSession(true);
         session.setAttribute("user", new SessionUser(
-                user.getId(), user.getFullName(), user.getRole(), user.getCardholderId()));
+                user.getId(), user.getFullName(), user.getEmail(),
+                user.getRole(), user.getCardholderId()));
         session.setMaxInactiveInterval(30 * 60); // 30 minutes
 
         audit.record(AuditEvent.LOGIN_OK, "Rol: " + user.getRole(),
-                     user.getFullName(), req.getRemoteAddr());
+                     user.getEmail(), req.getRemoteAddr());
 
         resp.sendRedirect(req.getContextPath() + Role.homeFor(user.getRole()));
     }

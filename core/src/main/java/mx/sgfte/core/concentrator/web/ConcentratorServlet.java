@@ -42,8 +42,8 @@ public class ConcentratorServlet extends HttpServlet {
 
         jakarta.servlet.http.HttpSession session = req.getSession();
         try {
-            Object user = session.getAttribute("user");
-            service.fund(amount, user == null ? null : String.valueOf(user));
+            // El actor del ledger es el correo, igual que en la bitácora.
+            service.fund(amount, AuditLogService.actorOf(req));
             session.setAttribute("success", "Concentradora fondeada correctamente.");
 
             // El método de fondeo va en la bitácora, no en el ledger: es contexto

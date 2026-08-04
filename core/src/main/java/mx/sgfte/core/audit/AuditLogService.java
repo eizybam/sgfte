@@ -41,11 +41,21 @@ public class AuditLogService {
         record(event, detail, actorOf(req), req == null ? null : req.getRemoteAddr());
     }
 
-    /** The signed-in user's name, or "anónimo" before login. */
+    /**
+     * Who is acting: their email, or "anónimo" before login.
+     *
+     * The email and not the name because it is unique and it is the identity
+     * they actually log in with — two "Juan Pérez" are indistinguishable in a
+     * trail, two addresses are not.
+     *
+     * Never String.valueOf(principal): that wrote the object's toString —
+     * "mx.sgfte.core.auth.SessionUser@1a2b3c" — into the trail and the ledger.
+     */
     public static String actorOf(HttpServletRequest req) {
-        if (req == null) return null;
-        Object user = req.getSession(false) == null ? null : req.getSession().getAttribute("user");
-        return user == null ? "anónimo" : String.valueOf(user);
+        if (req == null || req.getSession(false) == null) return null;
+        Object user = req.getSession().getAttribute("user");
+        if (user instanceof mx.sgfte.core.auth.SessionUser session) return session.getEmail();
+        return "anónimo";
     }
 
     public List<AuditLog> recent(int limit) {

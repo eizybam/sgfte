@@ -10,18 +10,21 @@ public class SessionUser implements Serializable {
 
     private final long id;               // app_user.id — who logged in
     private final String fullName;
+    private final String email;      // identifica de forma única a quien actúa
     private final String role;
     private final Long cardholderId;     // cardholder.id — NULL for admins
 
-    public SessionUser(long id, String fullName, String role, Long cardholderId) {
+    public SessionUser(long id, String fullName, String email, String role, Long cardholderId) {
         this.id = id;
         this.fullName = fullName;
+        this.email = email;
         this.role = role;
         this.cardholderId = cardholderId;
     }
 
     public long getId() { return id; }
     public String getFullName() { return fullName; }
+    public String getEmail() { return email; }
     public String getRole() { return role; }
 
     /**

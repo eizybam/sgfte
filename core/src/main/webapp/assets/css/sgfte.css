@@ -2125,6 +2125,19 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 .log-when { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
 .log-when span { display: block; }
 
+/*
+  Con table-layout: fixed un valor demasiado ancho NO ensancha su columna: se
+  desborda y se pisa con la de al lado. Recortar con puntos suspensivos evita
+  que un correo largo rompa la fila; el valor completo queda en el title.
+*/
+.table--logs td { overflow: hidden; }
+.log-user, .log-origin {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .log-user   { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-tan); }
 .log-origin { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
 
