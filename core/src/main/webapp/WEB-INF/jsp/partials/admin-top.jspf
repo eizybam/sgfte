@@ -22,34 +22,7 @@
          navegador no siga sirviendo la hoja de estilos anterior. --%>
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/assets/css/sgfte.css?v=${applicationScope.assetsVersion}">
-    <script>
-        /*
-          El prototipo es un lienzo FIJO de 1440x1024. En vez de reflujar la
-          maquetación en pantallas más chicas, se escala entera con `zoom`: las
-          proporciones quedan idénticas al diseño, ningún rótulo parte a dos
-          líneas y el ancho efectivo nunca baja de 1440px. Por eso sgfte.css no
-          tiene puntos de corte intermedios.
-
-          Se corre en el <head>, antes de pintar, para que no se vea el salto.
-
-          --app-h es el alto del viewport YA dividido entre el zoom: bajo `zoom`
-          una altura de 100vh se pinta encogida y dejaría una franja muerta
-          abajo. El suelo de 0.6 evita que en una ventana diminuta el texto
-          quede ilegible; a partir de ahí manda el bloque responsive del CSS.
-        */
-        (function () {
-            var DESIGN_WIDTH = 1440, MIN_ZOOM = 0.6, root = document.documentElement;
-
-            function fit() {
-                var zoom = Math.max(MIN_ZOOM, Math.min(1, window.innerWidth / DESIGN_WIDTH));
-                root.style.zoom = zoom;
-                root.style.setProperty("--app-h", (window.innerHeight / zoom) + "px");
-            }
-
-            fit();
-            window.addEventListener("resize", fit);
-        })();
-    </script>
+    <%@ include file="/WEB-INF/jsp/partials/canvas-fit.jspf" %>
 </head>
 <%--
   bodyClass deja que una pantalla pida el tratamiento de fondo de SU marco.

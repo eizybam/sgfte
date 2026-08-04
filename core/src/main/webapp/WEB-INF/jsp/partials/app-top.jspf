@@ -29,23 +29,7 @@
           rel="stylesheet">
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/assets/css/sgfte.css?v=${applicationScope.assetsVersion}">
-    <script>
-        /* Mismo escalado que el área de administración: el lienzo del prototipo
-           es fijo de 1440x1024 y se encoge entero con `zoom` en vez de reflujar.
-           Ver el comentario largo en admin-top.jspf. */
-        (function () {
-            var DESIGN_WIDTH = 1440, MIN_ZOOM = 0.6, root = document.documentElement;
-
-            function fit() {
-                var zoom = Math.max(MIN_ZOOM, Math.min(1, window.innerWidth / DESIGN_WIDTH));
-                root.style.zoom = zoom;
-                root.style.setProperty("--app-h", (window.innerHeight / zoom) + "px");
-            }
-
-            fit();
-            window.addEventListener("resize", fit);
-        })();
-    </script>
+    <%@ include file="/WEB-INF/jsp/partials/canvas-fit.jspf" %>
 </head>
 <body class="portal-body">
 <%@ include file="/WEB-INF/jsp/partials/icons.jspf" %>
