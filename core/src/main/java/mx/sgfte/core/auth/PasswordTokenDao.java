@@ -22,7 +22,7 @@ public class PasswordTokenDao {
 
     Optional<PasswordToken> findByToken(String token) throws SQLException {
         String sql = "SELECT id, app_user_id, token, expires_at, used_at "
-                + "FROM password_token where token + ?";
+                + "FROM password_token where token = ?";
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, token);
