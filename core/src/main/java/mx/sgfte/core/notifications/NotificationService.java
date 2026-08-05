@@ -34,7 +34,7 @@ public class NotificationService {
     /*
       Un solo hilo, demonio y compartido.
 
-      Demonio para que no impida apagar el servidor. Uno solo porque el volumen
+      Daemon para que no impida apagar el servidor. Uno solo porque el volumen
       es de avisos sueltos, y encolarlos evita abrir una conexión SMTP por cada
       movimiento simultáneo.
      */
@@ -49,6 +49,7 @@ public class NotificationService {
 
     private final AuditLogService auditLogService = new AuditLogService();
     private final NotificationDao dao = new NotificationDao();
+    private final NotificationLogDao logDao = new NotificationLogDao();
     private final EmailSender emailSender = new EmailSender();
 
     /**
@@ -93,9 +94,13 @@ public class NotificationService {
                      .map(p -> p.holderName() + " (" + p.label() + ")")
                      .orElse("Otra cuenta");
 
-        send(recipient.holderEmail(),
-             "Recibiste " + money(amount) + " en tu cuenta " + recipient.purpose(),
-             body(recipient, sender, amount, concept));
+        // Dispersión si vino de la Concentradora, transferencia si vino de un
+        // compañero — la misma distinción que ya se hacía para "sender".
+        AuditEvent event = sourceAccountId == null ? AuditEvent.DISPERSION : AuditEvent.TRANSFER;
+
+        deliver(recipient.cardholderId(), event, recipient.holderEmail(),
+                "Recibiste " + money(amount) + " en tu cuenta " + recipient.purpose(),
+                body(recipient, sender, amount, concept));
     }
 
     /** El texto del correo. Plano a propósito: se lee igual en cualquier cliente. */
@@ -118,13 +123,49 @@ public class NotificationService {
     }
 
     /**
-     * Envío directo. Sigue siendo público porque ya lo usaban otras piezas, y
-     * porque un aviso suelto no siempre nace de un movimiento de dinero.
+     * Punto de entrada para cualquier otro disparador — alta/baja de cuenta,
+     * tarjeta emitida, login, cambio de contraseña... — que quiera avisar por
+     * correo Y dejar la fila que el Notificaciones del tarjetahabiente lee.
+     *
+     * Mismo hilo único que moneyReceived: la llamada vuelve de inmediato, el
+     * envío y el registro ocurren detrás.
+     */
+    public void notify(long cardholderId, AuditEvent event, String to, String subject, String body) {
+        DISPATCH.submit(() -> {
+            try {
+                deliver(cardholderId, event, to, subject, body);
+            } catch (RuntimeException e) {
+                System.err.println("[NOTIFY] aviso fallido: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * El envío y el registro, ya en el hilo de despacho — deliverMoneyReceived
+     * y notify() confluyen aquí para no envolver un submit dentro de otro.
+     */
+    private void deliver(long cardholderId, AuditEvent event, String to, String subject, String body) {
+        sendEmail(to, subject, body);
+        // Se registra en la pantalla del tarjetahabiente pase lo que pase con el
+        // correo: el evento (se emitió una tarjeta, entró dinero...) ocurrió de
+        // verdad aunque Gmail esté teniendo un mal día; el registro en pantalla
+        // es la fuente de verdad, el correo es sólo el canal de aviso.
+        logDao.insert(cardholderId, event, subject);
+    }
+
+    /**
+     * Envío directo, sin registrar en el Notificaciones de nadie. Sigue siendo
+     * público porque ya lo usaban otras piezas, y porque un aviso suelto no
+     * siempre nace de un evento de un cardholder concreto.
      *
      * Registra el intento en la bitácora salga bien o mal: un aviso que no llegó
      * es justo lo que hay que poder consultar después.
      */
     public void send(String to, String subject, String body) {
+        sendEmail(to, subject, body);
+    }
+
+    private void sendEmail(String to, String subject, String body) {
         try {
             emailSender.send(to, subject, body);
             auditLogService.record(AuditEvent.NOTIFICATION, subject + " -> " + to, "system", null);

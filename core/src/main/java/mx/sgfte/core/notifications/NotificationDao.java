@@ -24,7 +24,7 @@ class NotificationDao {
      * moved, and a missing row must not turn a completed transfer into an error.
      */
     Optional<AccountParty> findParty(long accountId) {
-        String sql = "SELECT a.id, a.account_number, a.balance, cat.name AS purpose, "
+        String sql = "SELECT a.id, ch.id AS cardholder_id, a.account_number, a.balance, cat.name AS purpose, "
                    + "       ch.first_name, ch.last_name, ch.email "
                    + "  FROM account a "
                    + "  JOIN cardholder ch ON ch.id = a.cardholder_id "
@@ -37,6 +37,7 @@ class NotificationDao {
                 if (!rs.next()) return Optional.empty();
                 return Optional.of(new AccountParty(
                         rs.getLong("id"),
+                        rs.getLong("cardholder_id"),
                         rs.getString("account_number"),
                         rs.getString("purpose"),
                         rs.getString("first_name") + " " + rs.getString("last_name"),

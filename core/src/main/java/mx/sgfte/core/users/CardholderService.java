@@ -1,5 +1,8 @@
 package mx.sgfte.core.users;
 
+import mx.sgfte.core.audit.AuditEvent;
+import mx.sgfte.core.notifications.NotificationService;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -11,6 +14,8 @@ import java.util.regex.Pattern;
 public class CardholderService {
 
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+    private final NotificationService notificationService =
+            new NotificationService();
 
     private final CardholderDao dao;
 

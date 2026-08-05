@@ -161,6 +161,22 @@
             <path d="M6 12h.01M18 12h.01"/>
         </symbol>
 
+        <%-- Escudo de seguridad, para Notificaciones (login, contraseña...). --%>
+        <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3 5 5.5v5.6c0 5 2.9 8.3 7 9.9 4.1-1.6 7-4.9 7-9.9V5.5Z"/>
+            <path d="M9 12l2 2 4-4.2"/>
+        </symbol>
+
+        <%-- Campana neutra, cuando un evento de Notificaciones no cae en ningún
+             otro icono (por ejemplo un tipo de evento que este build no
+             reconoce todavía). --%>
+        <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 10a6 6 0 0 1 12 0v4.2l1.6 2.8H4.4L6 14.2Z"/>
+            <path d="M10.2 20a1.9 1.9 0 0 0 3.6 0"/>
+        </symbol>
+
         <%--
           Los tres de abajo son los trazados EXACTOS del modal "Dispersión de
           fondos" (Figma 2177:376). Se les cambió el relleno fijo #A98A80 por

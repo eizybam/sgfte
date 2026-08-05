@@ -12,6 +12,7 @@ import java.math.BigDecimal;
  */
 public record AccountParty(
         long accountId,
+        long cardholderId,
         String accountNumber,
         String purpose,
         String holderName,
