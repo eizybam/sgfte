@@ -19,6 +19,13 @@ public enum AuditEvent {
     LOGIN_FAILED  (Severity.ALERTA, Module.SEGURIDAD, "Intento de login fallido"),
     LOGOUT        (Severity.INFO,   Module.SEGURIDAD, "Cierre de sesión"),
 
+    // Activación / restablecimiento de contraseña (V9). Un solo evento para el
+    // cambio en sí porque, desde la bitácora, no importa si vino de un alta o
+    // de "olvidé mi contraseña" — las dos terminan en lo mismo.
+    ACCOUNT_ACTIVATION_SENT  (Severity.INFO, Module.SEGURIDAD, "Enlace de activación enviado"),
+    PASSWORD_RESET_REQUESTED(Severity.INFO, Module.SEGURIDAD, "Restablecimiento de contraseña solicitado"),
+    PASSWORD_CHANGED        (Severity.INFO, Module.SEGURIDAD, "Contraseña actualizada"),
+
     // --- Fondos ---
     CONCENTRATOR_FUNDED (Severity.INFO,   Module.FONDOS, "Concentradora fondeada"),
     DISPERSION          (Severity.INFO,   Module.FONDOS, "Dispersión de fondos"),

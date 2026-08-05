@@ -1,11 +1,8 @@
 package mx.sgfte.core.users;
 
 import mx.sgfte.core.audit.AuditEvent;
-import mx.sgfte.core.auth.AppUser;
-import mx.sgfte.core.auth.PasswordHasher;
-import mx.sgfte.core.auth.Role;
+import mx.sgfte.core.auth.*;
 import mx.sgfte.core.notifications.NotificationService;
-import mx.sgfte.core.auth.UserDao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +21,7 @@ public class CardholderService {
 
     private final CardholderDao dao;
     private final UserDao userDao = new UserDao();
+    private final PasswordTokenService passwordTokenService = new PasswordTokenService();
 
     public CardholderService() {
         this(new CardholderDao());
@@ -66,6 +64,7 @@ public class CardholderService {
             login.setStatus("PENDING");
             long appUserId = userDao.insert(login);
 
+            passwordTokenService.issueActivationToken(appUserId, cardholderId, ch.getEmail(), fullName);
 
         } catch (RuntimeException e) {
             System.err.println("[CARDHOLDER] no se pudo crear el acceso de " + ch.getEmail() + ": " + e.getMessage());

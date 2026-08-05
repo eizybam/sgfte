@@ -42,6 +42,12 @@
                     <div class="auth-alert auth-alert--ok">${success}</div>
                 </c:if>
 
+                <%-- Llega de /set-password tras crear o restablecer la contraseña
+                     (redirect, no forward: así un refresh no repite el mensaje). --%>
+                <c:if test="${param.activated == '1'}">
+                    <div class="auth-alert auth-alert--ok">¡Tu contraseña quedó configurada! Ya puedes iniciar sesión.</div>
+                </c:if>
+
                 <form id="login-form" method="post"
                       action="${pageContext.request.contextPath}/login" novalidate>
 
@@ -79,14 +85,15 @@
                     </div>
 
                     <%--
-                        Forgot-password hook for teammates:
-                        this button is where the "¿Olvidaste tu contraseña?" modal opens.
-                        Wire your popup to #forgot-password-link (e.g. open a dialog, or
-                        navigate to /forgot-password). Left as a plain button on purpose.
+                        "¿Olvidaste tu contraseña?" es una página completa, no un
+                        modal — el modal del Figma original quedaba corto para un
+                        formulario que hay que llenar después de abrir un correo en
+                        una pestaña nueva. /forgot-password reutiliza este mismo
+                        panel auth-*.
                     --%>
-                    <button type="button" class="auth-forgot" id="forgot-password-link">
+                    <a class="auth-forgot" href="${pageContext.request.contextPath}/forgot-password">
                         ¿Olvidaste tu contraseña?
-                    </button>
+                    </a>
 
                     <button type="submit" class="auth-submit">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
