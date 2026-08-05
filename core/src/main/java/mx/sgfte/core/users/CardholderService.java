@@ -1,10 +1,15 @@
 package mx.sgfte.core.users;
 
 import mx.sgfte.core.audit.AuditEvent;
+import mx.sgfte.core.auth.AppUser;
+import mx.sgfte.core.auth.PasswordHasher;
+import mx.sgfte.core.auth.Role;
 import mx.sgfte.core.notifications.NotificationService;
+import mx.sgfte.core.auth.UserDao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -18,6 +23,7 @@ public class CardholderService {
             new NotificationService();
 
     private final CardholderDao dao;
+    private final UserDao userDao = new UserDao();
 
     public CardholderService() {
         this(new CardholderDao());
@@ -42,7 +48,28 @@ public class CardholderService {
             String fullName = (ch.getFirstName() + " " + ch.getLastName()).trim();
             ch.setEmployeeCode(EmployeeCode.of(fullName, dao.nextEmployeeSequence()));
         }
-        return dao.insert(ch);
+        long id =  dao.insert(ch);
+        createLogin(id, ch);
+        return id;
+    }
+
+    private void createLogin(long cardholderId, Cardholder ch) {
+        try {
+            String fullName = (ch.getFirstName() + " " + ch.getLastName()).trim();
+
+            AppUser login = new AppUser();
+            login.setEmail(ch.getEmail());
+            login.setPasswordHash(PasswordHasher.hash(UUID.randomUUID().toString())); // random password; user must reset
+            login.setFullName(fullName);
+            login.setRole(Role.CARDHOLDER);
+            login.setCardholderId(cardholderId);
+            login.setStatus("PENDING");
+            long appUserId = userDao.insert(login);
+
+
+        } catch (RuntimeException e) {
+            System.err.println("[CARDHOLDER] no se pudo crear el acceso de " + ch.getEmail() + ": " + e.getMessage());
+        }
     }
 
     /**
