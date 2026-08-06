@@ -40,6 +40,9 @@ public class PortalHomeServlet extends HttpServlet {
         req.setAttribute("myAccounts", accounts);
         req.setAttribute("peersByAccount", portalService.peersByAccount(cardholderId));
 
+        // Lo que necesita el modal de "Hacer un gasto" para el <select> de tarjeta.
+        req.setAttribute("cards", portalService.myCards(cardholderId));
+
         req.getRequestDispatcher("/WEB-INF/jsp/app/home.jsp").forward(req, resp);
     }
 }

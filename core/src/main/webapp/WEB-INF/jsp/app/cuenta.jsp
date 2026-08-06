@@ -36,17 +36,19 @@
         </section>
 
         <p class="pquick__title">ACCESOS RAPIDOS</p>
-        <%-- Inertes mientras no exista su pantalla, igual que en el dashboard. --%>
+        <%-- Mis tarjetas navega; Soporte y Políticas abren cada uno una
+             ventana informativa simple (info-modals.jspf), igual que en el
+             dashboard. --%>
         <nav class="pquick">
-            <span class="pquick__item is-pending" title="Pantalla pendiente">
+            <a class="pquick__item" href="${ctx}/app/tarjetas">
                 <svg width="30" height="32" aria-hidden="true"><use href="#i-cards"/></svg>
                 <span>Mis tarjetas</span>
-            </span>
-            <span class="pquick__item is-pending" title="Pantalla pendiente">
+            </a>
+            <span class="pquick__item" role="button" tabindex="0" data-open-soporte>
                 <svg width="32" height="32" aria-hidden="true"><use href="#i-headset"/></svg>
                 <span>Soporte</span>
             </span>
-            <span class="pquick__item is-pending" title="Pantalla pendiente">
+            <span class="pquick__item" role="button" tabindex="0" data-open-politicas>
                 <svg width="32" height="32" aria-hidden="true"><use href="#i-policy"/></svg>
                 <span>Politicas</span>
             </span>
@@ -277,5 +279,6 @@
 <%-- Se abre con esta cuenta ya elegida como origen. --%>
 <c:set var="fixedSourceId" value="${account.id}"/>
 <%@ include file="/WEB-INF/jsp/partials/transfer-modal.jspf" %>
+<%@ include file="/WEB-INF/jsp/partials/info-modals.jspf" %>
 
 <%@ include file="/WEB-INF/jsp/partials/app-bottom.jspf" %>

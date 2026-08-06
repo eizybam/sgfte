@@ -12,6 +12,22 @@ import java.util.Properties;
  */
 public final class Db {
 
+    /*
+      Sin esto, un getConnection() no tiene límite: si el listener de Oracle
+      tarda en responder —el contenedor apenas arrancando, la máquina bajo
+      carga, un blip de red—, el hilo de la petición se queda esperando para
+      siempre y la página "carga eternamente" sin ningún error que lo
+      explique. Es el mismo problema que ya se resolvió para SMTP en
+      EmailSender (props mail.smtp.connectiontimeout/timeout); aquí no tenía
+      su equivalente.
+
+      CONNECT_TIMEOUT cubre el handshake TCP inicial; ReadTimeout cubre
+      quedarse esperando una respuesta después de ya conectado (una consulta
+      que no vuelve). Los dos en milisegundos.
+     */
+    private static final String CONNECT_TIMEOUT_MS = "5000";
+    private static final String READ_TIMEOUT_MS = "10000";
+
     private static final Properties CONFIG = load();
 
     static {
@@ -43,9 +59,11 @@ public final class Db {
     }
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(
-                CONFIG.getProperty("db.url"),
-                CONFIG.getProperty("db.user"),
-                CONFIG.getProperty("db.password"));
+        Properties props = new Properties();
+        props.setProperty("user", CONFIG.getProperty("db.user"));
+        props.setProperty("password", CONFIG.getProperty("db.password"));
+        props.setProperty("oracle.net.CONNECT_TIMEOUT", CONNECT_TIMEOUT_MS);
+        props.setProperty("oracle.jdbc.ReadTimeout", READ_TIMEOUT_MS);
+        return DriverManager.getConnection(CONFIG.getProperty("db.url"), props);
     }
 }
