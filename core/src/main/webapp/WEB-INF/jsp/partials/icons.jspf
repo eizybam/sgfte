@@ -1,0 +1,206 @@
+<%--
+  Iconos SVG en línea, tomados del set del prototipo.
+
+  Se definen UNA vez como <symbol> dentro de un <svg> oculto y después se
+  referencian con <use href="#i-xxx">. Así el SVG no se repite en cada enlace y
+  el color se hereda de CSS (stroke: currentColor), que es justo lo que necesita
+  el estado activo del sidebar.
+--%>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+        <g id="i-base" fill="none" stroke="currentColor" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round"></g>
+
+        <symbol id="i-overview" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.5" y="5" width="19" height="14" rx="2"/>
+            <circle cx="8.5" cy="11" r="2"/>
+            <path d="M5.5 16c.6-1.6 1.7-2.4 3-2.4s2.4.8 3 2.4"/>
+            <path d="M15 10h4M15 13.5h4"/>
+        </symbol>
+
+        <symbol id="i-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="7" y="5.5" width="14.5" height="10" rx="2"/>
+            <path d="M7 9h14.5"/>
+            <path d="M4.5 9.5v9M2 16l2.5 2.5L7 16"/>
+        </symbol>
+
+        <symbol id="i-accounts" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="M3 13h5l1.5 2.5h5L16 13h5"/>
+        </symbol>
+
+        <%-- Iconos de propósito del portal (64:4): surtidor, avión y cubiertos.
+             PortalIcons decide cuál toca; lo que no encaja cae en i-tag. --%>
+        <symbol id="i-fuel" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 21V5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v16"/>
+            <path d="M3 21h11M6.5 8.5h4"/>
+            <path d="M13 9h3.5a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 0 3 0V11l-2.5-3"/>
+        </symbol>
+
+        <symbol id="i-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 20h18"/>
+            <path d="M4.2 12.9 3 9.4l1.9-.5 2.2 2 4-1.1-3.4-5.4 2.3-.6 5.4 5 3.9-1a2 2 0 1 1 1 3.8L5.9 16Z"/>
+        </symbol>
+
+        <symbol id="i-food" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3v8a2.5 2.5 0 0 0 5 0V3M8.5 11v10"/>
+            <path d="M17.5 3c-1.4 1.3-2 3-2 5.2 0 1.6.6 2.6 2 3V21"/>
+        </symbol>
+
+        <symbol id="i-headset" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14v-2a8 8 0 0 1 16 0v2"/>
+            <rect x="2.5" y="13.5" width="4.5" height="6" rx="1.6"/>
+            <rect x="17" y="13.5" width="4.5" height="6" rx="1.6"/>
+            <path d="M20 19.5v.5a2.5 2.5 0 0 1-2.5 2.5H13"/>
+        </symbol>
+
+        <symbol id="i-policy" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/>
+            <path d="M14 3v5h5M9 13h6M9 17h4"/>
+        </symbol>
+
+        <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 21V14M5 10V3M12 21V12M12 8V3M19 21V16M19 12V3"/>
+            <path d="M2.5 14h5M9.5 8h5M16.5 16h5"/>
+        </symbol>
+
+        <symbol id="i-arrows" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8h16M16 4l4 4-4 4"/>
+            <path d="M20 16H4M8 12l-4 4 4 4"/>
+        </symbol>
+
+
+        <symbol id="i-categories" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12.6V4.5a1.5 1.5 0 0 1 1.5-1.5h8.1a1.5 1.5 0 0 1 1.06.44l7.4 7.4a1.5 1.5 0 0 1 0 2.12l-8.1 8.1a1.5 1.5 0 0 1-2.12 0l-7.4-7.4A1.5 1.5 0 0 1 3 12.6Z"/>
+            <circle cx="7.9" cy="7.9" r="1.5"/>
+        </symbol>
+
+        <symbol id="i-logs" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.5" y="5" width="6" height="5" rx="1.2"/>
+            <rect x="2.5" y="14" width="6" height="5" rx="1.2"/>
+            <path d="M11.5 6.5h10M11.5 9.5h7M11.5 15.5h10M11.5 18.5h7"/>
+        </symbol>
+
+        <symbol id="i-people" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2.5" width="14" height="19" rx="2"/>
+            <path d="M9.5 2.5h5v2.5h-5z"/>
+            <circle cx="12" cy="11" r="2.2"/>
+            <path d="M8.5 17c.7-1.9 2-2.9 3.5-2.9s2.8 1 3.5 2.9"/>
+        </symbol>
+
+        <symbol id="i-transfer" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9h13l-3-3M20 15H7l3 3"/>
+        </symbol>
+
+        <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3.2"/>
+            <path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"/>
+        </symbol>
+
+        <%-- Lupa maciza del marco "Gestion de Cuentas" (2250:322) · 18 × 18 --%>
+        <symbol id="i-search" viewBox="0 0 18 18" fill="currentColor">
+            <path d="M16.6 18L10.3 11.7C9.8 12.1 9.225 12.4167 8.575 12.65C7.925 12.8833 7.23333 13 6.5 13C4.68333 13 3.14583 12.3708 1.8875 11.1125C0.629167 9.85417 0 8.31667 0 6.5C0 4.68333 0.629167 3.14583 1.8875 1.8875C3.14583 0.629167 4.68333 0 6.5 0C8.31667 0 9.85417 0.629167 11.1125 1.8875C12.3708 3.14583 13 4.68333 13 6.5C13 7.23333 12.8833 7.925 12.65 8.575C12.4167 9.225 12.1 9.8 11.7 10.3L18 16.6L16.6 18V18M6.5 11C7.75 11 8.8125 10.5625 9.6875 9.6875C10.5625 8.8125 11 7.75 11 6.5C11 5.25 10.5625 4.1875 9.6875 3.3125C8.8125 2.4375 7.75 2 6.5 2C5.25 2 4.1875 2.4375 3.3125 3.3125C2.4375 4.1875 2 5.25 2 6.5C2 7.75 2.4375 8.8125 3.3125 9.6875C4.1875 10.5625 5.25 11 6.5 11V11"/>
+        </symbol>
+
+        <%-- Alta de empleado, del marco "Gestor de empleados" (287:204) · 24 × 18 --%>
+        <symbol id="i-user-plus" viewBox="0 0 24 18" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 7H20M20 7H23M20 7V4M20 7V10M1 17V16C1 14.1435 1.7375 12.363 3.05025 11.0503C4.36301 9.7375 6.14348 9 8 9M8 9C9.85652 9 11.637 9.7375 12.9497 11.0503C14.2625 12.363 15 14.1435 15 16V17M8 9C9.06087 9 10.0783 8.57857 10.8284 7.82843C11.5786 7.07828 12 6.06087 12 5C12 3.93913 11.5786 2.92172 10.8284 2.17157C10.0783 1.42143 9.06087 1 8 1C6.93913 1 5.92172 1.42143 5.17157 2.17157C4.42143 2.92172 4 3.93913 4 5C4 6.06087 4.42143 7.07828 5.17157 7.82843C5.92172 8.57857 6.93913 9 8 9Z"/>
+        </symbol>
+
+        <%-- Aviso del modal de alta · 20 × 20 --%>
+        <symbol id="i-info" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="9"/>
+            <path d="M10 5.5v5.5"/>
+            <path d="M10 14h.01"/>
+        </symbol>
+
+        <%-- Flechas del paginador · 16 × 16 --%>
+        <symbol id="i-prev" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 12L6 8L10 4"/>
+        </symbol>
+
+        <symbol id="i-next" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 12L10 8L6 4"/>
+        </symbol>
+
+        <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14"/>
+        </symbol>
+
+        <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="8.5" r="3"/>
+            <path d="M3 18.5c.9-2.8 3.2-4.3 6-4.3s5.1 1.5 6 4.3"/>
+            <path d="M16 6.2a3 3 0 010 5.6M17.5 14.6c1.9.5 3.3 1.8 3.9 3.9"/>
+        </symbol>
+
+        <symbol id="i-money" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.5" y="6" width="19" height="12" rx="2"/>
+            <circle cx="12" cy="12" r="2.4"/>
+            <path d="M6 12h.01M18 12h.01"/>
+        </symbol>
+
+        <%-- Escudo de seguridad, para Notificaciones (login, contraseña...). --%>
+        <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3 5 5.5v5.6c0 5 2.9 8.3 7 9.9 4.1-1.6 7-4.9 7-9.9V5.5Z"/>
+            <path d="M9 12l2 2 4-4.2"/>
+        </symbol>
+
+        <%-- Campana neutra, cuando un evento de Notificaciones no cae en ningún
+             otro icono (por ejemplo un tipo de evento que este build no
+             reconoce todavía). --%>
+        <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 10a6 6 0 0 1 12 0v4.2l1.6 2.8H4.4L6 14.2Z"/>
+            <path d="M10.2 20a1.9 1.9 0 0 0 3.6 0"/>
+        </symbol>
+
+        <%--
+          Los tres de abajo son los trazados EXACTOS del modal "Dispersión de
+          fondos" (Figma 2177:376). Se les cambió el relleno fijo #A98A80 por
+          currentColor para que el color lo ponga el CSS; la geometría no se
+          tocó. Cada uno conserva su viewBox original, así que hay que pintarlos
+          en su tamaño natural (ver .modal__* en sgfte.css).
+        --%>
+
+        <%-- Ranura de tarjeta, a la izquierda del desplegable · 16 × 12 --%>
+        <symbol id="i-card-slot" viewBox="0 0 16 12" fill="currentColor">
+            <path d="M14 1C14.5523 1 15 1.44772 15 2V10C15 10.5523 14.5523 11 14 11H2C1.44772 11 1 10.5523 1 10V2C1 1.44772 1.44772 1 2 1H14ZM2 0C0.895431 0 0 0.895431 0 2V10C0 11.1046 0.895431 12 2 12H14C15.1046 12 16 11.1046 16 10V2C16 0.895431 15.1046 0 14 0H2Z"/>
+            <path d="M2 3.5C2 3.22386 2.22386 3 2.5 3H4.5C4.77614 3 5 3.22386 5 3.5V4.5C5 4.77614 4.77614 5 4.5 5H2.5C2.22386 5 2 4.77614 2 4.5V3.5Z"/>
+            <path d="M2 6.5C2 6.22386 2.22386 6 2.5 6H7.5C7.77614 6 8 6.22386 8 6.5C8 6.77614 7.77614 7 7.5 7H2.5C2.22386 7 2 6.77614 2 6.5ZM2 8.5C2 8.22386 2.22386 8 2.5 8H3.5C3.77614 8 4 8.22386 4 8.5C4 8.77614 3.77614 9 3.5 9H2.5C2.22386 9 2 8.77614 2 8.5ZM5 8.5C5 8.22386 5.22386 8 5.5 8H6.5C6.77614 8 7 8.22386 7 8.5C7 8.77614 6.77614 9 6.5 9H5.5C5.22386 9 5 8.77614 5 8.5ZM8 8.5C8 8.22386 8.22386 8 8.5 8H9.5C9.77614 8 10 8.22386 10 8.5C10 8.77614 9.77614 9 9.5 9H8.5C8.22386 9 8 8.77614 8 8.5ZM11 8.5C11 8.22386 11.2239 8 11.5 8H12.5C12.7761 8 13 8.22386 13 8.5C13 8.77614 12.7761 9 12.5 9H11.5C11.2239 9 11 8.77614 11 8.5Z"/>
+        </symbol>
+
+        <%-- Punta de flecha del desplegable · 12.6375 × 6.81875 --%>
+        <symbol id="i-chevron" viewBox="0 0 12.6375 6.81875" fill="currentColor">
+            <path d="M11.9043 0.404297C11.9991 0.309472 12.1386 0.309472 12.2334 0.404297C12.3275 0.498468 12.3282 0.636706 12.2354 0.731445L6.48535 6.38086L6.4834 6.38281C6.38709 6.47912 6.34149 6.48535 6.31836 6.48535C6.25851 6.48529 6.20737 6.46952 6.13574 6.41406L0.402344 0.78125C0.309465 0.686478 0.310123 0.548275 0.404297 0.454102C0.49912 0.359374 0.638606 0.359309 0.733398 0.454102L0.736328 0.457031L6.08594 5.68262L6.32031 5.91113L6.55273 5.68066L11.9023 0.40625L11.9043 0.404297Z"
+                  stroke="currentColor" stroke-width="0.666667"/>
+        </symbol>
+
+        <%-- Billete del campo de monto · 16.7385 × 17 --%>
+        <symbol id="i-cash-app" viewBox="0 0 16.7385 17" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.3323 0.292188C13.4169 0 12.58 0 10.9062 0H5.83229C4.15846 0 3.32153 0 2.40615 0.292188C1.9202 0.472733 1.47889 0.758784 1.113 1.13039C0.74711 1.502 0.46546 1.95021 0.287693 2.44375C0 3.36281 0 4.21812 0 5.92344V11.0739C0 12.7766 0 13.6266 0.287693 14.5562C0.46546 15.0498 0.74711 15.498 1.113 15.8696C1.47889 16.2412 1.9202 16.5273 2.40615 16.7078C3.31106 17 4.15322 17 5.83229 17H10.9062C12.58 17 13.4169 17 14.3323 16.7025C14.8183 16.522 15.2596 16.2359 15.6255 15.8643C15.9913 15.4927 16.273 15.0445 16.4508 14.5509C16.7385 13.6319 16.7385 12.7766 16.7385 11.0713V5.92609C16.7385 4.22344 16.7385 3.37344 16.4508 2.44375C16.273 1.95021 15.9913 1.502 15.6255 1.13039C15.2596 0.758784 14.8183 0.472733 14.3323 0.292188ZM11.5783 6.32187C11.4554 6.45469 11.2383 6.45469 11.1075 6.32187L11.1128 6.32719C10.5609 5.8225 9.71616 5.45328 8.83739 5.45328C8.14692 5.45328 7.45906 5.70828 7.45906 6.35109C7.45906 6.96277 8.08987 7.19732 8.85912 7.48335C8.92167 7.50662 8.98513 7.5302 9.04922 7.55438C10.54 8.07766 11.7692 8.72047 11.7692 10.2452C11.7692 11.9 10.5348 13.0342 8.50836 13.1723L8.32529 14.0728C8.30954 14.1525 8.26701 14.2241 8.20499 14.2755C8.14296 14.3269 8.06532 14.3547 7.98529 14.3544L6.71682 14.3438C6.49976 14.3411 6.34019 14.1366 6.38466 13.9161L6.57819 12.9678C5.78522 12.7473 5.08953 12.3489 4.54029 11.7991C4.47386 11.7314 4.43657 11.6397 4.43657 11.5441C4.43657 11.4485 4.47386 11.3568 4.54029 11.2891L5.24646 10.5719C5.27804 10.5398 5.31555 10.5143 5.35682 10.4969C5.39813 10.4795 5.44238 10.4705 5.48706 10.4705C5.53177 10.4705 5.57605 10.4795 5.61732 10.4969C5.6586 10.5143 5.69611 10.5398 5.72769 10.5719C6.40769 11.2652 7.28646 11.5494 8.12339 11.5494C9.04399 11.5494 9.66646 11.1616 9.66646 10.5002C9.66646 9.91905 9.15563 9.72435 8.18621 9.35481C8.08323 9.31555 7.97509 9.27432 7.86183 9.23047C6.61429 8.77625 5.43476 8.11484 5.43476 6.57422C5.43476 4.79453 6.86276 3.92594 8.54706 3.83828L8.73016 2.94047C8.74572 2.86168 8.7875 2.79071 8.84844 2.73947C8.90937 2.6882 8.98579 2.65976 9.06492 2.65891H10.3308C10.5478 2.65891 10.71 2.86609 10.6655 3.08656L10.4589 4.09594C11.1053 4.31476 11.7027 4.66143 12.2165 5.11594C12.3629 5.25938 12.3708 5.49844 12.2322 5.63125L11.5783 6.32187Z"/>
+        </symbol>
+    </defs>
+</svg>

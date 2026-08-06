@@ -1,10 +1,8 @@
 package mx.sgfte.core.auth;
 import mx.sgfte.core.shared.db.Db;
+import oracle.jdbc.proxy.annotation.Pre;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Optional;
 
 
@@ -28,6 +26,64 @@ public class UserDao {
             throw new RuntimeException("Error looking up user by email", e);
         }
     }
+
+    public Optional<AppUser> findById(Long id) {
+        String sql = "SELECT id, email, password_hash, full_name, role, cardholder_id, status "
+                + "FROM app_user WHERE id = ?";
+
+        try (Connection c = Db.getConnection();
+              PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error looking up user by id", e);
+        }
+    }
+
+    public long insert(AppUser user) {
+        String sql = "INSERT INTO app_user (email, password_hash, full_name, role, cardholder_id, status)"
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection c = Db.getConnection();
+              PreparedStatement ps = c.prepareStatement(sql, new String[]{"id"})) {
+             ps.setString(1, user.getEmail());
+             ps.setString(2, user.getPasswordHash());
+             ps.setString(3, user.getFullName());
+             ps.setString(4, user.getRole());
+             if (user.getCardholderId() != null) {
+                 ps.setLong(5, user.getCardholderId());
+             } else {
+                 ps.setNull(5, Types.NUMERIC);
+             }
+             ps.setString(6, user.getStatus());
+             ps.executeUpdate();
+             try (ResultSet keys = ps.getGeneratedKeys()) {
+                 if (keys.next()) {
+                     return keys.getLong(1);
+                 }
+             }
+             throw new IllegalStateException("Insert succeded but no generated ID was returned");
+         } catch (SQLException e) {
+            throw new RuntimeException("Error inserting user", e);
+        }
+    }
+
+    public void setPasswordAndActivate(long id, String passwordHash) {
+        String sql = "UPDATE app_user SET password_hash = ?, status = 'ACTIVE' WHERE id = ?";
+        try (Connection c = Db.getConnection();
+              PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, passwordHash);
+            ps.setLong(2, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error setting password and activating user", e);
+        }
+    }
+
 
     private AppUser mapRow(ResultSet resultSet) throws SQLException {
         AppUser user = new AppUser();

@@ -8,6 +8,14 @@ import java.util.List;
 /** Card logic: issue a card for an account, invalidate a card. */
 public class CardService {
 
+    /**
+     * Vigencia de una tarjeta nueva, en años.
+     *
+     * Es una convención de la empresa, no una ley, así que vive aquí y no
+     * repartida por las consultas: cambiarla es cambiar esta línea.
+     */
+    public static final int VALIDITY_YEARS = 4;
+
     private static final SecureRandom RANDOM = new SecureRandom();
     private final CardDao dao;
 
@@ -28,7 +36,22 @@ public class CardService {
         if (!dao.isAccountActive(accountId)) {
             throw new ValidationException(List.of("La cuenta no existe o está inactiva"));
         }
-        return dao.insert(new Card(accountId, cardType, generateMaskedPan()));
+        /*
+          Una cuenta tiene como mucho una tarjeta activa de cada tipo. Quien lo
+          garantiza de verdad es el índice uq_card_active_type (V6); esto está
+          aquí para que el admin lea por qué no se pudo en vez de un ORA-00001.
+         */
+        boolean repeated = dao.findByAccount(accountId).stream()
+                .anyMatch(c -> cardType.equals(c.getCardType()) && "ACTIVE".equals(c.getStatus()));
+        if (repeated) {
+            throw new ValidationException(List.of(
+                    "Esta cuenta ya tiene una tarjeta "
+                    + ("PHYSICAL".equals(cardType) ? "física" : "digital")
+                    + " activa. Invalida la actual antes de expedir otra."));
+        }
+        Card card = new Card(accountId, cardType, generateMaskedPan());
+        card.setExpiresAt(java.time.LocalDate.now().plusYears(VALIDITY_YEARS));
+        return dao.insert(card);
     }
 
     public void invalidate(long cardId) {

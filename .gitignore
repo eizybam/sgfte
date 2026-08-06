@@ -25,3 +25,8 @@ replay_pid*
 
 #IDEs
 .idea
+.claude
+CLAUDE.MD
+
+#Environment and sensitive
+.env

@@ -1,84 +1,93 @@
 package mx.sgfte.core.accounts.web;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.accounts.Account;
 import mx.sgfte.core.accounts.AccountService;
+import mx.sgfte.core.audit.AuditEvent;
+import mx.sgfte.core.audit.AuditLogService;
 import mx.sgfte.core.categories.Category;
 import mx.sgfte.core.categories.CategoryDao;
-import mx.sgfte.core.users.CardholderDao;
 import mx.sgfte.core.users.ValidationException;
 
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Account creation — Figma frame "Crear Cuenta" (288:28).
+ *
+ * It used to be a page of its own. In the prototype it is a modal on top of
+ * "Gestión de Cuentas", so nothing is rendered here: the GET redirects to that
+ * list and the POST creates and returns to it.
+ *
+ * Post/redirect/get with a one-shot session flash: creating an account inserts a
+ * row and burns account numbers off the generator, so a refresh must not replay
+ * it.
+ */
 @WebServlet("/accounts")
 public class AccountServlet extends HttpServlet {
 
+    /** Leídos por AccountAdminServlet para reabrir el modal si falló. */
+    public static final String FLASH_ERRORS   = "createErrors";
+    public static final String FLASH_HOLDER   = "createHolder";
+    public static final String FLASH_CATEGORY = "createCategory";
+
     private final AccountService accountService = new AccountService();
-    private final CardholderDao cardholderDao = new CardholderDao();
     private final CategoryDao categoryDao = new CategoryDao();
+    private final AuditLogService audit = new AuditLogService();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        forwardForm(req, resp, categoryDao.findAllActive());
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.sendRedirect(req.getContextPath() + "/admin/cuentas");
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
         Long cardholderId = parseId(req.getParameter("cardholderId"));
         Long categoryId = parseId(req.getParameter("categoryId"));
 
-        // Loaded once: reused for the dropdown AND to get the name for the code prefix.
+        // Se cargan una vez: el nombre de la categoría es lo que da el prefijo.
         List<Category> categories = categoryDao.findAllActive();
 
+        HttpSession session = req.getSession();
         Account account = new Account(cardholderId, categoryId);
         try {
-            long id = accountService.create(account, nameOf(categories, categoryId));
-            req.setAttribute("successId", id);
-            req.setAttribute("successNumber", account.getAccountNumber());
+            accountService.create(account, nameOf(categories, categoryId));
+            audit.record(AuditEvent.ACCOUNT_CREATED, account.getAccountNumber(), req);
+
+            mx.sgfte.core.shared.web.OperationResult.success("¡Cuenta creada!",
+                            "La cuenta ya puede recibir dispersiones",
+                            "CUENTA REGISTRADA",
+                            "Se creó sin tarjetas y con saldo $0.00; los fondos llegan por dispersión.")
+                    .detail("Identificador", account.getAccountNumber())
+                    .detail("Propósito", nameOf(categories, categoryId))
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver cuentas", "/admin/cuentas")
+                    .primary("Ver cuenta", "/admin/cuenta?id=" + account.getId())
+                    .flash(session);
         } catch (ValidationException e) {
-            req.setAttribute("errors", e.getErrors());
-            // keep the user's selection so the dropdowns stay chosen
-            req.setAttribute("selectedCardholderId", cardholderId);
-            req.setAttribute("selectedCategoryId", categoryId);
+            session.setAttribute(FLASH_ERRORS, e.getErrors());
+            session.setAttribute(FLASH_HOLDER, req.getParameter("cardholderId"));
+            session.setAttribute(FLASH_CATEGORY, req.getParameter("categoryId"));
         }
-        forwardForm(req, resp, categories);
+
+        resp.sendRedirect(req.getContextPath() + "/admin/cuentas");
     }
 
-    private void forwardForm(HttpServletRequest req, HttpServletResponse resp, List<Category> categories)
-            throws ServletException, IOException {
-        req.setAttribute("cardholders", cardholderDao.findAllActive());
-        req.setAttribute("categories", categories);
-        req.getRequestDispatcher("/WEB-INF/jsp/accounts/form.jsp").forward(req, resp);
+    private String nameOf(List<Category> categories, Long id) {
+        if (id == null) return "";
+        for (Category c : categories) {
+            if (id.equals(c.getId())) return c.getName();
+        }
+        return "";
     }
 
-    private String nameOf(List<Category> categories, Long categoryId) {
-        if (categoryId == null) {
-            return null;
-        }
-        for (Category category : categories) {
-            if (categoryId.equals(category.getId())) {
-                return category.getName();
-            }
-        }
-        return null;
-    }
-
-    /** Parses a select value into a Long, or null if empty/invalid. */
     private Long parseId(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-        try {
-            return Long.valueOf(raw.trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        if (raw == null || raw.isBlank()) return null;
+        try { return Long.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
     }
 }

@@ -24,6 +24,9 @@ import java.util.List;
  */
 public class DispersionService {
 
+    private final mx.sgfte.core.notifications.NotificationService notificationService =
+            new mx.sgfte.core.notifications.NotificationService();
+
     private final ConcentratorDao concentratorDao;
     private final AccountDao accountDao;
     private final MovementDao movementDao;
@@ -73,5 +76,14 @@ public class DispersionService {
         } catch (SQLException e) {
             throw new RuntimeException("Error opening/closing the dispersion transaction", e);
         }
+
+        /*
+          Aviso al dueño de la cuenta, ya FUERA de la transacción.
+
+          Aquí abajo el commit ya ocurrió, así que sólo se avisa de dinero que
+          de verdad se movió, y una caída del correo no puede deshacerlo. El
+          servicio devuelve el control de inmediato: manda en otro hilo.
+         */
+        notificationService.moneyReceived(accountId, null, amount, description);
     }
 }

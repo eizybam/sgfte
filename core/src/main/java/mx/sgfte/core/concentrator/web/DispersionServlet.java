@@ -1,59 +1,149 @@
 package mx.sgfte.core.concentrator.web;
 
+import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.audit.AuditEvent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.concentrator.AccountLookupDao;
-import mx.sgfte.core.concentrator.ConcentratorService;
 import mx.sgfte.core.concentrator.DispersionService;
+import mx.sgfte.core.shared.web.OperationResult;
 import mx.sgfte.core.concentrator.InsufficientFundsException;
 import mx.sgfte.core.users.ValidationException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
- * GET  /admin/dispersion -> show account dropdown + amount form.
- * POST /admin/dispersion -> move money from Concentrator to the chosen account.
+ * POST /admin/dispersion — moves money from the Concentrator to an account.
+ *
+ * The form used to be its own page. In the Figma prototype it is the modal
+ * "Dispersión de fondos" (2177:376) that opens on top of the Vista Global, so
+ * there is no page left to render: the GET just sends you to /admin/home, where
+ * the modal lives.
+ *
+ * The POST follows post/redirect/get. The outcome travels in the session as a
+ * one-shot flash that AdminHomeServlet reads and clears, which means a refresh
+ * after a dispersion cannot repeat it — worth caring about when the side effect
+ * is moving money.
+ *
  * Protected by AuthFilter (/admin/*).
  */
 @WebServlet("/admin/dispersion")
 public class DispersionServlet extends HttpServlet {
 
+    /** Set on the session so /admin/home knows to reopen the modal. */
+    public static final String FLASH_ERRORS  = "dispersionErrors";
+    public static final String FLASH_ACCOUNT = "dispersionAccountId";
+    public static final String FLASH_AMOUNT  = "dispersionAmount";
+    public static final String FLASH_SUCCESS = "success";
+
     private final DispersionService dispersionService = new DispersionService();
-    private final ConcentratorService concentratorService = new ConcentratorService();
+    private final AuditLogService audit = new AuditLogService();
     private final AccountLookupDao accountLookupDao = new AccountLookupDao();
 
+    /** The form is a modal now; there is nothing to show on its own. */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        render(req, resp);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.sendRedirect(req.getContextPath() + "/admin/home");
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        Long accountId = parseId(req.getParameter("accountId"));
-        BigDecimal amount = parseAmount(req.getParameter("amount"));
+
+        String rawAccountId = req.getParameter("accountId");
+        String rawAmount = req.getParameter("amount");
+
+        Long accountId = parseId(rawAccountId);
+        BigDecimal amount = parseAmount(rawAmount);
         String description = req.getParameter("description");
+
+        HttpSession session = req.getSession();
         try {
             dispersionService.disperse(accountId, amount, description);
-            req.setAttribute("success", "Dispersión aplicada. El saldo se sumó a la cuenta.");
+            audit.record(AuditEvent.DISPERSION, "Cuenta " + accountId + " · $" + amount, req);
+
+            OperationResult.success("¡Depósito aplicado!",
+                            "El depósito se acreditó a la cuenta",
+                            "DEPÓSITO CONFIRMADO",
+                            "El saldo ya está disponible en la cuenta destino.")
+                    .amount("Monto depositado", amount)
+                    .detail("Origen", "Cuenta Concentradora")
+                    .detail("Destino", labelOf(accountId))
+                    .when(java.time.LocalDateTime.now())
+                    .primary("Ver cuenta", "/admin/cuenta?id=" + accountId)
+                    .flash(session);
         } catch (ValidationException e) {
-            req.setAttribute("errors", e.getErrors());
+            // Errores de campo: se quedan dentro del formulario, con lo tecleado.
+            keepForRetry(session, e.getErrors(), rawAccountId, rawAmount);
         } catch (InsufficientFundsException e) {
-            req.setAttribute("errors", java.util.List.of(e.getMessage()));
+            // Saldo insuficiente es ALERTA, no un error cualquiera: dice que
+            // alguien intentó mover dinero que no había.
+            audit.record(AuditEvent.DISPERSION_REJECTED, e.getMessage(), req);
+
+            // Y no es un fallo de formulario: no hay nada que corregir en el
+            // formulario, hay que fondear. Por eso va en la tarjeta de rechazo
+            // (2169:542) y no como aviso junto a un campo.
+            OperationResult.rejected("Depósito rechazado",
+                            "La operación no pudo completarse", e.getMessage())
+                    .amount("Monto del depósito", amount)
+                    .detail("Origen", "Cuenta Concentradora")
+                    .detail("Destino", labelOf(accountId))
+                    .when(java.time.LocalDateTime.now())
+                    .primary("Fondear Concentradora", "/admin/concentradora")
+                    .flash(session);
         }
-        render(req, resp);
+
+        resp.sendRedirect(req.getContextPath() + backTo(req));
     }
 
-    private void render(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        req.setAttribute("accounts", accountLookupDao.findActiveForSelect());
-        req.setAttribute("concentrator", concentratorService.getConcentrator());
-        req.getRequestDispatcher("/WEB-INF/jsp/admin/dispersion.jsp").forward(req, resp);
+    /**
+     * Where to land after dispersing. Three screens open this same modal, and
+     * bouncing them all back to the dashboard would lose the admin's place.
+     *
+     * Never a URL: only an account id or the literal "concentradora", so the
+     * parameter cannot be turned into an open redirect.
+     */
+    private String backTo(HttpServletRequest req) {
+        if ("concentradora".equals(req.getParameter("returnTo"))) return "/admin/concentradora";
+        Long detailId = parseId(req.getParameter("returnToAccount"));
+        return detailId == null ? "/admin/home" : "/admin/cuenta?id=" + detailId;
+    }
+
+    /**
+     * Puts the errors and what the admin typed back on the session, so the modal
+     * reopens already filled in instead of making them start over.
+     */
+    private void keepForRetry(HttpSession session, List<String> errors,
+                              String rawAccountId, String rawAmount) {
+        session.setAttribute(FLASH_ERRORS, errors);
+        session.setAttribute(FLASH_ACCOUNT, rawAccountId);
+        session.setAttribute(FLASH_AMOUNT, rawAmount);
+    }
+
+    /**
+     * How the destination reads on the result card: "Gasolina — Gómez, Carlos".
+     *
+     * Falls back to the id rather than failing: the operation already happened,
+     * and a card that cannot name the account is still better than a 500 on the
+     * way to showing it.
+     */
+    private String labelOf(Long accountId) {
+        if (accountId == null) return null;
+        try {
+            return accountLookupDao.findActiveForSelect().stream()
+                    .filter(a -> a.getId() == accountId)
+                    .map(a -> a.getLabel())
+                    .findFirst()
+                    .orElse("Cuenta " + accountId);
+        } catch (RuntimeException e) {
+            return "Cuenta " + accountId;
+        }
     }
 
     private Long parseId(String raw) {

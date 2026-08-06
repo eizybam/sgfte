@@ -1,0 +1,154 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  Modal "Transferencia" · marco Figma 111:2.
+
+  El marco lo dibuja como pantalla completa, con un título y un subtítulo
+  encima, pero es un pop-up: se abre sobre el panel o sobre la vista de cuenta,
+  desde el botón "Transferir a compañero". Sólo entra la tarjeta; el título y el
+  subtítulo del marco quedan fuera, como en los demás modales.
+
+  Los destinos NO se recargan del servidor al cambiar de origen: un modal que
+  recarga la página se cierra solo. Vienen todos de una vez —agrupados por la
+  cuenta de origen a la que pertenecen— y el guion de abajo enseña los del
+  origen elegido. Por eso peersByAccount es una sola consulta.
+
+  Quien lo incluya debe haber dejado en la petición `myAccounts` y `peersByAccount`.
+--%>
+<div class="modal-scrim" id="transfer-modal" hidden>
+    <div class="modal xfer__card" role="dialog" aria-modal="true" aria-labelledby="xfer-title">
+        <h2 class="modal__title xfer__modal-title" id="xfer-title">Transferencia</h2>
+        <p class="xfer__modal-lead">
+            Solo puedes transferir entre cuentas del mismo propósito (ej. Gasolina → Gasolina).
+        </p>
+
+        <form class="xfer__form" method="post" action="${ctx}/app/transferencia">
+
+            <label class="xfer__label" for="sourceId">CUENTA ORIGEN</label>
+            <div class="xfer__control">
+                <svg class="xfer__icon" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                <select class="xfer__input" id="sourceId" name="sourceId" required>
+                    <option value="" disabled ${empty fixedSourceId ? 'selected' : ''}>Selecciona una cuenta</option>
+                    <c:forEach var="a" items="${myAccounts}">
+                        <option value="${a.id}" ${fixedSourceId == a.id ? 'selected' : ''}>
+                            ${fn:escapeXml(a.purpose)} · ${fn:escapeXml(a.accountNumber)}
+                        </option>
+                    </c:forEach>
+                </select>
+                <svg class="xfer__chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </div>
+
+            <label class="xfer__label" for="destId">CUENTA DESTINO</label>
+            <div class="xfer__control">
+                <%--
+                  El marco pone aquí "Número de cuenta o CLABE", un campo libre.
+                  En este sistema no hay CLABEs y el destino no es un número
+                  cualquiera: tiene que ser una cuenta existente y del MISMO
+                  propósito, que es la regla que enuncia el propio subtítulo.
+                  Teclearla sólo permitiría equivocarse.
+
+                  Cada opción lleva su cuenta de origen; el guion muestra las que
+                  correspondan y esconde el resto.
+                --%>
+                <select class="xfer__input" id="destId" name="destId" required>
+                    <option value="" disabled selected>Selecciona la cuenta destino</option>
+                    <c:forEach var="entry" items="${peersByAccount}">
+                        <c:forEach var="p" items="${entry.value}">
+                            <option value="${p.accountId}" data-source="${entry.key}">
+                                ${fn:escapeXml(p.label)}
+                            </option>
+                        </c:forEach>
+                    </c:forEach>
+                </select>
+                <svg class="xfer__chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </div>
+            <p class="xfer__note" id="xfer-empty" hidden>
+                Ningún compañero tiene una cuenta de este propósito todavía.
+            </p>
+
+            <label class="xfer__label" for="amount">MONTO</label>
+            <div class="xfer__control">
+                <svg class="xfer__icon" width="16.74" height="17" aria-hidden="true"><use href="#i-cash-app"/></svg>
+                <input class="xfer__input" type="number" step="0.01" min="0.01"
+                       id="amount" name="amount" placeholder="0.00" required>
+            </div>
+
+            <label class="xfer__label" for="description">CONCEPTO</label>
+            <div class="xfer__control xfer__control--area">
+                <textarea class="xfer__input" id="description" name="description"
+                          maxlength="200" placeholder="Ej. Pago comida, renta..."></textarea>
+            </div>
+
+            <div class="xfer__actions">
+                <button type="button" class="btn btn--secondary btn--hero" data-close-transfer>Cancelar</button>
+                <button type="submit" class="btn btn--primary btn--hero">
+                    <svg width="24" height="24" aria-hidden="true"><use href="#i-arrows"/></svg>
+                    Confirmar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("transfer-modal");
+        if (!scrim) return;
+
+        var source = document.getElementById("sourceId");
+        var dest = document.getElementById("destId");
+        var empty = document.getElementById("xfer-empty");
+        var lastFocused = null;
+
+        /*
+          Enseña sólo los destinos de la cuenta de origen elegida.
+
+          Se ocultan Y se deshabilitan: una <option> oculta sigue siendo
+          seleccionable con el teclado, y podría enviarse un destino de otro
+          propósito. El servidor lo rechazaría igual, pero es mejor no ofrecerlo.
+        */
+        function syncDestinations() {
+            var picked = source.value;
+            var available = 0;
+
+            Array.prototype.forEach.call(dest.options, function (option) {
+                if (!option.dataset.source) return;   // el placeholder
+                var matches = option.dataset.source === picked;
+                option.hidden = !matches;
+                option.disabled = !matches;
+                if (matches) available++;
+            });
+
+            dest.selectedIndex = 0;
+            dest.disabled = available === 0;
+            empty.hidden = !picked || available > 0;
+        }
+
+        function open() {
+            lastFocused = document.activeElement;
+            scrim.hidden = false;
+            syncDestinations();
+            source.focus();
+        }
+
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        document.querySelectorAll("[data-open-transfer]").forEach(function (b) {
+            b.addEventListener("click", open);
+        });
+        document.querySelectorAll("[data-close-transfer]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        source.addEventListener("change", syncDestinations);
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+
+        syncDestinations();
+    })();
+</script>

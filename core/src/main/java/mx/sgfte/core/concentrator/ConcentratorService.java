@@ -22,11 +22,20 @@ public class ConcentratorService {
         return dao.findSingleton();
     }
 
-    /** Adds money to the Concentrator. Validates the amount is positive. */
-    public void fund(BigDecimal amount) {
+    /**
+     * Adds money to the Concentrator. Validates the amount is positive.
+     *
+     * @param actor quién fondea; queda en el ledger. Puede ser null.
+     */
+    public void fund(BigDecimal amount, String actor) {
         if (amount == null || amount.signum() <= 0) {
             throw new ValidationException(List.of("El monto a fondear debe ser mayor a 0"));
         }
-        dao.fund(amount);
+        dao.fund(amount, actor);
+    }
+
+    /** Sin actor: se registra igual, sólo que sin saber quién fue. */
+    public void fund(BigDecimal amount) {
+        fund(amount, null);
     }
 }

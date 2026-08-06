@@ -1,39 +1,282 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel · SGFTE</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600&family=Manrope:wght@400;500;600;700&display=swap"
-          rel="stylesheet">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/auth.css">
-    <style>
-        .home-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--sp-6); }
-        .home-card { background: var(--sgfte-card); border: 1px solid var(--sgfte-border);
-            border-radius: var(--sgfte-radius-card); padding: var(--sp-5); max-width: 520px; width: 100%; }
-        .home-card h1 { font-family: var(--sgfte-font-title); font-weight: 600; color: var(--sgfte-white);
-            margin: 0 0 var(--sp-1); font-size: 28px; }
-        .home-card p { color: var(--sgfte-tan); margin: 0 0 var(--sp-4); }
-        .home-role { font-family: var(--sgfte-font-mono); font-size: 13px; letter-spacing: 0.6px;
-            text-transform: uppercase; color: var(--sgfte-salmon); }
-    </style>
-</head>
-<body class="auth">
-<div class="home-wrap">
-    <div class="home-card">
-        <h1>Bienvenido, ${sessionScope.user.fullName}</h1>
-        <p class="home-role">Rol: ${sessionScope.user.role}</p>
-        <p>Este es un panel provisional. Las vistas de administración se conectarán aquí.</p>
-        <form method="post" action="${pageContext.request.contextPath}/logout">
-            <button type="submit" class="auth-submit" style="width:auto; padding:0 var(--sp-3);">
-                Cerrar sesión
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  Vista Global · marco Figma "Vista principal de Admin" (201:22).
+
+  La pantalla tiene tres piezas: la concentradora (fuente única de fondos,
+  RN-02), dos KPIs y el reparto del dinero por propósito.
+
+  Los importes se formatean con minFractionDigits=0 y maxFractionDigits=2, que
+  es justo lo que hace el prototipo: 4250000 se ve "$4,250,000" y 853567.31 se
+  ve "$853,567.31". No se redondea nada.
+--%>
+<c:set var="pageTitle" value="Vista Global"/>
+<c:set var="pageSubtitle" value="Resumen financiero y control de dispersión"/>
+<c:set var="activeNav" value="overview"/>
+<%@ include file="/WEB-INF/jsp/partials/admin-top.jspf" %>
+
+<div class="vista-grid">
+
+    <section class="conc">
+        <p class="conc__label">CUENTA CONCENTRADORA</p>
+
+        <p class="conc__amount">
+            <span class="conc__figure">$<fmt:formatNumber value="${concentratorBalance}"
+                    type="number" groupingUsed="true" minFractionDigits="0" maxFractionDigits="2"/></span>
+            <span class="conc__currency">MXN</span>
+        </p>
+
+        <%--
+          El marco sólo dibuja "Depositar a cuenta", pero fondear la
+          Concentradora no tenía ningún punto de entrada en la aplicación: la
+          operación que mete dinero al sistema quedaba inalcanzable.
+        --%>
+        <div class="conc__cta">
+            <button type="button" class="btn btn--primary btn--hero" data-open-dispersion>
+                <img src="${ctx}/assets/img/icons/transfer.png" alt="">
+                Depositar a cuenta
             </button>
+            <button type="button" class="btn btn--secondary btn--hero" data-open-fund>Fondear</button>
+        </div>
+    </section>
+
+    <div class="kpi-col">
+        <article class="kpi-card">
+            <div class="kpi-card__head">
+                <span class="kpi-card__label">Tarjetahabientes activos</span>
+                <img class="kpi-card__icon" src="${ctx}/assets/img/icons/users.png" alt="">
+            </div>
+            <p class="kpi-card__value">${activeCardholders}</p>
+        </article>
+
+        <article class="kpi-card">
+            <div class="kpi-card__head">
+                <span class="kpi-card__label">Dispersión mensual total</span>
+                <img class="kpi-card__icon" src="${ctx}/assets/img/icons/cash.png" alt="">
+            </div>
+            <p class="kpi-card__value">
+                <span>$<fmt:formatNumber value="${dispersionThisMonth}"
+                        type="number" groupingUsed="true" minFractionDigits="0" maxFractionDigits="2"/></span>
+                <span class="kpi-card__currency">MXN</span>
+            </p>
+        </article>
+    </div>
+</div>
+
+<section class="dist">
+    <h2 class="dist__title">Distribución de gasto</h2>
+    <p class="dist__lead">Análisis del propósito de fondos<br>asignados en el periodo actual.</p>
+
+    <c:choose>
+        <c:when test="${empty purposes}">
+            <p class="dist__empty">Todavía no hay fondos asignados a ninguna cuenta.</p>
+        </c:when>
+        <c:otherwise>
+            <%--
+              Paradas del degradado del pastel. Se acumulan los porcentajes ya
+              redondeados en el servlet; la última rebanada se cierra en 100%
+              para que un redondeo de 99 o 101 no deje un hueco ni se solape.
+            --%>
+            <c:set var="acc" value="0"/>
+            <c:set var="pieStops"><c:forEach var="p" items="${purposes}" varStatus="s"><c:if test="${not s.first}">,</c:if>var(--sgfte-purpose-${p.colorIndex}) ${acc}% ${s.last ? 100 : acc + p.percent}%<c:set var="acc" value="${acc + p.percent}"/></c:forEach></c:set>
+
+            <ul class="dist__legend">
+                <c:forEach var="p" items="${purposes}">
+                    <li class="dist__item">
+                        <span class="dist__key">
+                            <span class="dist__swatch"
+                                  style="background: var(--sgfte-purpose-${p.colorIndex});"></span>
+                            <span class="dist__name">${p.purpose}</span>
+                        </span>
+                        <span class="dist__pct">${p.percent}%</span>
+                    </li>
+                </c:forEach>
+            </ul>
+
+            <div class="dist__pie" role="img"
+                 aria-label="Reparto del saldo por propósito"
+                 style="background: conic-gradient(${pieStops});"></div>
+        </c:otherwise>
+    </c:choose>
+</section>
+
+<%--
+  Modal "Dispersión de fondos" (Figma 2177:376). Antes era la página
+  /admin/dispersion; ahora esa ruta sólo redirige aquí.
+
+  Se pinta siempre en el HTML y se muestra u oculta con [hidden]: el formulario
+  no depende de JavaScript para existir, sólo para abrirse. Si la dispersión
+  falló, el servlet dejó los errores en sesión y el modal arranca abierto con lo
+  que se había tecleado.
+--%>
+<c:set var="dispersionFailed" value="${not empty dispersionErrors}"/>
+
+<div class="modal-scrim" id="dispersion-modal" ${dispersionFailed ? '' : 'hidden'}>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dispersion-title">
+        <h2 class="modal__title" id="dispersion-title">Dispersión de fondos</h2>
+        <div class="modal__rule"></div>
+
+        <c:if test="${dispersionFailed}">
+            <div class="alert alert--error modal__alert">
+                <ul><c:forEach var="e" items="${dispersionErrors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>
+
+        <form class="modal__body" method="post" action="${ctx}/admin/dispersion">
+
+            <div class="modal__field">
+                <label class="modal__label" for="accountId">CUENTA DESTINO · Origen: Concentradora</label>
+                <div class="modal__control modal__control--select">
+                    <%-- width/height van también como atributos: sin CSS un <svg> vacío
+                         mide 300x150 y revienta la caja. Igual que el resto de iconos. --%>
+                    <svg class="modal__icon-card" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                    <select class="modal__input" id="accountId" name="accountId" required>
+                        <option value="" disabled ${empty dispersionAccountId ? 'selected' : ''}>Selecciona la cuenta a fondear</option>
+                        <c:forEach var="a" items="${accounts}">
+                            <option value="${a.id}" ${dispersionAccountId == a.id ? 'selected' : ''}>${a.label}</option>
+                        </c:forEach>
+                    </select>
+                    <svg class="modal__icon-chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+                </div>
+            </div>
+
+            <div class="modal__field">
+                <label class="modal__label modal__label--tracked" for="amount">MONTO</label>
+                <div class="modal__control modal__control--amount">
+                    <svg class="modal__icon-cash" width="16.74" height="17" aria-hidden="true"><use href="#i-cash-app"/></svg>
+                    <input class="modal__input" type="number" step="0.01" min="0.01"
+                           id="amount" name="amount" placeholder="0.00"
+                           value="${fn:escapeXml(dispersionAmount)}" required>
+                </div>
+            </div>
+
+            <div class="modal__actions">
+                <button type="button" class="btn btn--secondary btn--hero" data-close-dispersion>Cancelar</button>
+                <button type="submit" class="btn btn--primary btn--hero">
+                    <img src="${ctx}/assets/img/icons/disperse.png" alt="">
+                    Dispersar
+                </button>
+            </div>
         </form>
     </div>
 </div>
-</body>
-</html>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("dispersion-modal");
+        var firstField = document.getElementById("accountId");
+        var lastFocused = null;
+
+        function open() {
+            lastFocused = document.activeElement;
+            scrim.hidden = false;
+            firstField.focus();
+        }
+
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        document.querySelectorAll("[data-open-dispersion]").forEach(function (b) {
+            b.addEventListener("click", open);
+        });
+        document.querySelectorAll("[data-close-dispersion]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        // Clic en el velo, pero no dentro del panel.
+        scrim.addEventListener("mousedown", function (e) {
+            if (e.target === scrim) close();
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+
+        // Si viene de un intento fallido, arranca abierto y con el foco puesto.
+        if (!scrim.hidden) firstField.focus();
+    })();
+</script>
+
+
+<%--
+  Modal "Fondear Concentradora" (Figma 2177:344). Mismo componente que el de
+  dispersión: sólo cambian el título, el primer campo y la etiqueta del botón.
+
+  El método de fondeo se guarda en la bitácora, no en el ledger: es contexto
+  operativo. El ledger guarda importe y saldo resultante, que es lo que cuadra.
+--%>
+<c:set var="fundFailed" value="${not empty fundErrors}"/>
+
+<div class="modal-scrim" id="fund-modal" ${fundFailed ? '' : 'hidden'}>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fund-title">
+        <h2 class="modal__title" id="fund-title">Fondear Concentradora</h2>
+        <div class="modal__rule"></div>
+
+        <c:if test="${fundFailed}">
+            <div class="alert alert--error modal__alert">
+                <ul><c:forEach var="e" items="${fundErrors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>
+
+        <form class="modal__body" method="post" action="${ctx}/admin/concentradora">
+
+            <div class="modal__field">
+                <label class="modal__label" for="method">MÉTODO DE FONDEO</label>
+                <div class="modal__control modal__control--select">
+                    <svg class="modal__icon-card" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                    <select class="modal__input" id="method" name="method">
+                        <option value="SPEI / Depósito bancario" selected>SPEI / Depósito bancario</option>
+                        <option value="Transferencia interbancaria">Transferencia interbancaria</option>
+                        <option value="Efectivo">Efectivo</option>
+                    </select>
+                    <svg class="modal__icon-chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+                </div>
+            </div>
+
+            <div class="modal__field">
+                <label class="modal__label modal__label--tracked" for="fundAmount">MONTO</label>
+                <div class="modal__control modal__control--amount">
+                    <svg class="modal__icon-cash" width="16.74" height="17" aria-hidden="true"><use href="#i-cash-app"/></svg>
+                    <input class="modal__input" type="number" step="0.01" min="0.01"
+                           id="fundAmount" name="amount" placeholder="0.00"
+                           value="${fn:escapeXml(fundAmount)}" required>
+                </div>
+            </div>
+
+            <div class="modal__actions">
+                <button type="button" class="btn btn--secondary btn--hero" data-close-fund>Cancelar</button>
+                <button type="submit" class="btn btn--primary btn--hero">
+                    <img src="${ctx}/assets/img/icons/disperse.png" alt="">
+                    Confirmar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("fund-modal");
+        var amount = document.getElementById("fundAmount");
+        var lastFocused = null;
+
+        function open() { lastFocused = document.activeElement; scrim.hidden = false; amount.focus(); }
+        function close() { scrim.hidden = true; if (lastFocused) lastFocused.focus(); }
+
+        document.querySelectorAll("[data-open-fund]").forEach(function (b) { b.addEventListener("click", open); });
+        document.querySelectorAll("[data-close-fund]").forEach(function (b) { b.addEventListener("click", close); });
+
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+
+        if (!scrim.hidden) amount.focus();
+    })();
+</script>
+
+<%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

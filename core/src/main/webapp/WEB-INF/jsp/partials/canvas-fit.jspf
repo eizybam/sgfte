@@ -1,0 +1,38 @@
+<%--
+  Escalado del lienzo. Va en el <head> de los dos cascarones, antes de pintar,
+  para que no se vea el salto.
+
+  El prototipo es un lienzo FIJO de 1440x1024. En vez de reflujar la maquetación
+  en pantallas más chicas, se escala entero con `zoom`: las proporciones quedan
+  idénticas al diseño y ningún rótulo parte a dos líneas. Por eso sgfte.css no
+  tiene puntos de corte intermedios.
+
+  Se mide contra el ALTO además del ancho. Antes sólo miraba el ancho, así que
+  en una ventana ancha pero baja —cualquier portátil con la barra de pestañas y
+  el dock— el zoom se quedaba en 1 y los 1024px del diseño no cabían: había que
+  desplazarse para ver el final de la pantalla.
+
+  --app-h es el alto del viewport YA dividido entre el zoom: bajo `zoom` una
+  altura de 100vh se pinta encogida y dejaría una franja muerta abajo.
+
+  El suelo de 0.6 evita que en una ventana diminuta el texto quede ilegible; a
+  partir de ahí manda el bloque responsive del CSS.
+--%>
+<script>
+    (function () {
+        var DESIGN_W = 1440, DESIGN_H = 1024, MIN_ZOOM = 0.6;
+        var root = document.documentElement;
+
+        function fit() {
+            var zoom = Math.min(1,
+                                window.innerWidth / DESIGN_W,
+                                window.innerHeight / DESIGN_H);
+            zoom = Math.max(MIN_ZOOM, zoom);
+            root.style.zoom = zoom;
+            root.style.setProperty("--app-h", (window.innerHeight / zoom) + "px");
+        }
+
+        fit();
+        window.addEventListener("resize", fit);
+    })();
+</script>

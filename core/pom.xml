@@ -56,7 +56,17 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
-
+        <dependency>
+            <groupId>jakarta.mail</groupId>
+            <artifactId>jakarta.mail-api</artifactId>
+            <version>2.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>2.0.4</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -74,6 +84,15 @@
                      Using <release> (not source/target) makes javac check against the
                      real Java 21 API, so we can't accidentally call a method that
                      doesn't exist on the target JDK. -->
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <!-- Pinned on purpose. Maven's default Surefire binding is old enough
+                     that it only discovers JUnit 4 tests: `mvn test` would report
+                     "Tests run: 0" and stay green while the JUnit 5 suite never ran.
+                     Silent non-execution is worse than a red build. -->
             </plugin>
         </plugins>
     </build>

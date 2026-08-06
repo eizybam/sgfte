@@ -3,6 +3,7 @@ package mx.sgfte.core.transfers;
 import mx.sgfte.core.accounts.AccountDao;
 import mx.sgfte.core.movements.Movement;
 import mx.sgfte.core.movements.MovementDao;
+import mx.sgfte.core.notifications.NotificationService;
 import mx.sgfte.core.shared.db.Db;
 import mx.sgfte.core.users.ValidationException;
 
@@ -22,6 +23,9 @@ import java.util.List;
  * Business rule 5: only allowed if both accounts share the exact same category_id.
  */
 public class TransferService {
+
+    private final mx.sgfte.core.notifications.NotificationService notificationService =
+            new mx.sgfte.core.notifications.NotificationService();
 
     private final TransferDao transferDao;
     private final AccountDao accountDao;
@@ -68,6 +72,7 @@ public class TransferService {
                 movementDao.insert(conn, new Movement(destId, "TRANSFER_IN", amount, sourceId, text));
 
                 conn.commit();
+
             } catch (RuntimeException | SQLException e) {
                 conn.rollback();
                 if (e instanceof RuntimeException) throw (RuntimeException) e;
@@ -76,5 +81,9 @@ public class TransferService {
         } catch (SQLException e) {
             throw new RuntimeException("Error opening/closing the transfer transaction", e);
         }
+
+        // Sólo se avisa a QUIEN RECIBE: el que envía ya sabe que envió, porque
+        // acaba de hacerlo y ve la tarjeta de confirmación.
+        notificationService.moneyReceived(destId, sourceId, amount, description);
     }
 }
