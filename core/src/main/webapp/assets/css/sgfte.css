@@ -1,0 +1,3620 @@
+/* ==========================================================================
+   SGFTE · Sistema de diseño
+   --------------------------------------------------------------------------
+   Fuente de verdad: biblioteca Figma "tcds_prototipo_integradora_4_3E_Final"
+   (Componentes 360:84). Este archivo es el ÚNICO lugar donde se definen
+   colores, tipografías y componentes. Las vistas solo componen clases.
+
+   Reglas canónicas acordadas con el cliente (7 jul 2026):
+     · Radio 8 en TODO (botones, tarjetas, inputs, tablas). Badges r4, píldoras r999.
+     · Botón primario   = relleno #C34100, texto #FFEDE8.
+     · Botón secundario = transparente, borde #FEB96B@0.5, TEXTO AMARILLO #FEB96B.
+     · Par de botones   = ocupan el ancho del formulario, 20px de separación,
+                          secundario a la izquierda, primario a la derecha.
+     · Tabla canónica   = estilo "Vista de Logs", contenido CENTRADO.
+
+   Orden de carga:  sgfte.css  →  (opcional) auth.css solo en el login.
+   ========================================================================== */
+
+/* ==========================================================================
+   1 · Tokens
+   ========================================================================== */
+:root {
+    /* Superficies */
+    --sgfte-bg:            #141312;
+    --sgfte-surface:       #1d1b1a;
+    --sgfte-surface-2:     #211f1d;
+    --sgfte-card-black:    #131010;   /* var "negro tarjeta" · tarjeta concentradora */
+    --sgfte-line:          #2b2a28;   /* divisores y bordes de tabla */
+    --sgfte-line-warm:     #594139;   /* bordes cálidos (tarjetas de formulario) */
+    --sgfte-line-pill:     #463e3b;   /* borde de tarjetas, píldoras y dropdowns */
+    --sgfte-line-side:     #1d1b1a;   /* borde del panel lateral */
+
+    /*
+      Reglas cálidas del prototipo: NO son grises. La línea bajo el header y la
+      que separa el aviso legal son tertiary/300 (#ff8771) al 50%.
+    */
+    --sgfte-rule:          rgba(255, 135, 113, 0.5);
+
+    /* Texto */
+    --sgfte-white:         #ffffff;
+    --sgfte-cream:         #e6e1df;   /* var "Blanco apagado" */
+    --sgfte-tan:           #e1bfb4;
+    --sgfte-salmon:        #ffb59b;   /* var "Menu selected" */
+    --sgfte-pink-text:     #ffc2ba;   /* var "Rosa texto" · subtítulos y etiquetas */
+    --sgfte-pink-strong:   #ffb3a7;   /* sufijo de divisa (MXN) */
+    --sgfte-menu:          #d7968c;   /* var "menu" · enlaces inactivos del header */
+    --sgfte-id:            #a06d65;   /* matrícula del usuario en el header */
+    --sgfte-muted:         #9b8e88;
+    --sgfte-mono-muted:    #a98a80;   /* encabezados de tabla, etiquetas KPI */
+    --sgfte-placeholder:   rgba(169, 138, 128, 0.5);
+
+    /* Marca */
+    --sgfte-primary:        #c34100;
+    --sgfte-primary-hover:  #d94d06;
+    --sgfte-primary-active: #a83700;
+    --sgfte-primary-text:   #ffede8;
+    --sgfte-accent:         #feb96b;   /* amarillo del botón secundario */
+    --sgfte-contrast:       rgba(254, 185, 107, 0.9);  /* var "Contrastes" · borde destacado */
+
+    /* Destructivo */
+    --sgfte-danger:         #d14836;
+    --sgfte-danger-hover:   #e25848;
+    --sgfte-danger-active:  #b03a2a;
+
+    /* Estados */
+    --sgfte-ok:            #6cc070;
+    --sgfte-ok-text:       #a9d6ab;
+    --sgfte-error:         #ffb4ab;
+    --sgfte-warn:          #feb96b;
+
+    /*
+      Propósitos. Los tonos salen del SVG del pastel del prototipo (PieLayer),
+      no de una aproximación: son los mismos que usan los cuadros de la leyenda.
+      El orden es el de balanceByPurpose() — saldo mayor primero.
+    */
+    /* Paleta de propósitos: los siete colores del modal "Nueva categoría"
+       (2041:155), en su mismo orden. Los cuatro primeros son los que ya se
+       usaban cuando el color se derivaba de la posición en el catálogo; del 5
+       al 7 sólo existen desde que se elige a mano (V5). */
+    --sgfte-purpose-1:     #637719;   /* gasolina  */
+    --sgfte-purpose-2:     #195b77;   /* viajes    */
+    --sgfte-purpose-3:     #771934;   /* comida    */
+    --sgfte-purpose-4:     #531977;   /* viáticos  */
+    --sgfte-purpose-5:     #c34100;   /* naranja de marca */
+    --sgfte-purpose-6:     #feb96b;   /* ámbar     */
+    --sgfte-purpose-7:     #6b7280;   /* gris      */
+
+    /* Forma */
+    --sgfte-radius:        8px;
+    --sgfte-radius-badge:  4px;
+    --sgfte-radius-pill:   999px;
+
+    /* Rejilla de 8px */
+    --sp-half: 4px;
+    --sp-1:  8px;
+    --sp-2: 16px;
+    --sp-3: 24px;
+    --sp-4: 32px;
+    --sp-5: 40px;
+    --sp-6: 48px;
+    --sp-8: 64px;
+
+    /* Tipografía */
+    --sgfte-font-body:  "Hanken Grotesk", system-ui, sans-serif;
+    --sgfte-font-title: "Manrope", system-ui, sans-serif;
+    --sgfte-font-mono:  "JetBrains Mono", ui-monospace, monospace;
+
+    /* Estructura (medidas del marco 201:22, 1440 × 1024) */
+    --sgfte-sidebar-w: 300px;
+    --sgfte-header-h:  112px;
+    --sgfte-main-w:   1031px;   /* del borde izquierdo del contenido al derecho */
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+/*
+  Fondo del prototipo: un degradado CÓNICO centrado en el lienzo, no un
+  resplandor radial en la esquina. En Figma el nodo lleva una matriz con escala
+  negativa (giro de 180°), por eso el ángulo inicial es 270° y no 90°.
+  Se fija al viewport para que no se repita al hacer scroll.
+*/
+/*
+  --app-h lo fija el script de escalado del cascarón: es el alto del viewport ya
+  dividido entre el zoom, en px. Hace falta porque bajo `zoom` una altura de
+  100vh se pinta encogida y dejaría una franja muerta abajo. El respaldo 100vh
+  es lo que se usa si el script no llega a correr.
+*/
+body {
+    min-height: var(--app-h, 100vh);
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+    color: var(--sgfte-cream);
+    background-color: var(--sgfte-bg);
+    background-image: conic-gradient(from 270deg at 50% 50%,
+                                     #141413 0%, #1b1713 23.276%, #141413 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+a { color: inherit; }
+
+/* ==========================================================================
+   2 · Estructura de la aplicación (header + sidebar + contenido)
+   ========================================================================== */
+/*
+  El lienzo va centrado.
+
+  El escalado tope en zoom = 1, así que en una ventana MÁS ancha de 1440 el
+  diseño ya no crece: se quedaba pegado a la izquierda y todo el sobrante caía a
+  la derecha. Se notaba sobre todo en la cabecera, que sí ocupaba el ancho
+  completo, y dejaba el bloque de usuario a cientos de píxeles del contenido.
+*/
+.app {
+    max-width: 1440px;
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: var(--sgfte-sidebar-w) 1fr;
+    grid-template-rows: var(--sgfte-header-h) 1fr;
+    grid-template-areas:
+        "header header"
+        "side   main";
+    min-height: var(--app-h, 100vh);
+}
+
+/* ---- Header (Figma "Header Admin" 361:146) ------------------------------- */
+.app-header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    padding-right: var(--sp-3);
+    border-bottom: 1px solid var(--sgfte-rule);
+}
+
+/*
+  El grupo de enlaces NO está centrado en el prototipo: arranca en x=504 con
+  85px entre elementos. Por debajo de 1440px se centra (ver §12).
+*/
+.app-header__nav {
+    display: flex;
+    align-self: stretch;
+    gap: 85px;
+    margin-left: 504px;
+}
+
+/*
+  El enlace ocupa todo el alto del header para que su borde inferior caiga
+  exactamente sobre la línea (y=109..112), que es el subrayado activo.
+  Los 7px de padding superior recolocan el texto en su centro de diseño (y≈59).
+*/
+.app-header__link {
+    display: flex;
+    align-items: center;
+    padding-top: 7px;
+    border-bottom: 3px solid transparent;
+    border-radius: 2px;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 24px;
+    color: var(--sgfte-menu);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.app-header__link:hover { color: var(--sgfte-salmon); }
+
+.app-header__link.is-active {
+    color: var(--sgfte-salmon);
+    border-bottom-color: var(--sgfte-primary);
+}
+
+.app-header__user {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-left: auto;
+}
+
+.app-header__gear { display: block; width: 32px; height: 32px; }
+
+.app-header__who {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: right;
+    cursor: pointer;
+}
+
+.app-header__name { display: block; font-size: 16px; line-height: 24px; color: var(--sgfte-menu); }
+
+.app-header__id {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 24px;
+    color: var(--sgfte-id);
+}
+
+/* ---- Sidebar (Figma 204:23 / 206:32) ------------------------------------- */
+.app-side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    background: rgba(33, 31, 30, 0.18);
+    border-right: 1px solid var(--sgfte-line-side);
+}
+
+/*
+  Los enlaces se separan 65px ENTRE CAJAS. Como cada caja lleva 10px de padding
+  vertical, eso reproduce los 85px entre elementos del prototipo sin fijar una
+  altura: los rótulos de dos líneas miden 76px y "Empleados" 62px, igual que allí.
+*/
+.app-side__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 65px;
+    padding: 75px 0 0 35px;
+}
+
+.app-side__link {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    width: 230px;
+    padding: 10px 0 10px 20px;
+    border-radius: var(--sgfte-radius);
+    color: var(--sgfte-cream);
+    text-decoration: none;
+    font-size: 24px;
+    line-height: 28px;
+}
+
+.app-side__link:hover { background: rgba(254, 185, 107, 0.07); }
+
+/* El estado activo es SOLO el relleno ámbar al 15%: en el prototipo no hay borde */
+.app-side__link.is-active { background: rgba(254, 185, 107, 0.15); }
+
+.app-side__icon { display: block; flex: 0 0 42px; width: 42px; height: 42px; }
+
+.app-side__legal {
+    margin: auto 0 0;
+    /* Sin relleno a la derecha: el aviso mide 276px de ancho, como en el prototipo */
+    padding: 17px 0 0 var(--sp-3);
+    border-top: 1px solid var(--sgfte-rule);
+    font-size: 10px;
+    line-height: 24px;
+    color: var(--sgfte-white);
+}
+
+/* ---- Contenido ----------------------------------------------------------- */
+/*
+  El relleno inferior es de 31px, no de 64: es lo que deja el prototipo bajo la
+  última tarjeta. Con eso la página mide exactamente los 1024 del marco y el
+  aviso legal del panel lateral no se sale de la pantalla.
+*/
+.app-main {
+    grid-area: main;
+    padding: 63px 51px 31px 58px;
+    max-width: calc(var(--sgfte-main-w) + 58px + 51px);
+    width: 100%;
+}
+
+/* Encabezado de página: título + subtítulo a la izquierda, acción a la derecha */
+.page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.page-title {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--sgfte-cream);
+}
+
+.page-subtitle {
+    margin: 19px 0 0;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 32px;
+    color: var(--sgfte-pink-text);
+}
+
+/* ==========================================================================
+   3 · Botones
+   ========================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-1);
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid transparent;
+    border-radius: var(--sgfte-radius);
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn--primary { background: var(--sgfte-primary); color: var(--sgfte-primary-text); }
+.btn--primary:hover { background: var(--sgfte-primary-hover); }
+.btn--primary:active { background: var(--sgfte-primary-active); }
+
+/* Secundario: texto AMARILLO, no blanco (corrección del cliente) */
+.btn--secondary {
+    background: transparent;
+    border-color: rgba(254, 185, 107, 0.5);
+    color: var(--sgfte-accent);
+}
+.btn--secondary:hover { border-color: rgba(254, 185, 107, 0.8); background: rgba(254, 185, 107, 0.08); }
+.btn--secondary:active { border-color: var(--sgfte-accent); background: rgba(254, 185, 107, 0.14); }
+
+.btn--danger { background: var(--sgfte-danger); color: var(--sgfte-primary-text); }
+.btn--danger:hover { background: var(--sgfte-danger-hover); }
+.btn--danger:active { background: var(--sgfte-danger-active); }
+
+.btn--link {
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--sgfte-accent);
+    font-weight: 400;
+    text-decoration: underline;
+}
+
+.btn--block { width: 100%; }
+
+/*
+  Par canónico: los dos botones LLENAN el ancho del formulario con 20px de
+  separación (el cliente rechazó el par centrado y pequeño).
+*/
+.btn-pair { display: flex; gap: 20px; }
+.btn-pair > .btn { flex: 1 1 0; }
+
+/* ==========================================================================
+   4 · Tarjetas
+   ========================================================================== */
+.card {
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    padding: var(--sp-4);
+}
+
+/* Variante vidrio (estándar del prototipo para tarjetas de contenido) */
+.card--glass {
+    background: rgba(30, 28, 27, 0.6);
+    border-color: rgba(169, 138, 128, 0.1);
+    backdrop-filter: blur(12px);
+}
+
+/* Tarjeta destacada: la Concentradora en la Vista Global */
+.card--feature { border-color: rgba(254, 185, 107, 0.55); }
+
+.card__title {
+    margin: 0 0 var(--sp-2);
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--sgfte-white);
+}
+
+.card__label {
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sgfte-mono-muted);
+}
+
+/* Cifras de dinero: siempre monoespaciadas para que alineen */
+.money {
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    color: var(--sgfte-white);
+}
+
+.money--xl { font-size: 44px; letter-spacing: -0.01em; }
+.money--lg { font-size: 30px; }
+.money__currency { font-size: 0.5em; color: var(--sgfte-salmon); margin-left: var(--sp-1); }
+
+/* Rejilla de KPIs */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-2); }
+
+.kpi { display: flex; flex-direction: column; gap: var(--sp-2); }
+.kpi__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+
+.grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-2); align-items: start; }
+
+@media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   5 · Barra de filtros
+   ========================================================================== */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 12px 20px 12px 12px;
+    margin-bottom: var(--sp-3);
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    flex-wrap: wrap;
+}
+
+.toolbar__count {
+    margin-left: auto;
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    color: var(--sgfte-muted);
+}
+
+/* Conmutador segmentado */
+.segmented {
+    display: flex;
+    gap: var(--sp-half);
+    padding: 4px;
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius-pill);
+}
+
+.segmented__item {
+    padding: 8px 14px;
+    border: none;
+    border-radius: var(--sgfte-radius-pill);
+    background: transparent;
+    color: var(--sgfte-muted);
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.segmented__item.is-active { background: rgba(195, 65, 0, 0.18); color: var(--sgfte-salmon); }
+
+/* Dropdown en píldora */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    padding: 10px 12px 10px 16px;
+    background: transparent;
+    border: 1px solid var(--sgfte-line-pill);
+    border-radius: var(--sgfte-radius-pill);
+    color: var(--sgfte-cream);
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+/*
+  El <select> va desnudo dentro de la píldora: hereda la tipografía y usa la
+  flecha del marco en vez de la nativa, de modo que se ve como el componente
+  del prototipo pero sigue siendo un control real.
+*/
+.pill__select {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    outline: none;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.pill__select option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
+.pill:focus-within { border-color: var(--sgfte-accent); }
+.pill__chevron { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-mono-muted); }
+
+/* ==========================================================================
+   6 · Formularios
+   ========================================================================== */
+.field { margin-bottom: var(--sp-3); }
+
+.label {
+    display: block;
+    margin-bottom: var(--sp-1);
+    font-size: 14px;
+    color: var(--sgfte-tan);
+}
+
+.input {
+    width: 100%;
+    height: 44px;
+    padding: 0 var(--sp-2);
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line-warm);
+    border-radius: var(--sgfte-radius);
+    color: var(--sgfte-cream);
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+}
+
+.input::placeholder { color: var(--sgfte-placeholder); }
+
+.input:focus {
+    outline: none;
+    border-color: var(--sgfte-accent);
+    box-shadow: 0 0 0 3px rgba(254, 185, 107, 0.12);
+}
+
+select.input { appearance: none; cursor: pointer; padding-right: var(--sp-4); }
+textarea.input { height: auto; min-height: 90px; padding: var(--sp-2); resize: vertical; }
+
+/* Buscador de la barra de filtros: 340px fijos, icono de 18 a 14 del borde */
+.search { position: relative; flex: 0 0 340px; max-width: 100%; }
+.search .input { height: 40px; padding: 0 14px 0 42px; font-size: 15px; }
+.search .input::placeholder { color: var(--sgfte-muted); }
+
+.search__icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    color: var(--sgfte-placeholder);
+    pointer-events: none;
+    display: block;
+}
+
+/* ==========================================================================
+   7 · Tabla canónica (estilo "Vista de Logs") · contenido CENTRADO
+   ========================================================================== */
+/*
+  Las 27px de relleno lateral van en la TARJETA, no en las celdas: en el marco
+  la línea divisoria de cada fila arranca y termina a 27px del borde, no cruza
+  la tarjeta entera.
+*/
+.table-card {
+    padding: 0 27px;
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    overflow: hidden;
+}
+
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+.table th {
+    height: 62px;
+    padding: 0 var(--sp-1);
+    text-align: center;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--sgfte-mono-muted);
+    border-bottom: 1px solid var(--sgfte-line);
+    white-space: nowrap;
+}
+
+.table td {
+    height: 80px;
+    padding: 0 var(--sp-1);
+    text-align: center;
+    font-size: 16px;
+    color: var(--sgfte-cream);
+    border-bottom: 1px solid var(--sgfte-line);
+    vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+/* Valores monoespaciados: códigos de cuenta, montos, fechas */
+.table .mono { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
+.table .num  { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; }
+
+/* Celda de dos líneas (p. ej. FECHA / HORA) */
+.cell-duo { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cell-duo small { font-size: 12px; color: var(--sgfte-muted); }
+
+.table__empty { padding: var(--sp-5); text-align: center; color: var(--sgfte-muted); }
+
+/* Celda enlazada: en el prototipo no se subraya ni cambia de color en reposo */
+.cell-link { color: inherit; text-decoration: none; }
+.cell-link:hover { color: var(--sgfte-accent); text-decoration: underline; }
+
+/* Signo del movimiento */
+.amount-in  { color: var(--sgfte-ok-text); }
+.amount-out { color: var(--sgfte-salmon); }
+
+/* ==========================================================================
+   8 · Badges
+   ========================================================================== */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px 5px 9px;
+    border-radius: var(--sgfte-radius-badge);
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.badge--ok      { background: rgba(108, 192, 112, 0.15); color: var(--sgfte-ok); }
+.badge--error   { background: rgba(255, 180, 171, 0.16); color: var(--sgfte-error); }
+.badge--warn    { background: rgba(254, 185, 107, 0.15); color: var(--sgfte-warn); }
+.badge--neutral { background: rgba(169, 138, 128, 0.14); color: var(--sgfte-mono-muted); }
+
+/*
+  Badges de propósito: el color de la categoría al 30% con el texto claro del
+  marco "Gestion de Cuentas". p2 (Viajes) no aparece en ese marco, así que su
+  texto se derivó con la misma claridad que los otros tres.
+*/
+.badge--p1 { background: rgba(99, 119, 25, 0.30);  color: #c9e06a; }
+.badge--p2 { background: rgba(25, 91, 119, 0.30);  color: #6ac4e6; }
+.badge--p3 { background: rgba(119, 25, 52, 0.30);  color: #ff9db4; }
+.badge--p4 { background: rgba(83, 25, 119, 0.30);  color: #c9a2f0; }
+/* El texto es una versión clara del propio color: sobre el fondo al 30% los
+   tres nuevos no llegaban a contraste legible usando el color plano. */
+.badge--p5 { background: rgba(195, 65, 0, 0.30);   color: #ffa877; }
+.badge--p6 { background: rgba(254, 185, 107, 0.28); color: #ffd6a3; }
+.badge--p7 { background: rgba(107, 114, 128, 0.34); color: #c3c9d4; }
+
+/* ==========================================================================
+   9 · Avisos
+   ========================================================================== */
+.alert {
+    padding: var(--sp-2);
+    margin-bottom: var(--sp-3);
+    border: 1px solid transparent;
+    border-radius: var(--sgfte-radius);
+    font-size: 14px;
+}
+
+.alert ul { margin: 0; padding-left: var(--sp-2); }
+
+.alert--ok    { background: rgba(108, 192, 112, 0.15); border-color: rgba(108, 192, 112, 0.4); color: var(--sgfte-ok-text); }
+.alert--error { background: rgba(209, 72, 54, 0.14);  border-color: rgba(255, 180, 171, 0.35); color: var(--sgfte-error); }
+
+/* ==========================================================================
+   10 · Utilidades
+   ========================================================================== */
+.stack   { display: flex; flex-direction: column; gap: var(--sp-3); }
+.row     { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.muted   { color: var(--sgfte-muted); }
+.empty   { color: var(--sgfte-muted); font-size: 14px; }
+.back    { display: inline-block; margin-bottom: var(--sp-2); font-size: 13px; color: var(--sgfte-tan); text-decoration: none; }
+.back:hover { color: var(--sgfte-white); }
+.mt-4    { margin-top: var(--sp-4); }
+
+/* Ancho cómodo para formularios de una sola columna */
+.form-narrow { max-width: 560px; }
+
+/* ==========================================================================
+   11 · Área del tarjetahabiente (/app)
+   --------------------------------------------------------------------------
+   El empleado no tiene sidebar: son pocas pantallas y se navegan desde una
+   barra superior simple. Todo lo demás (tarjetas, tablas, badges, botones,
+   inputs, avisos) es EXACTAMENTE el mismo componente que usa el admin, para
+   que las dos áreas no se separen visualmente con el tiempo.
+   ========================================================================== */
+.portal { max-width: 900px; margin: 0 auto; padding: var(--sp-5) var(--sp-3) var(--sp-8); }
+
+.portal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--sgfte-line);
+    flex-wrap: wrap;
+}
+
+.portal-nav__brand { display: flex; flex-direction: column; gap: var(--sp-half); }
+
+.portal-nav__mark {
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 13px;
+    color: var(--sgfte-salmon);
+}
+
+.portal-nav__who { font-size: 15px; color: var(--sgfte-cream); }
+.portal-nav__links { display: flex; align-items: center; gap: var(--sp-3); }
+
+.portal-nav__links a {
+    color: var(--sgfte-tan);
+    text-decoration: none;
+    font-size: 14px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+}
+
+.portal-nav__links a:hover { color: var(--sgfte-white); border-bottom-color: var(--sgfte-primary); }
+.portal-nav__links form { margin: 0; }
+
+/* Rejilla de cuentas del empleado */
+.account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp-2); }
+
+.account-card {
+    display: block;
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    padding: var(--sp-3);
+    text-decoration: none;
+    transition: border-color 120ms ease;
+}
+
+.account-card:hover { border-color: var(--sgfte-accent); }
+
+.account-card__purpose {
+    font-family: var(--sgfte-font-title);
+    font-size: 18px;
+    color: var(--sgfte-white);
+    margin-bottom: var(--sp-half);
+}
+
+.account-card__number {
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    color: var(--sgfte-muted);
+    margin-bottom: var(--sp-2);
+}
+
+.account-card__cards { font-size: 13px; color: var(--sgfte-tan); margin-top: var(--sp-1); }
+
+/* Tarjetas físicas/digitales como "chips" */
+.chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+
+.chip {
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+    padding: var(--sp-1) var(--sp-2);
+    font-family: var(--sgfte-font-mono);
+    font-size: 13px;
+    color: var(--sgfte-cream);
+}
+
+.chip small {
+    display: block;
+    font-family: var(--sgfte-font-body);
+    font-size: 11px;
+    color: var(--sgfte-muted);
+    margin-top: 2px;
+}
+
+.chip--inactive { opacity: 0.45; }
+
+/* ==========================================================================
+   12 · Vista Global (/admin/home) · marco Figma 201:22
+   --------------------------------------------------------------------------
+   Las medidas son las del prototipo a 1440px. La columna izquierda (638) y la
+   derecha (340) suman exactamente 978, así que expresarlas en fr con 53px de
+   separación reproduce el diseño al pixel dentro de los 1031 de contenido, y
+   además escala si la ventana es más angosta.
+   ========================================================================== */
+/*
+  minmax(0, …) es obligatorio: sin él una pista fr NO baja de su tamaño
+  min-content, y el rótulo monoespaciado de la tarjeta KPI es ancho. Por debajo
+  de 1440px la columna derecha se quedaba con espacio de más y la proporción
+  638:340 se rompía sin avisar.
+*/
+.vista-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 638fr) minmax(0, 340fr);
+    gap: 53px;
+    align-items: start;
+}
+
+/* ---- Cuenta concentradora ------------------------------------------------ */
+.conc {
+    height: 319px;
+    padding: 32px var(--sp-3) 0;
+    background: var(--sgfte-card-black);
+    border: 1px solid var(--sgfte-contrast);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.conc__label {
+    margin: 0 0 0 5px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 32px;
+    color: var(--sgfte-pink-text);
+}
+
+/* La divisa se alinea por LÍNEA BASE con la cifra, como en el prototipo. */
+.conc__amount {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    height: 48px;
+    margin: 27px 0 0 5px;
+}
+
+.conc__figure { font-weight: 600; font-size: 48px; line-height: 1; color: var(--sgfte-white); }
+.conc__currency { font-weight: 400; font-size: 34px; line-height: 1; color: var(--sgfte-pink-strong); }
+
+/* Dos botones: el del marco más el de fondear, con la separación canónica */
+.conc__cta { display: flex; gap: 20px; margin-top: 92px; flex-wrap: wrap; }
+
+/*
+  El tamaño del icono va en .btn y no en .btn--hero.
+
+  Estaba colgado del modificador, así que cualquier botón con icono que no
+  fuera --hero pintaba el PNG a su tamaño real: en "Crear categoría" la cruz
+  salía más alta que el propio botón. Un icono de botón mide lo mismo lleve el
+  modificador o no.
+*/
+.btn img { display: block; width: 24px; height: 24px; }
+
+/* Botón destacado del prototipo: 60px de padding lateral */
+.btn--hero { padding: 13px 60px; gap: 12px; font-weight: 700; font-size: 16px; }
+
+/* ---- Tarjetas KPI de la columna derecha ---------------------------------- */
+.kpi-col { display: flex; flex-direction: column; gap: 40px; }
+
+.kpi-card {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 18px 20px;
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line-pill);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.kpi-card__head { display: flex; align-items: flex-start; gap: 30px; }
+
+/* El rótulo va en versalitas por CSS: el texto del JSP queda legible en minúsculas */
+.kpi-card__label {
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 32px;
+    text-transform: uppercase;
+    color: var(--sgfte-pink-text);
+}
+
+.kpi-card__icon { display: block; flex: 0 0 28px; width: 28px; height: 28px; }
+
+.kpi-card__value {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin: 0;
+    font-weight: 600;
+    font-size: 30px;
+    color: var(--sgfte-cream);
+}
+
+.kpi-card__currency { font-weight: 400; font-size: 18px; line-height: 32px; color: var(--sgfte-pink-strong); }
+
+/* ---- Distribución de gasto ----------------------------------------------- */
+.dist {
+    position: relative;
+    height: 337px;
+    margin-top: 33px;
+    padding: 35px 0 0 21px;
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line-pill);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.dist__title { margin: 0; font-weight: 500; font-size: 36px; line-height: 32px; color: var(--sgfte-white); }
+.dist__lead  { margin: 12px 0 0; font-size: 18px; line-height: 32px; color: var(--sgfte-pink-text); }
+
+/*
+  Paso uniforme de 45px (29 de alto + 16 de separación). El prototipo separa la
+  primera fila 40px y las demás 45; se toma el paso regular y se sube el bloque
+  5px, con lo que las filas 2, 3 y 4 caen exactamente en su sitio.
+*/
+.dist__legend {
+    margin: 21px 0 0 1px;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/*
+  Rejilla de dos columnas en vez de una separación fija: así los porcentajes
+  quedan en la misma vertical (x=271 del prototipo) aunque el nombre del
+  propósito sea largo — los propósitos salen del catálogo, no están fijados.
+*/
+.dist__item {
+    display: grid;
+    grid-template-columns: 249px auto;
+    align-items: center;
+    height: 29px;
+}
+
+.dist__key { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dist__swatch { flex: 0 0 18px; width: 18px; height: 18px; border-radius: 4px; }
+
+.dist__name {
+    font-size: 18px;
+    color: var(--sgfte-cream);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dist__pct { font-family: var(--sgfte-font-mono); font-size: 18px; color: var(--sgfte-pink-text); }
+
+/*
+  El pastel del prototipo es una imagen fija (y además tiene Viajes y Viáticos
+  intercambiados respecto a su propia leyenda). Aquí se dibuja con un degradado
+  cónico a partir de los porcentajes reales, con los mismos colores del SVG y
+  la misma geometría: 286px de diámetro, arranca a las 12 y gira en sentido
+  horario. La posición reproduce la del marco dentro de la tarjeta.
+*/
+.dist__pie {
+    position: absolute;
+    left: 589px;
+    top: 26px;
+    width: 286px;
+    height: 286px;
+    border-radius: 50%;
+}
+
+.dist__empty { margin: 26px 0 0; color: var(--sgfte-muted); font-size: 18px; }
+
+/* ==========================================================================
+   13 · Modal · marco Figma "Dispersión de fondos" (2177:376)
+   --------------------------------------------------------------------------
+   El prototipo dibuja el modal SOLO, sobre el fondo de página, así que no
+   define velo. Aquí se añade uno porque va encima de la Vista Global.
+
+   Por eso el panel lleva color SÓLIDO #231f1d y no el rgba(169,138,128,0.1)
+   del marco: ese 10% compuesto sobre #141312 da exactamente #231f1d, y
+   fijarlo hace que el panel se vea igual sea cual sea el velo de detrás.
+
+   No se usa <dialog>: los elementos de la capa superior no heredan el `zoom`
+   de la raíz, así que el modal se dibujaría a otra escala que la página.
+   ========================================================================== */
+.modal-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-3);
+    background: rgba(10, 9, 9, 0.72);
+}
+
+.modal-scrim[hidden] { display: none; }
+
+/*
+  Con un modal abierto, el fondo no se mueve.
+
+  El velo ya es `fixed` y se queda quieto —eso está comprobado, incluso bajo el
+  `zoom` del cascarón—, pero la página de detrás seguía desplazándose, y contra
+  un fondo que corre el modal parece que te persigue. Bloquear el desplazamiento
+  mientras hay uno abierto es además lo que se espera de un modal: lo de atrás
+  está inerte hasta que decidas.
+
+  En html y en body porque la barra puede colgar de cualquiera de los dos según
+  el navegador.
+*/
+html.is-modal-open,
+html.is-modal-open body { overflow: hidden; }
+
+.modal {
+    width: 557px;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 0 0 38px;
+    background: #231f1d;
+    border-radius: 10px;
+}
+
+.modal__title {
+    margin: 0;
+    padding-top: 32px;
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 24px;
+    letter-spacing: 3px;
+    text-align: center;
+    color: var(--sgfte-white);
+}
+
+.modal__rule { height: 1px; margin: 37px 28px 0 29px; background: var(--sgfte-accent); }
+
+.modal__body { padding-left: 85px; }
+
+.modal__field { margin-top: 31px; }
+.modal__field + .modal__field { margin-top: 50px; }
+
+.modal__label {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 24px;
+    color: var(--sgfte-pink-text);
+}
+
+.modal__label--tracked { letter-spacing: 3px; }
+
+/*
+  Sin radio: el marco NO redondea estos dos campos, aunque el estándar del
+  proyecto pida r8 en los inputs. Se respeta el prototipo.
+*/
+.modal__control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 0 20px;
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line-warm);
+}
+
+.modal__control--select { width: 392px; height: 48px; }
+.modal__control--amount { width: 400px; height: 50px; }
+
+.modal__control:focus-within { border-color: var(--sgfte-accent); }
+
+/* Los iconos van en su tamaño natural del prototipo, no escalados */
+.modal__icon-card   { flex: 0 0 16px; width: 16px; height: 12px; color: var(--sgfte-placeholder); }
+.modal__icon-cash   { flex: 0 0 17px; width: 16.74px; height: 17px; color: var(--sgfte-mono-muted); }
+.modal__icon-chev   { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-mono-muted); }
+
+.modal__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 22px;
+    line-height: 24px;
+    color: var(--sgfte-cream);
+}
+
+.modal__input::placeholder { color: var(--sgfte-placeholder); }
+
+/* El <select> nativo pinta su propia flecha; se quita y se usa la del marco */
+select.modal__input { appearance: none; cursor: pointer; }
+
+/*
+  Un <select> con `required` y una primera opción vacía queda :invalid mientras
+  no se elija nada — así el marcador de posición se ve gris como en el diseño y
+  el color normal en cuanto hay cuenta seleccionada.
+*/
+select.modal__input:invalid { color: var(--sgfte-placeholder); }
+select.modal__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
+
+.modal__actions { display: flex; gap: 20px; margin-top: 47px; }
+
+.modal__alert { margin: var(--sp-3) 85px 0 85px; }
+
+@media (max-width: 860px) {
+    .modal__body { padding-left: var(--sp-3); padding-right: var(--sp-3); }
+    .modal__control--select,
+    .modal__control--amount { width: 100%; }
+    .modal__title { font-size: 26px; letter-spacing: 1px; }
+    .modal__actions { flex-wrap: wrap; }
+    .modal__alert { margin-left: var(--sp-3); margin-right: var(--sp-3); }
+}
+
+/* ==========================================================================
+   14 · Expedir Tarjeta · marco Figma "Expedir Tarjeta - Admin" (2038:129)
+   ========================================================================== */
+
+/*
+  Halo del marco: una elipse #C34100 al 6% con desenfoque de 120, centrada en
+  (1000, 40) del lienzo. Se reproduce como degradado radial — el desenfoque
+  ensancha el radio efectivo de 380x210 a unos 620x450.
+*/
+body.has-topglow {
+    background-image:
+        radial-gradient(1240px 900px at 1000px 40px, rgba(195, 65, 0, 0.09), transparent 62%),
+        conic-gradient(from 270deg at 50% 50%, #141413 0%, #1b1713 23.276%, #141413 100%);
+}
+
+.issue-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 600fr) minmax(0, 360fr);
+    gap: 52px;
+    max-width: 1012px;
+    align-items: start;
+}
+
+/* ---- Tarjeta del formulario --------------------------------------------- */
+.issue-card {
+    padding: 25px 29px 37px 27px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+}
+
+.issue__section {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--sgfte-salmon);
+}
+
+.issue__field { margin-top: 25px; }
+.issue__field + .issue__field { margin-top: 18px; }
+.issue__field--type { margin-top: 22px; }
+
+.issue__label {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--sgfte-pink-text);
+}
+
+/* Caja de campo: el prototipo la pinta igual esté o no habilitada */
+.issue__box {
+    display: flex;
+    align-items: center;
+    width: 544px;
+    max-width: 100%;
+    height: 52px;
+    margin-top: 10px;
+    padding: 0 17px;
+    background: var(--sgfte-line);
+    border: 1px solid rgba(89, 65, 57, 0.5);
+    border-radius: var(--sgfte-radius);
+}
+
+.issue__box:focus-within { border-color: var(--sgfte-accent); }
+
+.issue__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 16px;
+    color: var(--sgfte-cream);
+}
+
+/* Sólo lectura: se ve idéntico, pero no invita a escribir */
+.issue__input[readonly] { cursor: default; }
+
+select.issue__input { appearance: none; cursor: pointer; }
+select.issue__input:invalid { color: var(--sgfte-placeholder); }
+select.issue__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
+
+.issue__chevron { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-mono-muted); }
+
+/* ---- Selector de tipo ---------------------------------------------------- */
+.issue__types { display: flex; gap: 16px; margin-top: 12px; }
+
+.issue__type {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 264px;
+    max-width: 100%;
+    height: 56px;
+    padding: 0 17px;
+    background: var(--sgfte-line);
+    border: 1.5px solid rgba(89, 65, 57, 0.5);
+    border-radius: var(--sgfte-radius);
+    font-weight: 600;
+    font-size: 16px;
+    color: #cfc4be;
+    cursor: pointer;
+}
+
+/* El radio real se oculta pero sigue siendo el que recibe foco y teclado */
+.issue__type input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.issue__type:has(input:checked) {
+    background: rgba(195, 65, 0, 0.16);
+    border-color: rgba(195, 65, 0, 0.9);
+    color: var(--sgfte-salmon);
+}
+
+.issue__type:has(input:focus-visible) { outline: 2px solid var(--sgfte-accent); outline-offset: 2px; }
+
+/* Punto de selección: 8px, a 25.5px del borde derecho */
+.issue__type::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 25.5px;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: var(--sgfte-salmon);
+    opacity: 0;
+}
+
+.issue__type:has(input:checked)::after { opacity: 1; }
+
+/* ---- Columna derecha ----------------------------------------------------- */
+.issue__aside-label {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--sgfte-salmon);
+}
+
+/*
+  Tarjeta de vista previa. Medidas fijas del marco, así que dentro se posiciona
+  en absoluto: es una maqueta de una tarjeta, no un bloque de contenido que
+  deba fluir. El halo es otra elipse #C34100, al 22% y con desenfoque de 45.
+*/
+.card-preview {
+    position: relative;
+    width: 360px;
+    max-width: 100%;
+    height: 216px;
+    margin-top: 14px;
+    overflow: hidden;
+    background: #1a1512;
+    background-image: radial-gradient(circle 220px at 329px 9px, rgba(195, 65, 0, 0.22), transparent 70%);
+    border: 1px solid rgba(195, 65, 0, 0.35);
+    border-radius: 16px;
+}
+
+.card-preview__brand,
+.card-preview__type,
+.card-preview__chip,
+.card-preview__pan,
+.card-preview__key,
+.card-preview__value { position: absolute; margin: 0; }
+
+.card-preview__brand {
+    left: 27px; top: 25px;
+    font-family: var(--sgfte-font-mono); font-weight: 500; font-size: 14px;
+    color: var(--sgfte-pink-text);
+}
+
+.card-preview__type {
+    right: 27px; top: 27px;
+    font-family: var(--sgfte-font-mono); font-weight: 500; font-size: 12px;
+    color: var(--sgfte-salmon);
+}
+
+.card-preview__chip {
+    left: 27px; top: 71px;
+    width: 46px; height: 34px;
+    background: #d9a441;
+    border-radius: 6px;
+}
+
+.card-preview__pan {
+    left: 27px; top: 127px;
+    font-family: var(--sgfte-font-mono); font-weight: 500; font-size: 19px;
+    color: var(--sgfte-cream);
+    white-space: pre;
+}
+
+.card-preview__key {
+    top: 167px;
+    font-family: var(--sgfte-font-mono); font-size: 9px;
+    color: #a1918a;
+}
+
+.card-preview__value {
+    top: 179px;
+    font-weight: 600; font-size: 14px;
+    color: var(--sgfte-cream);
+}
+
+.card-preview__key--holder,  .card-preview__value--holder  { left: 27px; }
+.card-preview__key--purpose, .card-preview__value--purpose { left: 249px; }
+
+/* ---- Resumen ------------------------------------------------------------- */
+.issue-summary {
+    margin-top: 30px;
+    padding: 21px 25px 0 23px;
+    height: 196px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+}
+
+.issue-summary__title {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--sgfte-salmon);
+}
+
+.issue-summary__list { margin: 0; padding: 0; }
+
+/* Filas cada 32px, empezando 26px bajo el rótulo */
+/* Mismo criterio que .month__row: centrado dentro de la banda, no baseline. */
+.issue-summary__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    height: 32px;
+    margin: 0;
+}
+
+.issue-summary__list > .issue-summary__row:first-child { margin-top: 26px; }
+
+.issue-summary__row dt { font-size: 14px; color: #a1918a; }
+.issue-summary__row dd { margin: 0; font-weight: 500; font-size: 14px; color: var(--sgfte-cream); text-align: right; }
+
+/* ---- Acción -------------------------------------------------------------- */
+/* Centrado bajo la columna del formulario, no bajo toda la rejilla */
+.issue-actions { display: flex; justify-content: center; width: 600px; max-width: 100%; margin-top: 43px; }
+
+@media (max-width: 860px) {
+    .issue-grid { grid-template-columns: 1fr; gap: var(--sp-4); }
+    .issue__box, .issue__type { width: 100%; }
+    .issue__types { flex-wrap: wrap; }
+    .issue-actions { width: 100%; }
+    .issue-summary { height: auto; padding-bottom: var(--sp-3); }
+}
+
+/* ==========================================================================
+   15 · Gestión de Cuentas · marco Figma "Gestion de Cuentas" (225:41)
+   ========================================================================== */
+
+/*
+  Anchos del marco (160/240/220/160/257 sobre 1037) en porcentaje, para que la
+  tabla conserve sus proporciones aunque el contenido no mida 1093px exactos.
+*/
+.table--accounts { }
+.table--accounts .col-code    { width: 15.43%; }
+.table--accounts .col-holder  { width: 23.14%; }
+.table--accounts .col-purpose { width: 21.21%; }
+.table--accounts .col-cards   { width: 15.43%; }
+.table--accounts .col-status  { width: 24.79%; }
+
+/* El botón de crear es de dos líneas y ancho fijo en el marco */
+.btn--stacked { width: 207px; line-height: 1.15; text-align: center; }
+
+/* ---- Paginador ----------------------------------------------------------- */
+.pager {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-1);
+    margin-top: 25px;
+}
+
+.pager__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius-badge);
+    background: none;
+    font-family: var(--sgfte-font-mono);
+    font-size: 14px;
+    color: var(--sgfte-mono-muted);
+    text-decoration: none;
+}
+
+.pager__item:hover { border-color: var(--sgfte-line-pill); color: var(--sgfte-cream); }
+
+/* La página actual no lleva borde: es un relleno naranja liso */
+.pager__item.is-current {
+    background: var(--sgfte-primary);
+    border-color: transparent;
+    font-weight: 500;
+    color: var(--sgfte-white);
+}
+
+/* Los saltos y los extremos deshabilitados se ven, pero no responden */
+.pager__item.is-disabled { opacity: 0.4; pointer-events: none; }
+.pager__gap { border-color: var(--sgfte-line); pointer-events: none; }
+
+.pager__item svg { width: 16px; height: 16px; display: block; }
+
+@media (max-width: 860px) {
+    .table-card { padding: 0 var(--sp-2); overflow-x: auto; }
+    .table--accounts { min-width: 760px; }
+    .search { flex: 1 1 100%; }
+}
+
+/* ==========================================================================
+   16 · Detalle de Cuenta · marco Figma "Detalle de Cuenta - Admin" (2043:155)
+   ========================================================================== */
+
+/* Esta pantalla dibuja su propia cabecera, que arranca más arriba */
+.app-main--flush { padding-top: 14px; }
+
+.detail-head { margin-bottom: 32px; }
+
+.crumbs { margin: 0; font-size: 14px; color: #a1918a; }
+.crumbs a { color: inherit; text-decoration: none; }
+.crumbs a:hover { color: var(--sgfte-cream); }
+.crumbs__sep { margin: 0 12px; }
+
+.detail-head__title {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 8px 0 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1.15;
+    color: var(--sgfte-cream);
+}
+
+/*
+  Píldora de propósito: distinta del badge de la tabla. Aquí el texto va en el
+  color BASE de la categoría (no en el tono claro) sobre un relleno al 13%, y
+  el radio es de píldora.
+*/
+.purpose-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid;
+    border-radius: 20px;
+    font-family: var(--sgfte-font-body);
+    font-weight: 500;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.purpose-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.purpose-pill--p1 { background: rgba(99, 119, 25, 0.13);  border-color: rgba(99, 119, 25, 0.4);  color: var(--sgfte-purpose-1); }
+.purpose-pill--p2 { background: rgba(25, 91, 119, 0.13);  border-color: rgba(25, 91, 119, 0.4);  color: var(--sgfte-purpose-2); }
+.purpose-pill--p3 { background: rgba(119, 25, 52, 0.13);  border-color: rgba(119, 25, 52, 0.4);  color: var(--sgfte-purpose-3); }
+.purpose-pill--p4 { background: rgba(83, 25, 119, 0.13);  border-color: rgba(83, 25, 119, 0.4);  color: var(--sgfte-purpose-4); }
+.purpose-pill--p5 { background: rgba(195, 65, 0, 0.13);   border-color: rgba(195, 65, 0, 0.4);   color: #ffa877; }
+.purpose-pill--p6 { background: rgba(254, 185, 107, 0.13); border-color: rgba(254, 185, 107, 0.4); color: var(--sgfte-purpose-6); }
+.purpose-pill--p7 { background: rgba(107, 114, 128, 0.15); border-color: rgba(107, 114, 128, 0.45); color: #c3c9d4; }
+
+.detail-head__meta { margin: 12px 0 0; font-weight: 500; font-size: 18px; color: var(--sgfte-pink-text); }
+.detail-head__meta .crumbs__sep { color: var(--sgfte-muted); }
+
+/* Rejilla: 660 + 340 con 32 de separación = los 1032 del marco */
+.detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 660fr) minmax(0, 340fr);
+    gap: 32px;
+    align-items: start;
+}
+
+/* Tarjeta de vidrio compartida por los cuatro paneles */
+.panel {
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+}
+
+.panel__label {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--sgfte-pink-text);
+}
+
+/* ---- Saldo disponible ---------------------------------------------------- */
+.balance { position: relative; min-height: 200px; padding: 25px 27px 27px; }
+
+.balance__figure {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 16px 0 0;
+    font-weight: 600;
+    font-size: 42px;
+    line-height: 1;
+    color: var(--sgfte-cream);
+}
+
+.balance__currency { font-weight: 400; font-size: 16px; color: var(--sgfte-pink-strong); }
+
+.balance__purpose {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 44px 0 0;
+    font-weight: 500;
+    font-size: 15px;
+    color: #cfc4be;
+}
+
+.balance__dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 12px; }
+
+/* Los dos botones se apilan a la derecha, alineados con el borde del panel */
+.balance__actions {
+    position: absolute;
+    top: 38px;
+    right: 27px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.balance__actions .btn { width: 190px; }
+
+/* El detalle de tarjetahabiente usa botones de 160x48 y 37 de separación */
+.balance__actions--narrow { top: 37px; right: 25px; gap: 37px; }
+.balance__actions--narrow .btn { width: 160px; height: 48px; padding: 0; font-weight: 700; font-size: 15px; }
+
+/* La concentradora, botones de 186x46 más separados (37 y 122 en el marco) */
+.balance__actions--conc { top: 37px; right: 28px; gap: 39px; }
+.balance__actions--conc .btn { width: 186px; height: 46px; padding: 0; font-weight: 700; font-size: 16px; }
+
+/* ---- Tarjetas vinculadas ------------------------------------------------- */
+.linked { padding: 23px 23px 24px; }
+.linked__list { display: flex; flex-direction: column; gap: 14px; margin: 22px 0 0; }
+
+.linked__card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 80px;
+    padding: 0 17px;
+    background: rgba(43, 42, 40, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.08);
+    border-radius: 12px;
+    text-decoration: none;
+}
+
+/* Mini tarjeta: rectángulo con su banda magnética */
+.linked__chip {
+    position: relative;
+    flex: 0 0 46px;
+    width: 46px;
+    height: 30px;
+    background: #1a1512;
+    border: 1px solid rgba(195, 65, 0, 0.5);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.linked__chip::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 9px;
+    height: 5px;
+    background: rgba(195, 65, 0, 0.6);
+}
+
+.linked__type { display: block; margin: 0; font-weight: 600; font-size: 15px; color: var(--sgfte-cream); }
+.linked__pan  { display: block; margin: 6px 0 0; font-family: var(--sgfte-font-mono); font-size: 13px; color: #a1918a; }
+
+.linked__state {
+    position: absolute;
+    top: 19px;
+    right: 23px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sgfte-ok);
+}
+
+.linked__state--off { background: var(--sgfte-muted); }
+
+.linked__add {
+    display: inline-block;
+    margin-top: 22px;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--sgfte-accent);
+    text-decoration: none;
+}
+
+.linked__add:hover { text-decoration: underline; }
+
+/* ---- Movimientos recientes ----------------------------------------------- */
+.moves { padding: 25px 27px 27px; }
+
+.moves__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); }
+.moves__more { font-weight: 500; font-size: 13px; color: var(--sgfte-accent); text-decoration: none; }
+.moves__more:hover { text-decoration: underline; }
+
+.moves__table { width: 100%; margin-top: 22px; border-collapse: collapse; table-layout: fixed; }
+
+.moves__table th {
+    padding: 0 0 12px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    text-align: left;
+    color: var(--sgfte-muted);
+    border-bottom: 1px solid rgba(169, 138, 128, 0.12);
+}
+
+.moves__table td {
+    height: 66px;
+    padding: 0;
+    border-bottom: 1px solid rgba(169, 138, 128, 0.07);
+    vertical-align: middle;
+}
+
+.moves__col-date   { width: 122px; }
+.moves__col-amount { width: 155px; text-align: right; }
+.moves__col-state  { width: 137px; text-align: right; }
+
+.moves__date    { font-family: var(--sgfte-font-mono); font-size: 13px; color: #c6b7b1; }
+.moves__concept { font-weight: 500; font-size: 14px; color: var(--sgfte-cream); }
+
+.moves__amount { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-cream); text-align: right; }
+.moves__amount--in { color: #8ab33a; }
+
+.moves__state { text-align: right; }
+
+/* Badge de estado del movimiento: más ancho que el de la tabla y con punto de 7 */
+.state-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: var(--sgfte-radius-badge);
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.state-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.state-badge--done { background: rgba(108, 192, 112, 0.15); color: var(--sgfte-ok); }
+/* Estado apagado: gris, para lo inactivo o dado de baja */
+.state-badge--off  { background: rgba(169, 138, 128, 0.14); color: var(--sgfte-mono-muted); }
+
+.moves__empty { padding: var(--sp-5) 0; text-align: center; color: var(--sgfte-muted); font-size: 14px; }
+
+/* Enlace dibujado por el marco pero sin destino todavía: se ve, no se pulsa. */
+.is-pending { opacity: 0.4; cursor: default; }
+
+/* ---- Resumen del mes ----------------------------------------------------- */
+.month { padding: 23px 25px 0 23px; }
+.month__list { margin: 0; padding: 0; }
+
+/*
+  align-items: center, no baseline. Con baseline el texto se pega al ARRIBA de
+  la banda de 56px —queda pegado a la línea de la fila anterior y con todo el
+  hueco debajo—, que es justo lo que no se quiere entre dos divisores.
+*/
+.month__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    height: 56px;
+    margin: 0;
+    border-bottom: 1px solid rgba(169, 138, 128, 0.08);
+}
+
+.month__list > .month__row:first-child { margin-top: 24px; }
+.month__row dt { font-size: 14px; color: #a1918a; }
+.month__row dd { margin: 0; font-weight: 600; font-size: 14px; color: var(--sgfte-cream); text-align: right; }
+
+@media (max-width: 860px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .detail-head__title { flex-wrap: wrap; font-size: 30px; gap: 12px; }
+    .balance { min-height: 0; }
+    .balance__actions { position: static; flex-direction: row; margin-top: var(--sp-3); }
+    .balance__actions .btn { width: auto; flex: 1 1 0; }
+    .balance__purpose { margin-top: var(--sp-3); }
+    .moves { overflow-x: auto; }
+    .moves__table { min-width: 520px; }
+}
+
+/* ==========================================================================
+   17 · Gestor de empleados · marco Figma "Gestor de empleados" (287:104)
+   ========================================================================== */
+
+/* Anchos del marco (260/120/140/150/200/138 sobre 1008) en porcentaje */
+.table--staff .col-name   { width: 25.79%; }
+.table--staff .col-id     { width: 11.90%; }
+.table--staff .col-accs   { width: 13.89%; }
+.table--staff .col-cards  { width: 14.88%; }
+.table--staff .col-funds  { width: 19.85%; }
+.table--staff .col-state  { width: 13.69%; }
+
+/* Celda de dos líneas: nombre y, debajo, el dato secundario */
+.staff-name { display: block; font-size: 16px; color: var(--sgfte-cream); text-decoration: none; }
+.staff-name:hover { color: var(--sgfte-accent); }
+.staff-sub  { display: block; margin-top: 2px; font-size: 13px; color: #a1918a; }
+
+/*
+  Botón de alta: el marco lo fija en 236x42 con 10px de relleno, no con los
+  60px laterales del botón normal, así que va aparte de .btn--hero.
+*/
+.btn--fixed {
+    width: 236px;
+    height: 42px;
+    padding: 10px;
+    gap: 10px;
+    filter: drop-shadow(0 2px 2px rgba(20, 19, 18, 0.25));
+}
+
+.btn--fixed svg { width: 22px; height: 16px; flex: 0 0 22px; }
+
+/* Una píldora sin nada que filtrar todavía se ve, pero no responde */
+.pill.is-inert { opacity: 0.55; cursor: not-allowed; }
+.pill.is-inert .pill__select { pointer-events: none; }
+
+@media (max-width: 860px) {
+    .table--staff { min-width: 820px; }
+    .btn--fixed { width: 100%; }
+}
+
+/* ==========================================================================
+   18 · Registro de tarjetahabiente · marco Figma (279:104)
+   --------------------------------------------------------------------------
+   El marco dibuja el modal a 784 × 848 sobre un lienzo de 1024 de alto. En una
+   pantalla de portátil real eso no cabe: los botones quedaban fuera. Se
+   reescala al MISMO ancho que el modal de dispersión (557) y a sus mismas
+   medidas de campo, etiqueta y botón, de modo que los dos se vean hermanos.
+   Las proporciones internas del marco se conservan.
+   ========================================================================== */
+.modal--form { width: 557px; padding: 32px 0; }
+
+.modal--form .modal__title {
+    padding-top: 0;
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: 1px;
+}
+
+.modal--form .modal__rule { margin: 24px 28px 0 29px; }
+.modal--form .modal__body { padding: 0 40px; }
+
+.register__label {
+    display: block;
+    margin-top: 24px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 24px;
+    color: var(--sgfte-pink-text);
+}
+
+/* Los campos del marco no llevan radio, igual que en el modal de dispersión */
+.register__control {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    margin-top: 8px;
+    padding: 0 20px;
+    background: var(--sgfte-bg);
+    border: 1px solid var(--sgfte-line-warm);
+}
+
+.register__control:focus-within { border-color: var(--sgfte-accent); }
+
+.register__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 18px;
+    color: var(--sgfte-cream);
+}
+
+.register__input::placeholder { color: var(--sgfte-placeholder); }
+.register__input[readonly] { color: var(--sgfte-placeholder); cursor: default; }
+
+select.register__input { appearance: none; cursor: pointer; }
+select.register__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
+
+.register__chevron { flex: 0 0 12.64px; width: 12.64px; height: 6.82px; color: var(--sgfte-placeholder); }
+.register__search  { flex: 0 0 18px; width: 18px; height: 18px; margin-right: 10px; color: var(--sgfte-placeholder); }
+
+/* Fila de dos campos, con la misma proporción 288:336 del marco */
+.register__row { display: flex; gap: 20px; }
+.register__row > :first-child { flex: 0 0 211px; }
+.register__row > :last-child { flex: 1 1 auto; min-width: 0; }
+
+.register__note {
+    display: flex;
+    gap: 12px;
+    margin: 24px 0 0;
+    padding: 16px 18px;
+    background: var(--sgfte-bg);
+    border-radius: 10px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--sgfte-placeholder);
+}
+
+.register__note svg { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 2px; }
+
+/*
+  Par canónico documentado en el componente Button: llenan el ancho del
+  formulario, 20px de separación, secundario a la izquierda.
+*/
+.register__actions { display: flex; gap: 20px; margin-top: 24px; }
+.register__actions .btn { flex: 1 1 0; height: 50px; padding: 13px 20px; font-weight: 700; }
+.register__actions .btn svg { width: 22px; height: 16px; flex: 0 0 22px; }
+
+@media (max-width: 860px) {
+    .modal--form { width: 100%; padding: var(--sp-3) 0; }
+    .modal--form .modal__title { font-size: 24px; line-height: 1.2; letter-spacing: 0; }
+    .modal--form .modal__rule { margin: var(--sp-2) var(--sp-3) 0; }
+    .modal--form .modal__body { padding: 0 var(--sp-3); }
+    .register__row { flex-wrap: wrap; }
+    .register__row > :first-child, .register__row > :last-child { flex: 1 1 100%; }
+    .register__actions { flex-wrap: wrap; }
+}
+
+/* ==========================================================================
+   19 · Analíticas · marco Figma "Analitica - Admin (v2)" (2029:6)
+   --------------------------------------------------------------------------
+   Las gráficas van en CSS puro (rejilla + alturas en %) y la dona en un
+   conic-gradient, como el pastel de la Vista Global. Sin librería: no hay paso
+   de compilación de JS en el proyecto y una dependencia externa sería lo único
+   de la pantalla que no funciona sin red.
+   ========================================================================== */
+
+/*
+  ---- Cabecera con acciones ------------------------------------------------
+  Las acciones van posicionadas, no en la misma fila flex: en el marco el
+  subtítulo corre por DEBAJO de los botones y ocupa todo el ancho. Metiéndolo
+  en una fila con ellos se partía en dos líneas.
+*/
+.an-head { position: relative; margin-bottom: 30px; }
+/* Sólo el título esquiva los botones; el subtítulo pasa por debajo, a lo ancho */
+.an-head .page-title { padding-right: 620px; }
+.an-head__actions { position: absolute; top: 8px; right: 0; display: flex; align-items: center; gap: var(--sp-3); }
+
+.an-head .page-title { font-size: 48px; }
+.an-head .page-subtitle { margin-top: 18px; font-size: 22px; }
+
+/* Botón de exportar: 226 × 46 con 8 de radio, del marco */
+.btn--export { width: 226px; height: 46px; padding: 10px; gap: 10px; font-weight: 700; }
+.btn--export svg { width: 18px; height: 18px; flex: 0 0 18px; }
+
+/* ---- Selector de periodo -------------------------------------------------- */
+.period {
+    display: flex;
+    gap: 0;
+    height: 46px;
+    padding: 3px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.period__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--sgfte-pink-text);
+    text-decoration: none;
+}
+
+.period__item.is-active {
+    background: var(--sgfte-primary);
+    font-weight: 600;
+    color: var(--sgfte-primary-text);
+}
+
+/* ---- Rejilla de la pantalla ---------------------------------------------- */
+.an-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+.an-grid { display: grid; grid-template-columns: minmax(0, 668fr) minmax(0, 340fr); gap: 24px; margin-top: 24px; }
+
+.an-card {
+    padding: 21px 23px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+}
+
+.an-card__title { margin: 0; font-weight: 500; font-size: 22px; color: var(--sgfte-white); }
+.an-card__sub   { margin: 10px 0 0; font-size: 14px; color: var(--sgfte-pink-text); }
+.an-card__head  { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); }
+.an-card__note  { font-weight: 500; font-size: 13px; color: var(--sgfte-muted); }
+
+/* ---- Tarjeta KPI ---------------------------------------------------------- */
+.an-kpi { position: relative; height: 150px; padding: 17px 19px; }
+.an-kpi__label {
+    margin: 0;
+    padding-right: 30px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--sgfte-pink-text);
+}
+.an-kpi__icon { position: absolute; top: 19px; right: 19px; width: 20px; height: 20px; color: var(--sgfte-pink-text); }
+
+.an-kpi__value {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 18px 0 0;
+    font-weight: 600;
+    font-size: 30px;
+    color: var(--sgfte-cream);
+}
+.an-kpi__currency { font-weight: 400; font-size: 14px; color: var(--sgfte-pink-strong); }
+
+.an-kpi__delta { position: absolute; left: 19px; bottom: 22px; margin: 0; font-weight: 500; font-size: 13px; }
+.an-kpi__delta--up   { color: #8ab33a; }
+.an-kpi__delta--down { color: #ff9d8f; }
+.an-kpi__delta--flat { color: var(--sgfte-muted); }
+
+/* ---- Gráfica de barras ---------------------------------------------------- */
+.chart { position: relative; height: 208px; margin-top: 22px; padding-left: 50px; }
+
+/*
+  Las líneas guía y sus rótulos se dibujan con un pseudo-elemento por línea a
+  través de una lista, no con un fondo repetido, para que cada una pueda llevar
+  su cifra al lado.
+*/
+.chart__grid { position: absolute; inset: 0 0 22px 50px; }
+.chart__line { position: absolute; left: 0; right: 0; height: 1px; background: rgba(169, 138, 128, 0.25); }
+.chart__tick {
+    position: absolute;
+    right: calc(100% + 10px);
+    transform: translateY(-50%);
+    font-family: var(--sgfte-font-mono);
+    font-size: 10px;
+    color: var(--sgfte-muted);
+    white-space: nowrap;
+}
+
+.chart__bars {
+    position: absolute;
+    inset: 0 0 22px 50px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+}
+
+.chart__col { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+
+.chart__bar {
+    width: 24px;
+    min-height: 2px;
+    border-radius: 4px 4px 0 0;
+    background: rgba(195, 65, 0, 0.82);
+}
+
+.chart__bar.is-latest { background: #e8631f; }
+
+/* Fuera del área de barras: cae en la franja de 22px reservada abajo */
+.chart__label {
+    position: absolute;
+    bottom: -18px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 10px;
+    color: var(--sgfte-muted);
+    white-space: nowrap;
+}
+
+.chart__col.is-latest .chart__label { color: var(--sgfte-salmon); }
+
+/* La actividad semanal usa barras más anchas y en ámbar */
+.chart--week .chart__bar { width: 34px; background: rgba(254, 185, 107, 0.78); }
+.chart--week .chart__bar.is-latest { background: var(--sgfte-accent); }
+
+/* ---- Dona ----------------------------------------------------------------- */
+.donut-row { display: flex; align-items: center; gap: 22px; margin-top: 22px; }
+
+.donut {
+    position: relative;
+    flex: 0 0 150px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+/* El agujero: un círculo del color del panel encima del degradado cónico */
+.donut::after {
+    content: "";
+    position: absolute;
+    inset: 26px;
+    border-radius: 50%;
+    background: #1b1a19;
+}
+
+.donut__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.donut__total { font-weight: 600; font-size: 22px; color: var(--sgfte-white); }
+.donut__caption { margin-top: 6px; font-size: 11px; color: var(--sgfte-pink-text); }
+
+.donut-legend { flex: 1 1 auto; display: flex; flex-direction: column; gap: 24px; }
+.donut-legend__row { display: flex; align-items: center; gap: 8px; }
+.donut-legend__swatch { flex: 0 0 14px; width: 14px; height: 14px; border-radius: 4px; }
+.donut-legend__name { flex: 1 1 auto; font-size: 14px; color: var(--sgfte-cream); }
+.donut-legend__pct { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-pink-text); }
+
+/* ---- Top cuentas por gasto ------------------------------------------------ */
+.top-list { display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
+.top-list__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); }
+.top-list__name { font-weight: 500; font-size: 14px; color: var(--sgfte-cream); }
+.top-list__amount { font-family: var(--sgfte-font-mono); font-size: 13px; color: var(--sgfte-pink-text); }
+.top-list__track { height: 8px; margin-top: 8px; border-radius: 4px; background: var(--sgfte-line); overflow: hidden; }
+.top-list__fill { height: 100%; border-radius: 4px; }
+
+/* ---- Transferencias P2P ---------------------------------------------------- */
+.p2p { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-4); margin-top: 24px; }
+
+.p2p__amount { display: flex; align-items: baseline; gap: 8px; margin: 14px 0 0; font-weight: 600; font-size: 28px; color: var(--sgfte-cream); }
+.p2p__note { margin: 14px 0 0; font-size: 13px; color: var(--sgfte-muted); }
+
+.p2p__bar { display: flex; height: 18px; margin-top: 18px; border-radius: 9px; overflow: hidden; }
+.p2p__seg { height: 100%; }
+
+.p2p__legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.p2p__item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cfc4be; }
+.p2p__dot { width: 10px; height: 10px; border-radius: 3px; }
+
+.an-empty { margin: var(--sp-4) 0; text-align: center; color: var(--sgfte-muted); font-size: 14px; }
+
+@media (max-width: 1180px) {
+    .an-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .an-grid { grid-template-columns: 1fr; }
+    .p2p { grid-template-columns: 1fr; }
+    .an-head .page-title { padding-right: 0; }
+    .an-head__actions { position: static; margin-top: var(--sp-3); flex-wrap: wrap; }
+}
+
+@media (max-width: 860px) {
+    .an-kpis { grid-template-columns: 1fr; }
+    .an-head .page-title { font-size: 32px; }
+    .an-head .page-subtitle { font-size: 18px; margin-top: 8px; }
+    .period { width: 100%; }
+    .period__item { flex: 1 1 0; width: auto; font-size: 12px; }
+    .btn--export { width: 100%; }
+    .donut-row { flex-wrap: wrap; }
+}
+
+/* ==========================================================================
+   20 · Logs y Auditoría · marco Figma "Vista de Logs" (253:43)
+   ========================================================================== */
+
+/*
+  Anchos renormalizados, no copiados: en el marco las seis columnas suman
+  1144px dentro de una tabla de 1010, así que la última se sale y "FECHA/HORA"
+  no le cabe a su propio encabezado. Se reparte el ancho real dando a cada
+  columna lo que su contenido y su título necesitan, con ORIGEN quedándose el
+  sobrante como en el diseño.
+*/
+.table--logs .col-when   { width: 15%; }
+.table--logs .col-level  { width: 10.5%; }
+.table--logs .col-action { width: 20.5%; }
+.table--logs .col-user   { width: 15%; }
+.table--logs .col-module { width: 13%; }
+.table--logs .col-origin { width: 26%; }
+
+/* Esta tabla alinea a la IZQUIERDA, no al centro como la canónica */
+.table--logs th,
+.table--logs td { text-align: left; }
+
+/* Fecha y hora en dos líneas dentro de la misma celda */
+.log-when { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
+.log-when span { display: block; }
+
+/*
+  Con table-layout: fixed un valor demasiado ancho NO ensancha su columna: se
+  desborda y se pisa con la de al lado. Recortar con puntos suspensivos evita
+  que un correo largo rompa la fila; el valor completo queda en el title.
+*/
+.table--logs td { overflow: hidden; }
+.log-user, .log-origin {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.log-user   { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-tan); }
+.log-origin { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
+
+/*
+  Badge de severidad. INFO reutiliza el naranja de la marca —no el verde de
+  "correcto"— porque aquí no significa éxito, sino "suceso normal".
+*/
+.sev { display: inline-flex; }
+.sev--info   { background: rgba(195, 65, 0, 0.18);  color: var(--sgfte-salmon); }
+.sev--alerta { background: rgba(254, 185, 107, 0.15); color: var(--sgfte-accent); }
+.sev--crit   { background: rgba(255, 180, 171, 0.16); color: var(--sgfte-error); }
+
+/* Botón de exportar de esta pantalla: 28px de icono y 60 de padding lateral */
+.btn--logs { padding: 10px 60px; gap: 10px; font-weight: 700; color: var(--sgfte-white); }
+.btn--logs svg { width: 28px; height: 28px; flex: 0 0 28px; }
+
+@media (max-width: 860px) {
+    .table--logs { min-width: 900px; }
+    .btn--logs { width: 100%; padding: 10px; }
+}
+
+
+/* ==========================================================================
+   21 · Categorías · marco 2036:6 y modal 2041:155
+   ========================================================================== */
+
+/*
+  Columnas del marco: los encabezados caen en 28 / 320 / 640 / 748 / 912 dentro
+  de una tarjeta de 1032. Como .table-card mete 27px de relleno a cada lado, el
+  ancho útil es 978 y no 1032 — sumar los 1032 hacía que la tabla se saliera.
+*/
+.table--categories .col-cat        { width: 292px; }
+.table--categories .col-desc       { width: 320px; }
+.table--categories .col-accounts   { width: 108px; }
+.table--categories .col-dispersed  { width: 164px; }
+.table--categories .col-state      { width: 94px; }
+
+/* Filas de 92px en el marco: 108 -> 200 -> 292 */
+.table--categories td { height: 92px; }
+
+/*
+  Todo a la izquierda: en 2036:6 cada encabezado arranca justo donde arranca su
+  columna, y el contenido de la fila va debajo. Es distinto de la tabla de
+  cuentas, que sí centra, así que se limita a este modificador.
+*/
+.table--categories th,
+.table--categories td { text-align: left; }
+
+/*
+  Encabezados de 12px y no los 20px de .table: en el marco "DISPERSIÓN TOTAL"
+  mide 116px y su columna 164, así que cabe holgado. A 20px medía ~190 y, como
+  .table th no parte la línea, se metía encima de ESTADO.
+*/
+.table--categories th { font-size: 12px; letter-spacing: 0.4px; }
+
+.cat-cell { display: flex; align-items: center; gap: 12px; }
+
+/* Cuadro de color de 36x36: es la única pista visual del color elegido, así
+   que va del propio --sgfte-purpose-N y no de una clase por categoría. */
+.cat-swatch {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+}
+
+.cat-name { display: block; font-weight: 600; font-size: 15px; color: var(--sgfte-cream); }
+.cat-kind { display: block; margin-top: 4px; font-size: 13px; color: var(--sgfte-muted); }
+
+.cat-desc { font-size: 14px; color: #cfc4be; }
+.cat-desc--empty { color: var(--sgfte-muted); font-style: italic; }
+
+/* El badge ESTADO es el interruptor: no hay borrar, sólo retirar y reactivar. */
+.cat-toggle {
+    border: 1px solid transparent;
+    background: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.cat-toggle:hover .badge { filter: brightness(1.25); }
+.cat-toggle:focus-visible { outline: 2px solid var(--sgfte-accent); outline-offset: 3px; border-radius: 20px; }
+
+.cat-count { margin: 22px 0 0; font-size: 14px; color: var(--sgfte-muted); }
+
+/* ---- El modal de categorías titula distinto ------------------------------ */
+/*
+  2041:155 pone el título a la izquierda, en 24px, con un subtítulo debajo —no
+  centrado y en versalitas como los modales de dinero—, y sus campos sí llevan
+  radio 8 y fondo propio. Va como modificador para no tocar "Crear cuenta",
+  que sigue su propio marco.
+*/
+.modal--stack { width: 540px; padding: 0 0 37px; }
+
+.modal--stack .modal__title {
+    padding: 37px 39px 0;
+    font-family: var(--sgfte-font-body);
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-align: left;
+    color: var(--sgfte-cream);
+}
+
+.modal__lead { margin: 12px 0 0; padding: 0 39px; font-size: 14px; color: var(--sgfte-muted); }
+
+.modal--stack .modal__body { padding: 0 39px; }
+
+.modal--stack .modal__label {
+    margin-top: 28px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0;
+    color: var(--sgfte-pink-text);
+}
+
+.modal--stack .register__control {
+    height: 52px;
+    margin-top: 10px;
+    padding: 0 17px;
+    background: #2b2a28;
+    border: 1px solid rgba(89, 65, 57, 0.5);
+    border-radius: 8px;
+}
+
+.modal--stack .register__input { font-size: 16px; }
+.modal--stack .register__input::placeholder { color: var(--sgfte-muted); }
+.modal--stack .register__actions { margin-top: 36px; }
+.modal--stack .register__actions .btn:first-child { width: 150px; }
+.modal--stack .register__actions .btn:last-child  { flex: 1 1 auto; gap: 14px; }
+
+/* La cruz del marco mide 14, no los 24 de un botón destacado (2041:181). */
+.modal--stack .register__actions .btn img { width: 14px; height: 14px; }
+
+/* ---- Paleta del modal ---------------------------------------------------- */
+.swatches { display: flex; gap: 14px; margin-top: 10px; }
+
+/* El radio real se oculta pero SIGUE en el DOM: así el grupo se recorre con
+   las flechas y el formulario envía el color sin JavaScript de por medio. */
+.swatch__input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.swatch__box {
+    display: block;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* El anillo del marco: 46x46 con 2px de borde alrededor del cuadro de 38. */
+.swatch__input:checked + .swatch__box {
+    /* El hueco del anillo va del color del propio modal (rgba(30,28,27,.97)),
+       no de --sgfte-bg: sobre el panel se vería un recuadro más oscuro. */
+    box-shadow: 0 0 0 4px #1e1c1b, 0 0 0 6px var(--sgfte-primary-text);
+}
+
+.swatch__input:focus-visible + .swatch__box {
+    /* El hueco del anillo va del color del propio modal (rgba(30,28,27,.97)),
+       no de --sgfte-bg: sobre el panel se vería un recuadro más oscuro. */
+    box-shadow: 0 0 0 4px #1e1c1b, 0 0 0 6px var(--sgfte-accent);
+}
+
+/* ---- Interruptor ACTIVA del modal ---------------------------------------- */
+.switch { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.switch__input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.switch__track {
+    position: relative;
+    display: block;
+    width: 48px;
+    height: 28px;
+    border-radius: 14px;
+    background: rgba(169, 138, 128, 0.28);
+    cursor: pointer;
+    transition: background 120ms ease;
+}
+
+.switch__track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--sgfte-cream);
+    transition: transform 120ms ease;
+}
+
+.switch__input:checked + .switch__track { background: var(--sgfte-primary); }
+.switch__input:checked + .switch__track::after { transform: translateX(20px); }
+.switch__input:focus-visible + .switch__track { outline: 2px solid var(--sgfte-accent); outline-offset: 3px; }
+
+.switch__label { font-weight: 500; font-size: 15px; color: var(--sgfte-cream); }
+
+
+/* ==========================================================================
+   22 · Modal de resultado · marcos 2169:436 (éxito) y 2169:542 (rechazo)
+   ========================================================================== */
+
+/* La tarjeta del marco: 520x664, r24, sobre el velo del resto de modales. */
+.result {
+    width: 520px;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 47px 39px 37px;
+    background: rgba(30, 28, 27, 0.6);
+    border: 1px solid rgba(169, 138, 128, 0.1);
+    border-radius: 24px;
+    backdrop-filter: blur(2.5px);
+    text-align: center;
+}
+
+/* El velo del resultado va más opaco que el de los formularios: detrás queda
+   la pantalla a la que volvió la redirección, y no debe competir. */
+.result-scrim { background: rgba(10, 9, 9, 0.72); }
+
+.result__icon { display: flex; justify-content: center; }
+.result__icon svg { display: block; }
+
+.result__title {
+    margin: 26px 0 0;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--sgfte-cream);
+}
+
+.result__subtitle { margin: 14px 0 0; font-size: 15px; color: #a1918a; }
+
+/* Banda de estado: 440x90 en el marco, con el punto del color del resultado. */
+.result__strip {
+    margin-top: 24px;
+    padding: 19px 21px;
+    border: 1px solid;
+    border-radius: 12px;
+    text-align: left;
+}
+
+.result--ok  .result__strip { background: rgba(56, 168, 92, 0.08); border-color: rgba(56, 168, 92, 0.25); }
+.result--bad .result__strip { background: rgba(209, 72, 54, 0.10); border-color: rgba(209, 72, 54, 0.32); }
+
+.result__strip-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.result__strip-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.result--ok  .result__strip-label { color: var(--sgfte-ok); }
+.result--bad .result__strip-label { color: #ec6a5a; }
+
+.result__strip-text { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: #cdbdb8; }
+
+/* Caja de detalle: mismas filas que el resumen de Detalle de Cuenta. */
+.result__details {
+    margin: 18px 0 0;
+    padding: 0 23px;
+    background: rgba(43, 42, 40, 0.5);
+    border: 1px solid rgba(169, 138, 128, 0.08);
+    border-radius: 12px;
+    text-align: left;
+}
+
+.result__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    /* 44px de paso en el marco: 23 -> 67 -> 111 -> 155 */
+    min-height: 44px;
+}
+
+.result__row + .result__row { border-top: 1px solid rgba(169, 138, 128, 0.08); }
+.result__row dt { font-size: 14px; color: #a1918a; }
+.result__row dd { margin: 0; font-weight: 600; font-size: 14px; color: var(--sgfte-cream); text-align: right; }
+
+/*
+  Dos botones a lo ancho de la caja.
+
+  El marco los pone en 22/269 en el éxito y en 36/283 en el rechazo, que no
+  concuerdan entre sí ni con el margen de 39 que usan la banda y el detalle. Se
+  alinean con ese margen, que es la retícula que la propia tarjeta ya sigue.
+*/
+.result__actions { display: flex; gap: 20px; margin-top: 24px; }
+.result__actions .btn { flex: 1 1 0; padding-left: 0; padding-right: 0; }
+
+
+/* ==========================================================================
+   23 · Portal del tarjetahabiente · marco 64:4
+   ========================================================================== */
+
+.portal-body { background: var(--sgfte-bg); }
+
+/* Mismo lienzo centrado que el área de administración. */
+.pshell {
+    max-width: 1440px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: var(--app-h, 100vh);
+}
+
+/* La cabecera mide lo mismo que en el admin. Allí la altura se la da la fila
+   de la rejilla; aquí no hay rejilla, así que se pide explícitamente o el
+   contenido subiría 37px respecto al marco. */
+.pshell .app-header { flex: 0 0 auto; height: var(--sgfte-header-h); }
+
+/* 108 = del borde inferior de la cabecera (115) al primer bloque (223). */
+.pmain { flex: 1 1 auto; padding: 108px 32px 40px 24px; }
+
+/* Pie: regla a todo lo ancho y el aviso legal, como en el marco. */
+.pfoot {
+    margin-top: auto;
+    padding: 18px 24px 22px;
+    border-top: 1px solid var(--sgfte-rule);
+}
+.pfoot p { margin: 0; font-size: 10px; line-height: 24px; color: #fff; }
+
+/*
+  Tres columnas: 235 + 765 + 307. Los huecos del marco no son iguales (34 a la
+  izquierda del centro, 43 a la derecha), así que van como margen del centro en
+  vez de como `gap`, que los igualaría.
+*/
+.pgrid { display: flex; align-items: flex-start; }
+
+/*
+  min-width:0 en las tres columnas.
+
+  Un elemento flex tiene min-width:auto, que vale su tamaño min-content y GANA
+  al flex-basis: como los rótulos de la actividad van en nowrap, su min-content
+  empujaba la columna de 307 hasta 371 y se salía de los 1440. El basis no es
+  un máximo si no se desactiva ese mínimo automático.
+*/
+.pgrid > * { min-width: 0; }
+
+.prail { flex: 0 0 235px; }
+.pcenter { flex: 0 0 765px; margin: 0 43px 0 34px; }
+.pactivity { flex: 0 0 307px; }
+
+/* ---- Balance total ------------------------------------------------------- */
+.pbalance {
+    padding: 19px;
+    background: #211e1d;
+    border: 1px solid #463e3b;
+    border-radius: 12px;
+}
+
+.pbalance__label {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--sgfte-pink-text);
+}
+
+.pbalance__figure {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 16px 0 0;
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 1;
+    color: #fff;
+}
+
+.pbalance__currency { font-weight: 400; font-size: 14px; color: #ffb3a7; }
+.pbalance__delta { margin: 30px 0 0; font-size: 14px; color: var(--sgfte-accent); }
+/* Una bajada no puede ir del mismo color que una subida. */
+.pbalance__delta--down { color: var(--sgfte-error); }
+
+/* ---- Accesos rápidos ---------------------------------------------------- */
+.pquick__title {
+    margin: 62px 0 0 18px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--sgfte-pink-text);
+}
+
+.pquick { display: flex; flex-direction: column; gap: 22px; margin: 28px 0 0 18px; }
+
+.pquick__item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 20px;
+    line-height: 28px;
+    color: #fff;
+    text-decoration: none;
+}
+
+.pquick__item[role="button"] { cursor: pointer; }
+.pquick__item svg { display: block; flex: 0 0 auto; color: var(--sgfte-pink-text); }
+.pquick__item:hover { color: var(--sgfte-accent); }
+.pquick__item:hover svg { color: var(--sgfte-accent); }
+
+/* ---- Saludo -------------------------------------------------------------- */
+.pwelcome {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1.1;
+    color: var(--sgfte-cream);
+}
+
+.plead { margin: 16px 0 0; font-weight: 500; font-size: 20px; color: var(--sgfte-pink-text); }
+
+/* ---- Panel de cuentas ---------------------------------------------------- */
+/*
+  El único bloque de la pantalla que se desplaza.
+
+  Es una columna de tres filas donde sólo la de en medio crece y desborda, así
+  que el título y los botones se quedan donde están y las tarjetas pasan por
+  detrás. La altura es fija (535 en el marco) para que el panel no se estire con
+  el número de cuentas: si se estirara, no habría nada que desplazar.
+*/
+.paccounts {
+    display: flex;
+    flex-direction: column;
+    height: 535px;
+    margin-top: 30px;
+    background: #131010;
+    border: 1px solid rgba(254, 185, 107, 0.9);
+    border-radius: 12px;
+}
+
+.paccounts__head { flex: 0 0 auto; padding: 30px 42px 0; }
+
+.paccounts__head h2 {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--sgfte-cream);
+}
+
+/* min-height:0 es lo que permite encoger a un hijo flex por debajo de su
+   contenido; sin él la rejilla empuja el panel y el scroll nunca aparece. */
+.paccounts__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 104px 8px;
+}
+
+/* Dos columnas de 244 con 68 de separación, como el marco. */
+.paccounts__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 244px);
+    gap: 40px 68px;
+}
+
+.pcard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 224px;
+    padding: 28px 0 0;
+    background: #211e1d;
+    border: 1px solid #463e3b;
+    border-radius: 20px;
+    text-decoration: none;
+}
+
+.pcard:hover { border-color: rgba(254, 185, 107, 0.9); }
+.pcard__icon { display: block; color: var(--sgfte-pink-text); }
+
+.pcard__purpose {
+    margin-top: 27px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--sgfte-pink-text);
+}
+
+.pcard__amount {
+    margin-top: 8px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 24px;
+    line-height: 24px;
+    color: #fff;
+}
+
+.pcard__currency { margin-top: 4px; font-size: 14px; color: #ffb3a7; }
+
+.paccounts__empty {
+    padding: 60px 0;
+    text-align: center;
+    font-size: 15px;
+    color: var(--sgfte-muted);
+}
+
+/* El pie repite el fondo del panel para tapar lo que pasa por detrás. */
+.paccounts__foot {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    gap: 41px;
+    padding: 20px 0 24px;
+    background: #131010;
+    border-top: 1px solid var(--sgfte-rule);
+    border-radius: 0 0 12px 12px;
+}
+
+/*
+  Botón de dos renglones con el icono al lado (2372:568).
+
+  nowrap para que la única partición sea la del <br> que trae el texto: sin él
+  "Transferir a compañero" se rompía además por el espacio y salían tres
+  renglones en un botón dibujado para dos.
+*/
+.btn--stacked { align-items: center; line-height: 1.25; white-space: nowrap; }
+
+/* ---- Actividad reciente -------------------------------------------------- */
+.pactivity {
+    padding: 22px 26px 24px;
+    background: #211e1d;
+    border: 1px solid #463e3b;
+    border-radius: 20px;
+}
+
+.pactivity__head { display: flex; align-items: center; justify-content: space-between; }
+
+.pactivity__title {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--sgfte-pink-text);
+}
+
+.pactivity__filter { display: block; color: var(--sgfte-pink-text); }
+.pactivity__list { list-style: none; margin: 30px 0 0; padding: 0; }
+
+.pact { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.pact + .pact { margin-top: 26px; }
+
+/* Cuadrito con borde ámbar del marco, 25x29 */
+.pact__icon {
+    display: flex;
+    flex: 0 0 25px;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 29px;
+    background: #131010;
+    border: 1px solid rgba(254, 185, 107, 0.9);
+    border-radius: 4px;
+    color: var(--sgfte-pink-text);
+}
+
+.pact__text { flex: 1 1 auto; min-width: 0; }
+
+/* El nombre del comercio puede ser largo; el marco lo corta con puntos
+   suspensivos ("Taquería los chaparrit...") en vez de partirlo en dos. */
+.pact__label {
+    display: block;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--sgfte-cream);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pact__label--in { color: rgba(254, 185, 107, 0.9); }
+
+.pact__when {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(255, 179, 167, 0.75);
+    /* "23 mayo, 10:30am" cabe justo; sin esto parte en dos y desnivela la fila. */
+    white-space: nowrap;
+}
+
+.pact__amount { flex: 0 0 auto; font-size: 14px; color: #fff; white-space: nowrap; }
+.pact__amount--in { color: rgba(254, 185, 107, 0.9); }
+
+
+/* ==========================================================================
+   24 · Responsive
+   ========================================================================== */
+
+/*
+  NO hay puntos de corte intermedios a propósito.
+
+  El cascarón escala la página con `zoom = min(1, ancho / 1440)`, así que el
+  ancho EFECTIVO de la maquetación nunca baja de 1440px: el diseño se dibuja
+  siempre a su tamaño nativo, sólo que más pequeño en pantalla. Nada se
+  redistribuye y ningún rótulo parte a dos líneas.
+
+  El zoom tiene un suelo de 0.6 (ventanas de ~864px). Por debajo ya es una
+  pantalla de verdad pequeña y entra el bloque de abajo, que sí reordena.
+*/
+@media (max-width: 860px) {
+    .vista-grid { grid-template-columns: 1fr; }
+    .conc { height: auto; padding-bottom: var(--sp-3); }
+    .conc__cta { margin-top: var(--sp-5); }
+    .dist { height: auto; padding: 35px var(--sp-3) var(--sp-4) 21px; }
+    .dist__pie { position: static; margin: var(--sp-4) 0 0; }
+
+    .app {
+        grid-template-rows: auto auto 1fr;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "header"
+            "side"
+            "main";
+    }
+
+    .app-header { padding: var(--sp-2) var(--sp-3); flex-wrap: wrap; gap: var(--sp-2); }
+    .app-header__nav { gap: var(--sp-3); margin: 0; align-self: auto; }
+    .app-header__link { padding-top: 0; font-size: 17px; }
+    .app-header__user { gap: var(--sp-2); }
+
+    .app-side { border-right: none; border-bottom: 1px solid var(--sgfte-line-side); }
+    .app-side__nav { flex-direction: row; flex-wrap: wrap; gap: var(--sp-1); padding: var(--sp-2); }
+    .app-side__link { width: auto; gap: var(--sp-2); padding: var(--sp-1) var(--sp-2); font-size: 16px; line-height: 20px; }
+    .app-side__icon { flex-basis: 28px; width: 28px; height: 28px; }
+    .app-side__legal { display: none; }
+
+    .app-main { padding: var(--sp-4) var(--sp-3) var(--sp-6); }
+    .page-title { font-size: 32px; }
+    .page-subtitle { margin-top: var(--sp-1); font-size: 18px; line-height: 26px; }
+
+    .conc__figure { font-size: 34px; }
+    .conc__currency { font-size: 24px; }
+    .conc__amount { height: auto; }
+    .btn--hero { padding: 13px var(--sp-3); }
+    .dist__title { font-size: 26px; }
+    .dist__item { grid-template-columns: 1fr auto; }
+    .dist__pie { width: 220px; height: 220px; }
+}
+
+
+/* ==========================================================================
+   25 · Vista de cuenta del tarjetahabiente · marco 263:58
+   ========================================================================== */
+
+/* Título y subtítulo a la izquierda, "Transferir a compañero" a la derecha. */
+.pacct-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); }
+
+/*
+  El panel de tarjetas NO se desplaza: una cuenta tiene como mucho dos tarjetas
+  y siempre caben. Por eso la altura es automática y no los 535 fijos que
+  necesitaba el panel de cuentas para tener algo que desplazar.
+*/
+.pcards-panel { height: auto; }
+.pcards-head { display: flex; align-items: baseline; gap: 28px; }
+.pcards-hint { margin: 0; font-size: 18px; color: var(--sgfte-cream); }
+
+/*
+  Zona de las tarjetas. Con dos se solapan (posición absoluta); con una sola
+  ocupa el ancho entero, que es lo que pidió el diseño corregido.
+*/
+/*
+  Los márgenes salen del marco: la tarjeta de delante ocupa de 138 a 366 desde
+  el borde del panel y la regla del pie está en 489. Sin el margen inferior la
+  caja medía justo lo que la tarjeta y la regla quedaba pegada a su borde.
+*/
+.pcards { position: relative; height: 228px; margin: 68px 45px 123px; }
+.pcards--one { height: 228px; }
+
+/* El radio real desaparece pero sigue en el DOM: es lo que recuerda cuál está
+   delante, sin JavaScript y con recorrido de teclado. */
+.pcards__pick { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.tarjeta {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px;
+    background-image: linear-gradient(129.6deg, #3b3937 0%, #211f1e 42.3%, #141312 76.9%);
+    border: 1px solid #594139;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: left 160ms ease, width 160ms ease, height 160ms ease, opacity 160ms ease;
+}
+
+/*
+  Delante y detrás, tal cual el marco (339 y 585 sobre el panel).
+
+  El estado por defecto lo llevan .tarjeta--a y .tarjeta--b directamente, no una
+  regla con :checked: si dependiera del radio, con una sola tarjeta —cuando no
+  hay radios— ninguna quedaría colocada y saldría sin ancho ni posición.
+  El radio sólo hace falta para INVERTIRLAS.
+*/
+.tarjeta--a,
+#front-b:checked ~ .tarjeta--b {
+    left: 0;
+    top: 0;
+    width: 425px;
+    height: 228px;
+    opacity: 1;
+    z-index: 2;
+    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
+}
+
+.tarjeta--b,
+#front-b:checked ~ .tarjeta--a {
+    left: 246px;
+    top: 5px;
+    width: 393px;
+    height: 220px;
+    opacity: 0.56;
+    z-index: 1;
+    box-shadow: none;
+}
+
+/* La de detrás no enseña su número: en el marco sólo asoma por la derecha. */
+.tarjeta--b .tarjeta__pan { visibility: hidden; }
+#front-b:checked ~ .tarjeta--b .tarjeta__pan { visibility: visible; }
+#front-b:checked ~ .tarjeta--a .tarjeta__pan { visibility: hidden; }
+
+/* Una sola tarjeta: sin nada detrás que insinuar, ocupa todo el ancho. */
+.pcards--one .tarjeta {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 228px;
+    opacity: 1;
+    z-index: 2;
+    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
+    cursor: default;
+}
+
+.tarjeta__top { display: flex; align-items: center; justify-content: space-between; }
+
+.tarjeta__key {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.6px;
+    color: #a98a80;
+}
+
+.tarjeta__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: rgba(195, 65, 0, 0.18);
+    border: 1px solid rgba(195, 65, 0, 0.5);
+    border-radius: 9999px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.6px;
+    color: #ffb59b;
+}
+
+.tarjeta__pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.tarjeta__data { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.tarjeta__exp { text-align: right; }
+
+.tarjeta__value {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 28px;
+    color: var(--sgfte-cream);
+    white-space: nowrap;
+}
+
+.pcards-foot { justify-content: flex-start; padding: 20px 45px 24px; }
+
+/*
+  Mis tarjetas: la misma cáscara de panel que .paccounts (cabecera y pie
+  fijos), pero NO su alto fijo de 535 — ese número se calibró para las
+  tarjetas de cuenta (224 de alto, dos columnas fijas), y con la rejilla que
+  fluye de aquí sobraba de sobra con pocas tarjetas: la caja se veía enorme
+  para 4 tarjetas y encima cortaba la fila de en medio en vez de mostrarla
+  entera.
+
+  En su lugar, el panel crece con el contenido (height: auto) y sólo el
+  scroll interno lleva un tope (max-height): con pocas tarjetas la caja mide
+  justo lo que ocupan —sin scroll, sin hueco de sobra— y a partir de dos
+  filas largas empieza a desplazarse en vez de seguir creciendo.
+*/
+/*
+  Sin esto el panel hereda el ancho completo de .pmain (el mismo que la tabla
+  de movimientos), pero la rejilla de tarjetas nunca lo llena: dos columnas de
+  425 más su hueco caben en menos de 1000px, y el resto quedaba en blanco a la
+  derecha — una caja que se ve rota aunque lo de dentro esté bien.
+  980 = dos columnas (425×2) + el hueco (32) + el relleno del scroll (45×2).
+*/
+.tarjetas-panel { height: auto; max-width: 980px; }
+
+.tarjetas-panel .paccounts__scroll {
+    flex: 0 1 auto;
+    max-height: 620px;
+    padding: 16px 45px 8px;
+}
+
+.tarjetas-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+}
+
+.tarjetas-grid__item { display: flex; flex-direction: column; gap: 14px; }
+.tarjetas-grid__badge { align-self: flex-start; }
+
+/*
+  Estática como .tarjeta--still (no se solapa ni se arrastra), pero SÍ se
+  puede pulsar para abrir su detalle — cada una es independiente aquí.
+
+  El selector compuesto .tarjeta--still.tarjeta--pick, y no .tarjeta--pick
+  solo, es a propósito: .tarjeta--still fija cursor:default más abajo en
+  este archivo (sección del modal de detalle) y con la misma especificidad
+  gana la regla que aparece después, así que .tarjeta--pick sola perdía el
+  cursor de mano.
+*/
+.tarjeta--still.tarjeta--pick { cursor: pointer; }
+.tarjeta--pick:hover,
+.tarjeta--pick:focus-visible {
+    border-color: rgba(254, 185, 107, 0.9);
+    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
+}
+.tarjeta--pick:focus-visible { outline: 2px solid var(--sgfte-accent); outline-offset: 2px; }
+
+.pback {
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--sgfte-pink-text);
+    text-decoration: none;
+}
+
+.pback:hover { color: var(--sgfte-accent); }
+
+.pactivity__more {
+    display: inline-block;
+    margin-top: 26px;
+    padding: 6px 21px;
+    border: 1px solid rgba(254, 185, 107, 0.5);
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 24px;
+    color: var(--sgfte-accent);
+}
+
+
+/* ==========================================================================
+   26 · Transferencia del portal · marco 111:2
+   ========================================================================== */
+
+/*
+  El marco lo dibuja como pantalla completa, pero es un pop-up: se abre sobre el
+  panel o sobre la vista de cuenta. Entra sólo la tarjeta; el título y el
+  subtítulo que el marco pone ENCIMA del recuadro pasan dentro, como en el resto
+  de modales del proyecto.
+*/
+.xfer__card {
+    width: 544px;
+    max-width: 100%;
+    padding: 36px 76px 40px;
+    background: #231f1d;
+    border-radius: 10px;
+}
+
+.xfer__modal-title {
+    padding-top: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: 3px;
+    text-align: center;
+    color: #fff;
+}
+
+.xfer__modal-lead {
+    margin: 22px 0 34px;
+    font-size: 15px;
+    line-height: 22px;
+    letter-spacing: 1.5px;
+    text-align: center;
+    color: var(--sgfte-pink-text);
+}
+
+.xfer__note { margin: 10px 0 0; font-size: 13px; color: var(--sgfte-warn); }
+
+.xfer__label {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 24px;
+    letter-spacing: 3px;
+    color: var(--sgfte-pink-text);
+}
+
+/* Bloques de 112px: etiqueta (24) + 8 + campo (48) y 32 hasta el siguiente. */
+.xfer__label + .xfer__control { margin-top: 8px; }
+/*
+  .xfer__note va tambien: el aviso de "ningún compañero..." se sienta entre el
+  campo de destino y la etiqueta siguiente, y la adyacencia de CSS mira el DOM,
+  no lo que se pinta. Aunque el aviso esté oculto rompía la regla de arriba y
+  MONTO se pegaba al desplegable.
+*/
+.xfer__control + .xfer__label,
+.xfer__note + .xfer__label { margin-top: 32px; }
+
+/*
+  Sin radio, igual que los campos del modal de dispersión: el marco no redondea
+  estos recuadros aunque el estándar del proyecto pida r8 en los inputs.
+*/
+.xfer__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 20px;
+    background: var(--sgfte-bg);
+    border: 1px solid #594139;
+}
+
+.xfer__control--area { height: 80px; align-items: stretch; padding: 12px 20px; }
+.xfer__control:focus-within { border-color: var(--sgfte-accent); }
+
+.xfer__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 22px;
+    line-height: 24px;
+    color: var(--sgfte-cream);
+    /* El desplegable trae su propia flecha; se usa la del prototipo. */
+    appearance: none;
+}
+
+.xfer__input::placeholder { color: rgba(169, 138, 128, 0.5); }
+.xfer__input:disabled { color: rgba(169, 138, 128, 0.5); cursor: not-allowed; }
+.xfer__control--area .xfer__input { padding-top: 2px; resize: none; line-height: 26px; }
+
+.xfer__icon { flex: 0 0 auto; color: var(--sgfte-pink-text); }
+.xfer__chev { flex: 0 0 auto; color: var(--sgfte-pink-text); pointer-events: none; }
+
+/* Cancelar a la izquierda y Confirmar a la derecha, como en el marco. */
+.xfer__actions { display: flex; gap: 20px; margin-top: 56px; }
+.xfer__actions .btn { flex: 1 1 0; padding-left: 0; padding-right: 0; }
+
+
+/* ==========================================================================
+   27 · Historial de movimientos del portal · marco 109:4
+   ========================================================================== */
+
+/* Esta pantalla no tiene columnas laterales: ocupa los 1312 del marco. */
+.pmain--wide { padding-left: 65px; padding-right: 63px; }
+
+.hist-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 40px; }
+
+.hist-title {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 600;
+    font-size: 48px;
+    line-height: 40px;
+    letter-spacing: -0.64px;
+    color: #fff;
+}
+
+.hist-lead { margin: 30px 0 0; font-weight: 500; font-size: 20px; line-height: 32px; color: var(--sgfte-pink-text); }
+
+/* Dos tarjetas de 261 iguales a la del balance del panel. */
+.hist-kpis { display: flex; gap: 70px; }
+.hist-kpis .pbalance { width: 261px; }
+
+/* ---- Barra de filtros ---------------------------------------------------- */
+.hist-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    margin-top: 42px;
+    padding: 0 20px 0 12px;
+    background: #1d1b1a;
+    border: 1px solid #2b2a28;
+    border-radius: 8px;
+}
+
+.hist-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 360px;
+    height: 40px;
+    padding: 0 14px;
+    background: var(--sgfte-bg);
+    border: 1px solid #594038;
+    border-radius: 8px;
+}
+
+.hist-search svg { flex: 0 0 auto; color: var(--sgfte-muted); }
+.hist-search:focus-within { border-color: var(--sgfte-accent); }
+
+.hist-search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    font-family: var(--sgfte-font-body);
+    font-size: 15px;
+    color: var(--sgfte-cream);
+}
+
+.hist-search input::placeholder { color: var(--sgfte-muted); }
+
+.hist-seg {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--sgfte-bg);
+    border: 1px solid #2b2a28;
+    border-radius: 999px;
+}
+
+.hist-seg__item {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    color: var(--sgfte-muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.hist-seg__item.is-active { background: rgba(195, 65, 0, 0.18); color: #ffb59b; }
+
+.hist-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 10px 16px;
+    border: 1px solid #463e3b;
+    border-radius: 999px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    color: var(--sgfte-cream);
+    white-space: nowrap;
+}
+
+/* El <select> real cubre la píldora, invisible: así el desplegable es nativo
+   y la píldora conserva el aspecto del prototipo. */
+.hist-pill select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.hist-pill svg { color: var(--sgfte-cream); }
+.hist-count { margin-left: auto; font-family: var(--sgfte-font-mono); font-size: 12px; color: var(--sgfte-muted); }
+
+/* ---- Tabla --------------------------------------------------------------- */
+.hist-card {
+    margin-top: 30px;
+    padding: 0 28px;
+    background: #1d1b1a;
+    border: 1px solid #2b2a28;
+    border-radius: 8px;
+}
+
+.hist-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+/* Anchos del marco: 165 + 275 + 170 + 200 + 185 + 125 + 136 = 1256 */
+.hist-table .c-date    { width: 165px; }
+.hist-table .c-concept { width: 275px; }
+.hist-table .c-origin  { width: 170px; }
+.hist-table .c-method  { width: 200px; }
+.hist-table .c-target  { width: 185px; }
+.hist-table .c-amount  { width: 125px; }
+.hist-table .c-state   { width: 136px; }
+
+.hist-table th {
+    height: 62px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: 0.6px;
+    text-align: center;
+    color: #a98a80;
+    border-bottom: 1px solid #2b2a28;
+    white-space: nowrap;
+}
+
+.hist-table td {
+    height: 80px;
+    padding: 18px 6px;
+    font-size: 16px;
+    text-align: center;
+    color: var(--sgfte-cream);
+    border-bottom: 1px solid #2b2a28;
+}
+
+.hist-table tbody tr:last-child td { border-bottom: 0; }
+
+.hist-date span {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.hist-concept__main { display: block; font-size: 16px; }
+.hist-concept__sub  { display: block; margin-top: 2px; font-size: 13px; color: #a1918a; }
+.mono-cell { font-family: var(--sgfte-font-mono); font-size: 14px; }
+
+.hist-amount { font-family: var(--sgfte-font-mono); font-size: 14px; }
+.hist-amount--in { color: var(--sgfte-ok); }
+
+.hist-empty { height: 120px; color: var(--sgfte-muted); font-size: 15px; }
+
+/* ---- Paginador ----------------------------------------------------------- */
+.hist-pager { display: flex; justify-content: flex-end; gap: 8px; margin-top: 13px; }
+
+.hist-pager__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #2b2a28;
+    border-radius: 4px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 14px;
+    color: #a98a80;
+    text-decoration: none;
+}
+
+.hist-pager__item.is-current { background: var(--sgfte-primary); border-color: var(--sgfte-primary); color: #fff; }
+.hist-pager__item.is-disabled { opacity: 0.4; pointer-events: none; }
+.hist-pager__item.is-gap { border-color: transparent; }
+
+/* ==========================================================================
+   25 · Notificaciones (portal del tarjetahabiente)
+   ========================================================================== */
+.notif-head { margin-bottom: 26px; }
+
+.notif-filters { display: flex; gap: 10px; margin-bottom: 34px; }
+
+.notif-filter {
+    padding: 10px 18px;
+    background: transparent;
+    border: 1px solid var(--sgfte-line-pill);
+    border-radius: 8px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--sgfte-muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.notif-filter.is-active {
+    background: rgba(195, 65, 0, 0.18);
+    border-color: transparent;
+    color: #ffb59b;
+}
+
+.notif-day {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 30px 0 16px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--sgfte-muted);
+}
+.notif-day:first-child { margin-top: 0; }
+
+.notif-day::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--sgfte-line); }
+
+.notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+
+.notif-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 20px 24px;
+    background: #1d1b1a;
+    border: 1px solid #2b2a28;
+    border-bottom: 2px solid var(--sgfte-contrast);
+    border-radius: 8px;
+}
+
+.notif-card__icon {
+    display: flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #131010;
+    border: 1px solid rgba(254, 185, 107, 0.9);
+    border-radius: 8px;
+    color: var(--sgfte-pink-text);
+}
+
+.notif-card__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+
+.notif-card__title {
+    overflow: hidden;
+    font-size: 17px;
+    color: var(--sgfte-cream);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notif-card__tag {
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+}
+
+.notif-card__tag--seguridad      { background: rgba(254, 185, 107, 0.15); color: var(--sgfte-accent); }
+.notif-card__tag--administrativa { background: rgba(169, 138, 128, 0.14); color: var(--sgfte-mono-muted); }
+
+.notif-card__when {
+    flex: 0 0 auto;
+    font-family: var(--sgfte-font-mono);
+    font-size: 13px;
+    color: var(--sgfte-muted);
+    white-space: nowrap;
+}
+
+.notif-empty { padding: 60px 0; text-align: center; color: var(--sgfte-muted); font-size: 15px; }
+
+
+/* ==========================================================================
+   28 · Detalle de tarjeta · marco 285:47
+   ========================================================================== */
+
+/* 557 de ancho en el marco, con la cabecera separada por una regla. */
+.cardx { width: 557px; padding: 0 0 40px; background: #231f1d; }
+
+.cardx__head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 99px;
+    border-bottom: 1px solid var(--sgfte-rule);
+}
+
+.cardx__title {
+    margin: 0;
+    font-family: var(--sgfte-font-title);
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: 3px;
+    color: #fff;
+}
+
+.cardx__close {
+    position: absolute;
+    top: 23px;
+    right: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: #c6b7b1;
+    border: 0;
+    color: #231f1d;
+    cursor: pointer;
+}
+
+.cardx__close:hover { background: #fff; }
+
+.cardx__body { display: flex; flex-direction: column; align-items: center; padding: 64px 66px 0; }
+
+/* La cara de la tarjeta aquí no se mueve ni se pulsa: es una ilustración. */
+.tarjeta--still {
+    position: static;
+    width: 425px;
+    height: 228px;
+    opacity: 1;
+    cursor: default;
+    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
+}
+
+.tarjeta--still .tarjeta__pan { visibility: visible; }
+
+/* Bloque de datos: 425 de ancho, filas separadas por línea. */
+.cardx__rows {
+    width: 425px;
+    margin: 49px 0 0;
+    padding: 16px 28px 0;
+    background: #1d1b1a;
+    border: 1px solid #2b2a28;
+    border-radius: 8px;
+}
+
+.cardx__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding: 18px 0;
+    border-bottom: 1px solid #2b2a28;
+}
+
+.cardx__row:last-child { border-bottom: 0; }
+
+/* Botón "Hacer un gasto" bajo las filas de detalle: mismo ancho (425, vía
+   .btn--block dentro del padding de .cardx__body), separado por aire. */
+.cardx__rows + .btn { margin-top: 28px; }
+
+.cardx__row dt { font-weight: 500; font-size: 14px; color: var(--sgfte-pink-text); }
+.cardx__row dd { display: flex; align-items: center; gap: 10px; margin: 0; }
+
+.cardx__mono { font-family: var(--sgfte-font-mono); font-size: 14px; color: var(--sgfte-cream); }
+
+.cardx__tag {
+    padding: 5px 11px 5px 9px;
+    background: rgba(195, 65, 0, 0.18);
+    border-radius: 4px;
+    font-family: var(--sgfte-font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    color: #ffb59b;
+}
+
+/* ==========================================================================
+   26 · Soporte / Políticas (ventanas informativas simples)
+   ========================================================================== */
+/* Selectores compuestos (.cardx.info-modal, no .info-modal solo) para ganarle
+   a .cardx/.cardx__body en especificidad sin importar el orden del archivo —
+   misma razón que .tarjeta--still.tarjeta--pick más arriba. */
+.cardx.info-modal { width: 460px; }
+
+.cardx__body.info-modal__body {
+    gap: 16px;
+    padding: 40px 48px 0;
+    text-align: center;
+}
+
+.info-modal__icon { color: var(--sgfte-pink-text); }
+
+.info-modal__lead { margin: 0; font-size: 15px; line-height: 22px; color: var(--sgfte-cream); }
+
+.info-modal__email {
+    display: inline-block;
+    padding: 10px 20px;
+    background: rgba(254, 185, 107, 0.12);
+    border: 1px solid rgba(254, 185, 107, 0.4);
+    border-radius: 8px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 15px;
+    color: var(--sgfte-accent);
+    text-decoration: none;
+}
+.info-modal__email:hover { background: rgba(254, 185, 107, 0.2); }
+
+.info-modal__list {
+    margin: 0;
+    padding: 0 0 0 20px;
+    text-align: left;
+    font-size: 14px;
+    line-height: 26px;
+    color: var(--sgfte-cream);
+}
+.info-modal__list li + li { margin-top: 4px; }
+
+.info-modal .btn--block { margin-top: 12px; }

@@ -1,0 +1,97 @@
+<%--
+  Las declara el propio parcial y no el cascarón: lo incluyen también pantallas
+  antiguas que nunca importaron `fn`, y una inclusión estática hereda sólo lo
+  que la página ya declaró. Repetir un taglib idéntico es legal.
+--%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  Modal de resultado · marcos Figma "Deposito Exitoso - Screen" (2169:436) y
+  "Deposito Rechazado" (2169:542).
+
+  Los dos marcos son la misma tarjeta: sólo cambian el icono, el color de la
+  banda y las etiquetas de los botones. Por eso hay un único componente y no
+  uno por operación —también los hay dibujados para transferencia, expedición y
+  reintegración, y todos repiten esta estructura—.
+
+  Se pinta solo si el filtro dejó un resultado en la petición, así que basta con
+  incluirlo en el cascarón: ninguna pantalla tiene que acordarse de nada.
+
+  En Figma son pantallas completas; aquí son un modal sobre la pantalla a la que
+  vuelve la redirección, que es lo que se pidió y lo que evita perder el sitio.
+--%>
+<c:if test="${not empty operationResult}">
+    <c:set var="r" value="${operationResult}"/>
+
+    <div class="modal-scrim result-scrim" id="result-modal">
+        <div class="result ${r.ok ? 'result--ok' : 'result--bad'}" role="alertdialog"
+             aria-modal="true" aria-labelledby="result-title">
+
+            <%-- Icono de 88px: círculo con palomita o con aspa, en SVG para que
+                 herede el color del estado y no dependa de dos PNG. --%>
+            <div class="result__icon" aria-hidden="true">
+                <c:choose>
+                    <c:when test="${r.ok}">
+                        <svg viewBox="0 0 88 88" width="88" height="88">
+                            <circle cx="44" cy="44" r="44" fill="rgba(56,168,92,0.9)"/>
+                            <path d="M26 45.5 38 57 62 32" fill="none" stroke="#0f2417"
+                                  stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </c:when>
+                    <c:otherwise>
+                        <svg viewBox="0 0 88 88" width="88" height="88">
+                            <circle cx="44" cy="44" r="44" fill="rgba(209,72,54,0.9)"/>
+                            <path d="M31 31 57 57M57 31 31 57" fill="none" stroke="#2a0e0a"
+                                  stroke-width="7" stroke-linecap="round"/>
+                        </svg>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+
+            <h2 class="result__title" id="result-title">${fn:escapeXml(r.title)}</h2>
+            <p class="result__subtitle">${fn:escapeXml(r.subtitle)}</p>
+
+            <div class="result__strip">
+                <p class="result__strip-label">${fn:escapeXml(r.stripLabel)}</p>
+                <p class="result__strip-text">${fn:escapeXml(r.stripText)}</p>
+            </div>
+
+            <c:if test="${not empty r.details}">
+                <dl class="result__details">
+                    <c:forEach var="d" items="${r.details}">
+                        <div class="result__row">
+                            <dt>${fn:escapeXml(d.label)}</dt>
+                            <dd>${fn:escapeXml(d.value)}</dd>
+                        </div>
+                    </c:forEach>
+                </dl>
+            </c:if>
+
+            <div class="result__actions">
+                <a class="btn btn--secondary btn--hero" href="${ctx}${r.secondaryHref}">
+                    ${fn:escapeXml(r.secondaryLabel)}
+                </a>
+                <c:if test="${not empty r.primaryLabel}">
+                    <a class="btn btn--primary btn--hero" href="${ctx}${r.primaryHref}">
+                        ${fn:escapeXml(r.primaryLabel)}
+                    </a>
+                </c:if>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cerrar sin elegir botón deja al admin donde estaba, que ya es una
+        // salida válida: el resultado ya se consumió y no vuelve a aparecer.
+        (function () {
+            var scrim = document.getElementById("result-modal");
+            function close() { scrim.remove(); }
+            scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+            document.addEventListener("keydown", function (e) {
+                if (e.key === "Escape") close();
+            });
+            var first = scrim.querySelector(".btn");
+            if (first) first.focus();
+        })();
+    </script>
+</c:if>

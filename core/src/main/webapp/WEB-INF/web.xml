@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <!--
+      Todo el proyecto se lee y se sirve en UTF-8.
+
+      Hacía falta porque los fragmentos incluidos (.jspf) NO heredan el
+      pageEncoding de la página que los incluye: Jasper los lee con su valor por
+      omisión, ISO-8859-1. Sólo admin-top.jspf y app-top.jspf traían la
+      directiva, así que el resto salía con la ñ y los acentos rotos —"Gestión"
+      se veía "GestiÃ³n" en el pie, y "propósito" como "propÃ³sito" en el modal
+      de transferencia—.
+
+      Se declara aquí y no repitiendo la directiva en cada fragmento porque
+      pageEncoding sólo puede aparecer UNA vez por unidad de traducción: en un
+      .jspf incluido por una página que ya la declara, sería un error de
+      compilación. El descriptor es el único sitio que vale para todos.
+    -->
+    <jsp-config>
+        <jsp-property-group>
+            <url-pattern>*.jsp</url-pattern>
+            <url-pattern>*.jspf</url-pattern>
+            <page-encoding>UTF-8</page-encoding>
+        </jsp-property-group>
+    </jsp-config>
+
+</web-app>
