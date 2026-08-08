@@ -1,7 +1,6 @@
 services:
   db:
     image: gvenzl/oracle-free:23-slim
-    platform: linux/arm64
     shm_size: 1gb
     environment:
       ORACLE_PASSWORD: ${ORACLE_PASSWORD}

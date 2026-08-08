@@ -17,7 +17,7 @@
 <c:set var="activeNav" value="logs"/>
 <c:set var="pageAction">
     <%-- Sin funcionalidad todavía, igual que el de Analíticas. --%>
-    <button type="button" class="btn btn--primary btn--logs" disabled
+    <button type="button" class="btn btn--primary btn--logs"
             title="Exportación de logs pendiente">
         <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
