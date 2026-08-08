@@ -44,3 +44,7 @@ build/
 #Databases
 src/main/resources/db.properties
 
+# Env
+.env
+*.pem
+

@@ -16,23 +16,19 @@ public record ConcentratorSummary(
         LocalDateTime lastReintegration,
         BigDecimal reintegratedThisMonth) {
     /** JSTL/EL reaches records through getters, not the fields directly. */
-    @Override
-    public BigDecimal dispersedThisMonth() {
+    public BigDecimal getDispersedThisMonth() {
         return dispersedThisMonth;
     }
 
-    @Override
-    public int movementsThisMonth() {
+    public int getMovementsThisMonth() {
         return movementsThisMonth;
     }
 
-    @Override
-    public LocalDateTime lastReintegration() {
+    public LocalDateTime getLastReintegration() {
         return lastReintegration;
     }
 
-    @Override
-    public BigDecimal reintegratedThisMonth() {
+    public BigDecimal getReintegratedThisMonth() {
         return reintegratedThisMonth;
     }
 

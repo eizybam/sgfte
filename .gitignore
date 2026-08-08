@@ -30,3 +30,4 @@ CLAUDE.MD
 
 #Environment and sensitive
 .env
+*.pem
