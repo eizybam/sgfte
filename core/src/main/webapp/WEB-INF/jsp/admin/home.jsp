@@ -38,7 +38,10 @@
                 <img src="${ctx}/assets/img/icons/transfer.png" alt="">
                 Depositar a cuenta
             </button>
-            <button type="button" class="btn btn--secondary btn--hero" data-open-fund>Fondear</button>
+            <button type="button" class="btn btn--secondary btn--hero" data-open-fund>
+                <img src="${ctx}/assets/img/icons/fund.png" alt="">
+                Fondear
+            </button>
         </div>
     </section>
 
