@@ -28,15 +28,20 @@
     </div>
 
     <div class="an-head__actions">
-        <%-- Sin funcionalidad todavía: el marco lo dibuja, pero no hay reporte que exportar. --%>
-        <button type="button" class="btn btn--primary btn--export" disabled
-                title="Exportación de reportes pendiente">
+        <%-- El periodo de la pantalla viaja al reporte: si estás viendo 12 meses,
+     el archivo dice 12 meses. --%>
+        <c:url var="exportUrl" value="/admin/analytics.csv">
+            <c:param name="period" value="${period.code}"/>
+        </c:url>
+        <a class="btn btn--primary btn--export" href="${exportUrl}"
+           title="Descargar el reporte del periodo seleccionado en CSV">
             <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M9 2v8M5.5 7.5 9 11l3.5-3.5M3 13.5v1.5h12v-1.5"/>
             </svg>
             Exportar reporte
-        </button>
+        </a>
+
 
         <nav class="period" aria-label="Periodo">
             <c:forEach var="p" items="${periods}">
