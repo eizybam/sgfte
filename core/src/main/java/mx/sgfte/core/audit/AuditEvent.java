@@ -52,7 +52,12 @@ public enum AuditEvent {
     CARDHOLDER_DELETED (Severity.CRIT, Module.EMPLEADOS, "Usuario eliminado"),
 
     // --- Microservicios ---
+    // Exportar el reporte es INFO: es una lectura legítima. Se registra igual,
+    // porque saca información agregada de toda la empresa fuera del sistema.
+    REPORT_EXPORTED (Severity.INFO, Module.ANALITICAS, "Reporte de analíticas exportado"),
+
     NOTIFICATION (Severity.INFO, Module.NOTIFICACIONES, "Notificación enviada");
+
 
     /** Los tres niveles del segmentado de la pantalla. */
     public static final class Severity {
@@ -70,6 +75,7 @@ public enum AuditEvent {
         public static final String TARJETAS       = "Tarjetas";
         public static final String EMPLEADOS      = "Empleados";
         public static final String NOTIFICACIONES = "Notificaciones";
+        public static final String ANALITICAS = "Analíticas";
         private Module() {}
     }
 
