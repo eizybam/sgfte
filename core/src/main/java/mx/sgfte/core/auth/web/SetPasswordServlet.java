@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.auth.PasswordTokenService;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class SetPasswordServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        invalidateSession(req);
         String token = req.getParameter("token");
         boolean valid = false;
         try {
@@ -45,6 +47,7 @@ public class SetPasswordServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        invalidateSession(req);
         String token = req.getParameter("token");
         String password = req.getParameter("password");
         String confirm = req.getParameter("confirmPassword");
@@ -92,5 +95,12 @@ public class SetPasswordServlet extends HttpServlet {
     private void forward(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         req.getRequestDispatcher("/WEB-INF/jsp/auth/set-password.jsp").forward(req, resp);
+    }
+
+    private void invalidateSession(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
     }
 }
