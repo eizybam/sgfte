@@ -33,12 +33,21 @@
                 <label class="issue__label" for="cardholderId">TARJETAHABIENTE</label>
                 <div class="issue__box">
                     <%-- No se envía: sólo filtra el desplegable de cuentas. --%>
-                    <select class="issue__input" id="cardholderId" required>
-                        <option value="" disabled selected>Selecciona al tarjetahabiente</option>
-                        <c:forEach var="h" items="${holders}">
-                            <option value="${h.key}">${fn:escapeXml(h.value)}</option>
-                        </c:forEach>
-                    </select>
+                        <div class="issue__field">
+                            <span class="issue__label">TARJETAHABIENTE</span>
+                            <div class="issue__box">
+                                <button type="button" class="issue__input picker__trigger" id="holderTrigger"
+                                        data-picker="cardholder"
+                                        data-picker-target="cardholder"
+                                        data-picker-title="Elegir tarjetahabiente"
+                                        data-picker-placeholder="Buscar por nombre, ID de empleado o correo">
+                                    <span id="holderLabel" class="picker__placeholder">Selecciona al tarjetahabiente</span>
+                                </button>
+                                <svg class="issue__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+                            </div>
+                            <%-- No se envía al servidor: sólo decide qué cuentas se piden. --%>
+                            <input type="hidden" id="cardholderId" value="${selectedHolderId}">
+                        </div>
                     <svg class="issue__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
                 </div>
             </div>
@@ -127,16 +136,12 @@
 
 <script>
     (function () {
-        var holderSel  = document.getElementById("cardholderId");
+        var trigger    = document.getElementById("holderTrigger");
+        var holderId   = document.getElementById("cardholderId");
+        var holderLbl  = document.getElementById("holderLabel");
         var accountSel = document.getElementById("accountId");
         var cardName   = document.getElementById("cardName");
-
-        // Se guardan todas las <option> de cuenta para poder rearmar la lista
-        // al cambiar de tarjetahabiente. Ocultar <option> no es fiable entre
-        // navegadores; volver a insertarlas sí.
-        var allAccounts = Array.prototype.slice.call(accountSel.options)
-                               .filter(function (o) { return o.value !== ""; });
-        var placeholder = accountSel.options[0];
+        var ctx        = "${ctx}";
 
         function text(id, value) { document.getElementById(id).textContent = value; }
 
@@ -145,6 +150,9 @@
             return checked && checked.value === "DIGITAL" ? "Digital" : "Física";
         }
 
+        // ---- SIN CAMBIOS respecto a la versión anterior de esta pantalla ----
+        // Sigue funcionando porque las <option> que llegan por fetch traen los
+        // mismos data-* que traían las que escribía el c:forEach.
         function paint() {
             var opt = accountSel.selectedOptions[0];
             var has = opt && opt.value !== "";
@@ -161,36 +169,62 @@
             text("sm-type", type);
             text("sm-balance", has ? opt.dataset.balance : "—");
         }
+        // ---------------------------------------------------------------------
 
-        function fillAccounts(keepValue) {
-            var holder = holderSel.value;
-            accountSel.replaceChildren(placeholder);
-            allAccounts
-                .filter(function (o) { return o.dataset.holderId === holder; })
-                .forEach(function (o) { accountSel.appendChild(o); });
+        /*
+          Las cuentas del empleado elegido, pedidas al vuelo.
 
-            accountSel.value = keepValue || "";
-            if (!accountSel.value) placeholder.selected = true;
+          Lo que llega es HTML: una ristra de <option> ya escapadas por JSTL. Va
+          directo a innerHTML del <select>. No hay JSON que parsear ni <option>
+          que construir a mano, y por eso paint() ni se entera.
+        */
+        function loadAccounts(id) {
+            accountSel.disabled = true;
+            accountSel.innerHTML = '<option value="" disabled selected>Cargando…</option>';
             paint();
+
+            fetch(ctx + "/admin/picker?type=issue-options&cardholderId=" + encodeURIComponent(id),
+                { credentials: "same-origin" })
+                .then(function (res) {
+                    if (res.redirected) { window.location.reload(); return null; }
+                    if (!res.ok) throw new Error("HTTP " + res.status);
+                    return res.text();
+                })
+                .then(function (html) {
+                    if (html === null) return;
+                    accountSel.innerHTML = html;
+                    accountSel.disabled = false;
+                    paint();
+                })
+                .catch(function () {
+                    accountSel.innerHTML =
+                        '<option value="" disabled selected>No se pudieron cargar las cuentas</option>';
+                    paint();
+                });
         }
 
-        holderSel.addEventListener("change", function () { fillAccounts(null); });
+        /*
+          El selector no llama a esta pantalla: emite un evento y se olvida.
+          Se comprueba `target` porque en otras pantallas hay más de un selector
+          en la misma página y todos disparan el mismo evento.
+        */
+        document.addEventListener("picker:choose", function (e) {
+            if (e.detail.target !== "cardholder") return;
+
+            var d = e.detail.data;                       // los data-* del <tr>
+            holderId.value = d.id;
+            holderLbl.textContent = d.name + " · " + d.code;
+            holderLbl.classList.remove("picker__placeholder");
+            loadAccounts(d.id);
+        });
+
         accountSel.addEventListener("change", paint);
         document.querySelectorAll('input[name="cardType"]').forEach(function (r) {
             r.addEventListener("change", paint);
         });
 
-        // Al volver de expedir, la cuenta llega preseleccionada: se ajusta el
-        // tarjetahabiente para que las dos listas queden coherentes.
-        var preselected = accountSel.selectedOptions[0];
-        if (preselected && preselected.value !== "") {
-            holderSel.value = preselected.dataset.holderId;
-            fillAccounts(preselected.value);
-        } else {
-            accountSel.replaceChildren(placeholder);
-            paint();
-        }
+        paint();
     })();
 </script>
-
+<%@ include file="/WEB-INF/jsp/partials/picker-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

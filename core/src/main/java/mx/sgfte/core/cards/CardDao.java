@@ -76,7 +76,7 @@ public class CardDao {
      *
      * Ordered by holder then purpose so the two dropdowns read alphabetically.
      */
-    public List<IssueTarget> findIssueTargets() {
+    public List<IssueTarget> findIssueTargets(long cardholderId) {
         String sql = "SELECT a.id, a.account_number, a.balance, "
                 + "       cat.name AS purpose, "
                 + "       ch.id AS cardholder_id, ch.first_name, ch.last_name "
@@ -84,19 +84,22 @@ public class CardDao {
                 + "JOIN cardholder ch ON ch.id = a.cardholder_id "
                 + "JOIN category  cat ON cat.id = a.category_id "
                 + "WHERE a.status = 'ACTIVE' AND ch.status = 'ACTIVE' "
-                + "ORDER BY ch.last_name, ch.first_name, cat.name";
+                + "  AND ch.id = ? "
+                + "ORDER BY cat.name";
         List<IssueTarget> targets = new ArrayList<>();
         try (Connection c = Db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                targets.add(new IssueTarget(
-                        rs.getLong("id"),
-                        rs.getString("account_number"),
-                        rs.getString("purpose"),
-                        rs.getBigDecimal("balance"),
-                        rs.getLong("cardholder_id"),
-                        rs.getString("first_name") + " " + rs.getString("last_name")));
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    targets.add(new IssueTarget(
+                            rs.getLong("id"),
+                            rs.getString("account_number"),
+                            rs.getString("purpose"),
+                            rs.getBigDecimal("balance"),
+                            rs.getLong("cardholder_id"),
+                            rs.getString("first_name") + " " + rs.getString("last_name")));
+                }
             }
             return targets;
         } catch (SQLException e) {
