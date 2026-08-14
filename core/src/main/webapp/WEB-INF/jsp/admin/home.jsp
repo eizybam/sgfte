@@ -306,6 +306,19 @@
 
         if (!scrim.hidden) amount.focus();
     })();
+
+    // El selector avisa; la pantalla decide. Se filtra por target porque el
+    // evento es global y podría haber más de un selector en la página.
+    document.addEventListener("picker:choose", function (e) {
+        if (e.detail.target !== "dispersion-account") return;
+
+        var d = e.detail.data;
+        document.getElementById("accountId").value = d.id;
+        var label = document.getElementById("accountLabel");
+        label.textContent = d.holder + " — " + d.purpose + " · " + d.number;
+        label.classList.remove("picker__placeholder");
+    });
 </script>
 
+<%@ include file="/WEB-INF/jsp/partials/picker-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

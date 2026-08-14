@@ -43,10 +43,23 @@ public class AdminHomeServlet extends HttpServlet {
         req.setAttribute("dispersionThisMonth", dashboardDao.dispersionThisMonth());
         req.setAttribute("purposes", buildShares(dashboardDao.balanceByPurpose()));
 
-        // Destinos del modal de dispersión
-        req.setAttribute("accounts", accountLookupDao.findActiveForSelect());
-
         consumeFlash(req);
+        
+            /*
+          Cuando el intento anterior falló, el modal se reabre con lo que el admin
+          había tecleado. Antes la cuenta elegida se recuperaba sola, porque estaban
+          TODAS en el <select> y bastaba con marcar la suya. Ahora el desplegable no
+          existe: hay que traer su etiqueta, y sólo la suya.
+        */
+        Object retryId = req.getAttribute(DispersionServlet.FLASH_ACCOUNT);
+        if (retryId != null && !retryId.toString().isBlank()) {
+            try {
+                accountLookupDao.findLabel(Long.parseLong(retryId.toString()))
+                        .ifPresent(l -> req.setAttribute("dispersionAccountLabel", l));
+            } catch (NumberFormatException ignored) {
+                // Un id ilegible sólo significa que el campo se reabre vacío.
+            }
+        }
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/home.jsp").forward(req, resp);
     }
