@@ -4,6 +4,7 @@ import mx.sgfte.core.cards.Card;
 import mx.sgfte.core.cards.CardDao;
 import mx.sgfte.core.movements.Movement;
 import mx.sgfte.core.movements.MovementQueryDao;
+import mx.sgfte.core.purchases.PurchaseService;
 import mx.sgfte.core.transfers.TransferService;
 
 import java.math.BigDecimal;
@@ -27,18 +28,26 @@ public class PortalService {
     private final CardDao cardDao;
     private final MovementQueryDao movementQueryDao;
     private final TransferService transferService;
+    private final PurchaseService purchaseService;
 
     public PortalService() {
-        this(new PortalDao(), new CardDao(), new MovementQueryDao(), new TransferService());
+        this(new PortalDao(), new CardDao(), new MovementQueryDao(),
+                new TransferService(), new PurchaseService());
     }
 
     // Constructor for tests (inject fakes).
     public PortalService(PortalDao portalDao, CardDao cardDao,
                          MovementQueryDao movementQueryDao, TransferService transferService) {
+        this(portalDao, cardDao, movementQueryDao, transferService, new PurchaseService());
+    }
+
+    public PortalService(PortalDao portalDao, CardDao cardDao, MovementQueryDao movementQueryDao,
+                         TransferService transferService, PurchaseService purchaseService) {
         this.portalDao = portalDao;
         this.cardDao = cardDao;
         this.movementQueryDao = movementQueryDao;
         this.transferService = transferService;
+        this.purchaseService = purchaseService;
     }
 
     /** The employee's accounts. Empty list is a normal state, not an error. */
@@ -66,6 +75,11 @@ public class PortalService {
     public List<Card> cardsOf(long cardholderId, long accountId) {
         requireOwnership(cardholderId, accountId);
         return cardDao.findByAccount(accountId);
+    }
+
+    /** Every card the employee holds, across all of their accounts — "Mis tarjetas". */
+    public List<PortalCard> myCards(long cardholderId) {
+        return portalDao.findCards(cardholderId);
     }
 
     /** Ledger of an account the employee owns, newest first. */
@@ -98,6 +112,17 @@ public class PortalService {
             throw new AccountNotOwnedException(cardholderId, sourceId == null ? -1 : sourceId);
         }
         transferService.transfer(sourceId, destId, amount, description);
+    }
+
+    /**
+     * "Hacer un gasto": simulates a real purchase against an account the
+     * employee owns. Same ownership guard as transfer() — without it, an
+     * employee could post someone else's accountId and drain their balance
+     * through a fake purchase instead of a fake transfer.
+     */
+    public void spend(long cardholderId, long accountId, BigDecimal amount, String merchant) {
+        requireOwnership(cardholderId, accountId);
+        purchaseService.spend(accountId, amount, merchant);
     }
 
     private void requireOwnership(long cardholderId, long accountId) {

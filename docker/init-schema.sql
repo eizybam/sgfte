@@ -1,3 +1,5 @@
+ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CURRENT_SCHEMA = SGFTE;
 -- ============================================================
 -- SGFTE · Esquema completo (Oracle)
 -- Sistema de Gestión de Fondos, Tarjetas y Empleados

@@ -412,6 +412,60 @@ public class PortalDao {
         }
     }
 
+    /**
+     * Every ACTIVE card across every ACTIVE account this cardholder owns, for
+     * "Mis tarjetas" (Figma: quick access, "Mis tarjetas").
+     *
+     * cards.findByCardholder() already exists for the admin's employee-detail
+     * screen, but it only returns Card — accountId, not what that account IS.
+     * The portal screen needs the purpose and its colour to tell cards apart
+     * at a glance, so this joins through account/category itself rather than
+     * bolting a second per-card lookup onto the admin DAO's result.
+     *
+     * Only ACTIVE cards, same as the account view: an invalidated card isn't
+     * something a cardholder needs to see day to day, only administration's
+     * concern.
+     */
+    public List<PortalCard> findCards(long cardholderId) {
+        String sql = "SELECT k.id, k.account_id, k.card_type, k.masked_pan, k.created_at, k.expires_at, "
+                   + "       a.account_number, cat.name AS purpose, cat.color_index "
+                   + "  FROM card k "
+                   + "  JOIN account  a   ON a.id = k.account_id "
+                   + "  JOIN category cat ON cat.id = a.category_id "
+                   + " WHERE a.cardholder_id = ? AND a.status = 'ACTIVE' AND k.status = 'ACTIVE' "
+                   + " ORDER BY cat.name, k.card_type";
+        List<PortalCard> cards = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    cards.add(new PortalCard(
+                            rs.getLong("id"),
+                            rs.getLong("account_id"),
+                            rs.getString("account_number"),
+                            rs.getString("purpose"),
+                            rs.getInt("color_index"),
+                            rs.getString("card_type"),
+                            rs.getString("masked_pan"),
+                            toLocalDate(rs.getTimestamp("created_at")),
+                            toLocalDate(rs.getDate("expires_at"))));
+                }
+            }
+            return cards;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading the cardholder's cards", e);
+        }
+    }
+
+    /** Las dos columnas de fecha llegan con tipos distintos; una sola salida. */
+    private java.time.LocalDate toLocalDate(java.util.Date value) {
+        if (value == null) return null;
+        if (value instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        if (value instanceof java.sql.Date d) return d.toLocalDate();
+        return new java.sql.Date(value.getTime()).toLocalDate();
+    }
+
     private void bindAll(PreparedStatement ps, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             Object p = params.get(i);

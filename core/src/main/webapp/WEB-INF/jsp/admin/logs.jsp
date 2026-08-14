@@ -16,16 +16,20 @@
 <c:set var="pageSubtitle" value="Trazabilidad completa de eventos y acciones del sistema"/>
 <c:set var="activeNav" value="logs"/>
 <c:set var="pageAction">
-    <%-- Sin funcionalidad todavía, igual que el de Analíticas. --%>
-    <button type="button" class="btn btn--primary btn--logs" disabled
-            title="Exportación de logs pendiente">
+<c:url var="exportUrl" value="/admin/logs.csv">
+    <c:param name="q" value="${q}"/>
+    <c:param name="sev" value="${sev}"/>
+    <c:param name="moduleFilter" value="${moduleFilter}"/>
+</c:url>
+    <a  class="btn btn--primary btn--logs"
+          href="/admin/logs.csv"  title="Exportación de logs pendiente">
         <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="5" y="3" width="18" height="22" rx="2"/>
             <path d="M9 9h10M9 14h10M9 19h6"/>
         </svg>
         Exportar logs
-    </button>
+    </a>
 </c:set>
 <%@ include file="/WEB-INF/jsp/partials/admin-top.jspf" %>
 

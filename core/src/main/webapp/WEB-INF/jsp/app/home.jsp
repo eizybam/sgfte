@@ -51,21 +51,22 @@
 
         <p class="pquick__title">ACCESOS RAPIDOS</p>
         <%--
-          Los tres accesos van inertes: el marco los dibuja, pero ninguno tiene
-          pantalla diseñada —ni "Mis tarjetas", ni "Soporte", ni "Politicas"—,
-          así que enlazarlos sería mandar al empleado a un 404. Se ven, como el
-          botón de exportar de Logs, y se encienden cuando exista su marco.
+          "Soporte" y "Politicas" siguen inertes: el marco los dibuja pero
+          ninguno tiene pantalla diseñada, así que enlazarlos mandaría al
+          empleado a un 404. "Mis tarjetas" tiene la suya; Soporte y Políticas
+          abren cada uno una ventana informativa simple (info-modals.jspf) en
+          vez de una pantalla, que es todo lo que hace falta para las dos.
         --%>
         <nav class="pquick">
-            <span class="pquick__item is-pending" title="Pantalla pendiente">
+            <a class="pquick__item" href="${ctx}/app/tarjetas">
                 <svg width="30" height="32" aria-hidden="true"><use href="#i-cards"/></svg>
                 <span>Mis tarjetas</span>
-            </span>
-            <span class="pquick__item is-pending" title="Pantalla pendiente">
+            </a>
+            <span class="pquick__item" role="button" tabindex="0" data-open-soporte>
                 <svg width="32" height="32" aria-hidden="true"><use href="#i-headset"/></svg>
                 <span>Soporte</span>
             </span>
-            <span class="pquick__item is-pending" title="Pantalla pendiente">
+            <span class="pquick__item" role="button" tabindex="0" data-open-politicas>
                 <svg width="32" height="32" aria-hidden="true"><use href="#i-policy"/></svg>
                 <span>Politicas</span>
             </span>
@@ -115,13 +116,16 @@
                     <svg width="24" height="24" aria-hidden="true"><use href="#i-arrows"/></svg>
                     <span>Transferir<br>a compañero</span>
                 </button>
-                <%-- Deshabilitado, no enlazado a ninguna parte: la pantalla de
-                     Movimientos todavía no existe y /app/cuenta necesita un id.
-                     Un botón apagado dice eso mejor que un enlace roto. --%>
-                <button type="button" class="btn btn--secondary btn--hero btn--stacked" disabled
-                        title="Pantalla de Movimientos pendiente">
-                    <svg width="24" height="24" aria-hidden="true"><use href="#i-logs"/></svg>
-                    <span>Ver<br>Movimientos</span>
+                <%--
+                  Antes era "Ver Movimientos", apagado —la pantalla no
+                  existía—. Ya existe (el nav de arriba lleva directo a
+                  /app/movimientos), así que el botón era pura redundancia;
+                  "Hacer un gasto" es un mejor uso del segundo lugar. Sin
+                  cuenta ya elegida —este panel enseña todas—, el modal
+                  arranca con el <select> vacío en vez de una preseleccionada.
+                --%>
+                <button type="button" class="btn btn--secondary btn--hero btn--stacked" data-open-gasto>
+                    <span>Hacer un<br>gasto</span>
                 </button>
             </div>
         </div>
@@ -162,5 +166,7 @@
 </div>
 
 <%@ include file="/WEB-INF/jsp/partials/transfer-modal.jspf" %>
+<%@ include file="/WEB-INF/jsp/partials/gasto-modal.jspf" %>
+<%@ include file="/WEB-INF/jsp/partials/info-modals.jspf" %>
 
 <%@ include file="/WEB-INF/jsp/partials/app-bottom.jspf" %>

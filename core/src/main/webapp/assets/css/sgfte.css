@@ -2602,6 +2602,7 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
     text-decoration: none;
 }
 
+.pquick__item[role="button"] { cursor: pointer; }
 .pquick__item svg { display: block; flex: 0 0 auto; color: var(--sgfte-pink-text); }
 .pquick__item:hover { color: var(--sgfte-accent); }
 .pquick__item:hover svg { color: var(--sgfte-accent); }
@@ -2990,6 +2991,61 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 }
 
 .pcards-foot { justify-content: flex-start; padding: 20px 45px 24px; }
+
+/*
+  Mis tarjetas: la misma cáscara de panel que .paccounts (cabecera y pie
+  fijos), pero NO su alto fijo de 535 — ese número se calibró para las
+  tarjetas de cuenta (224 de alto, dos columnas fijas), y con la rejilla que
+  fluye de aquí sobraba de sobra con pocas tarjetas: la caja se veía enorme
+  para 4 tarjetas y encima cortaba la fila de en medio en vez de mostrarla
+  entera.
+
+  En su lugar, el panel crece con el contenido (height: auto) y sólo el
+  scroll interno lleva un tope (max-height): con pocas tarjetas la caja mide
+  justo lo que ocupan —sin scroll, sin hueco de sobra— y a partir de dos
+  filas largas empieza a desplazarse en vez de seguir creciendo.
+*/
+/*
+  Sin esto el panel hereda el ancho completo de .pmain (el mismo que la tabla
+  de movimientos), pero la rejilla de tarjetas nunca lo llena: dos columnas de
+  425 más su hueco caben en menos de 1000px, y el resto quedaba en blanco a la
+  derecha — una caja que se ve rota aunque lo de dentro esté bien.
+  980 = dos columnas (425×2) + el hueco (32) + el relleno del scroll (45×2).
+*/
+.tarjetas-panel { height: auto; max-width: 980px; }
+
+.tarjetas-panel .paccounts__scroll {
+    flex: 0 1 auto;
+    max-height: 620px;
+    padding: 16px 45px 8px;
+}
+
+.tarjetas-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+}
+
+.tarjetas-grid__item { display: flex; flex-direction: column; gap: 14px; }
+.tarjetas-grid__badge { align-self: flex-start; }
+
+/*
+  Estática como .tarjeta--still (no se solapa ni se arrastra), pero SÍ se
+  puede pulsar para abrir su detalle — cada una es independiente aquí.
+
+  El selector compuesto .tarjeta--still.tarjeta--pick, y no .tarjeta--pick
+  solo, es a propósito: .tarjeta--still fija cursor:default más abajo en
+  este archivo (sección del modal de detalle) y con la misma especificidad
+  gana la regla que aparece después, así que .tarjeta--pick sola perdía el
+  cursor de mano.
+*/
+.tarjeta--still.tarjeta--pick { cursor: pointer; }
+.tarjeta--pick:hover,
+.tarjeta--pick:focus-visible {
+    border-color: rgba(254, 185, 107, 0.9);
+    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
+}
+.tarjeta--pick:focus-visible { outline: 2px solid var(--sgfte-accent); outline-offset: 2px; }
 
 .pback {
     display: inline-flex;
@@ -3500,6 +3556,10 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 .cardx__row:last-child { border-bottom: 0; }
 
+/* Botón "Hacer un gasto" bajo las filas de detalle: mismo ancho (425, vía
+   .btn--block dentro del padding de .cardx__body), separado por aire. */
+.cardx__rows + .btn { margin-top: 28px; }
+
 .cardx__row dt { font-weight: 500; font-size: 14px; color: var(--sgfte-pink-text); }
 .cardx__row dd { display: flex; align-items: center; gap: 10px; margin: 0; }
 
@@ -3515,3 +3575,46 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
     letter-spacing: 0.4px;
     color: #ffb59b;
 }
+
+/* ==========================================================================
+   26 · Soporte / Políticas (ventanas informativas simples)
+   ========================================================================== */
+/* Selectores compuestos (.cardx.info-modal, no .info-modal solo) para ganarle
+   a .cardx/.cardx__body en especificidad sin importar el orden del archivo —
+   misma razón que .tarjeta--still.tarjeta--pick más arriba. */
+.cardx.info-modal { width: 460px; }
+
+.cardx__body.info-modal__body {
+    gap: 16px;
+    padding: 40px 48px 0;
+    text-align: center;
+}
+
+.info-modal__icon { color: var(--sgfte-pink-text); }
+
+.info-modal__lead { margin: 0; font-size: 15px; line-height: 22px; color: var(--sgfte-cream); }
+
+.info-modal__email {
+    display: inline-block;
+    padding: 10px 20px;
+    background: rgba(254, 185, 107, 0.12);
+    border: 1px solid rgba(254, 185, 107, 0.4);
+    border-radius: 8px;
+    font-family: var(--sgfte-font-mono);
+    font-size: 15px;
+    color: var(--sgfte-accent);
+    text-decoration: none;
+}
+.info-modal__email:hover { background: rgba(254, 185, 107, 0.2); }
+
+.info-modal__list {
+    margin: 0;
+    padding: 0 0 0 20px;
+    text-align: left;
+    font-size: 14px;
+    line-height: 26px;
+    color: var(--sgfte-cream);
+}
+.info-modal__list li + li { margin-top: 4px; }
+
+.info-modal .btn--block { margin-top: 12px; }

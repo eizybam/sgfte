@@ -1,0 +1,174 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  Modal "Hacer un gasto" · simula una compra real con una tarjeta.
+
+  Mismo patrón que transfer-modal.jspf (mismo .xfer__* de siempre). La cuenta
+  es un <select> de verdad, como el sourceId de la transferencia, y no un
+  campo fijo: este mismo modal se abre desde dos sitios —el panel de Cuentas
+  del dashboard, donde no hay ninguna cuenta elegida todavía, y una tarjeta
+  concreta en Mis tarjetas, donde sí la hay—. Cuando SÍ se sabe, el script la
+  preselecciona al abrir; cuando no, el select empieza vacío y hay que elegir.
+
+  Un solo modal compartido por todos los disparadores, no uno por cuenta o
+  tarjeta: quien lo abre puede llevar data-account (y data-card, si además ya
+  sabe la tarjeta) y el script los preselecciona al abrir.
+
+  TARJETA depende de CUENTA: todas las tarjetas viajan de una vez (igual que
+  peersByAccount en la transferencia — un modal que recarga del servidor al
+  cambiar de cuenta se cierra solo) y el script enseña sólo las de la cuenta
+  elegida, vía data-source. Es sólo para elegir CON qué tarjeta se simula la
+  compra —una cuenta no guarda a qué tarjeta corresponde cada consumo, así
+  que no viaja al servidor—.
+
+  Quien lo incluya debe haber dejado `myAccounts` y `cards` en la petición.
+--%>
+<div class="modal-scrim" id="gasto-modal" hidden>
+    <div class="modal xfer__card" role="dialog" aria-modal="true" aria-labelledby="gasto-title">
+        <h2 class="modal__title xfer__modal-title" id="gasto-title">Hacer un gasto</h2>
+        <p class="xfer__modal-lead">
+            Simula una compra real: el monto se descuenta del saldo igual que un consumo de verdad.
+        </p>
+
+        <form class="xfer__form" method="post" action="${ctx}/app/gasto">
+            <%-- A dónde regresar tras enviar: el dashboard o Mis tarjetas,
+                 según desde dónde se abrió — no siempre la misma. El script
+                 lo llena solo, leyendo la URL actual. --%>
+            <input type="hidden" name="returnTo" id="gasto-return-to">
+
+            <label class="xfer__label" for="gasto-account-id">CUENTA</label>
+            <div class="xfer__control">
+                <svg class="xfer__icon" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                <select class="xfer__input" id="gasto-account-id" name="accountId" required>
+                    <option value="" disabled selected>Selecciona una cuenta</option>
+                    <c:forEach var="a" items="${myAccounts}">
+                        <option value="${a.id}">${fn:escapeXml(a.purpose)} · ${fn:escapeXml(a.accountNumber)}</option>
+                    </c:forEach>
+                </select>
+                <svg class="xfer__chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </div>
+
+            <label class="xfer__label" for="gasto-card-id">TARJETA</label>
+            <div class="xfer__control">
+                <svg class="xfer__icon" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                <%-- Sin name: es sólo para elegir con cuál tarjeta se simula
+                     la compra, no algo que el servidor necesite guardar. --%>
+                <select class="xfer__input" id="gasto-card-id" disabled required>
+                    <option value="" disabled selected>Elige primero la cuenta</option>
+                    <c:forEach var="k" items="${cards}">
+                        <option value="${k.id}" data-source="${k.accountId}">
+                            ${fn:toUpperCase(k.typeLabel)} · ${fn:escapeXml(k.maskedPan)}
+                        </option>
+                    </c:forEach>
+                </select>
+                <svg class="xfer__chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </div>
+            <p class="xfer__note" id="gasto-no-cards" hidden>
+                Esta cuenta todavía no tiene tarjetas activas.
+            </p>
+
+            <label class="xfer__label" for="gasto-amount">MONTO</label>
+            <div class="xfer__control">
+                <svg class="xfer__icon" width="16.74" height="17" aria-hidden="true"><use href="#i-cash-app"/></svg>
+                <input class="xfer__input" type="number" step="0.01" min="0.01"
+                       id="gasto-amount" name="amount" placeholder="0.00" required>
+            </div>
+
+            <label class="xfer__label" for="gasto-merchant">COMERCIO / CONCEPTO</label>
+            <div class="xfer__control">
+                <input class="xfer__input" type="text" id="gasto-merchant" name="merchant"
+                       maxlength="200" placeholder="Ej. OXXO, Walmart, Pemex..." required>
+            </div>
+
+            <div class="xfer__actions">
+                <button type="button" class="btn btn--secondary btn--hero" data-close-gasto>Cancelar</button>
+                <button type="submit" class="btn btn--primary btn--hero">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("gasto-modal");
+        if (!scrim) return;
+
+        var accountId = document.getElementById("gasto-account-id");
+        var cardId = document.getElementById("gasto-card-id");
+        var noCards = document.getElementById("gasto-no-cards");
+        var amount = document.getElementById("gasto-amount");
+        var merchant = document.getElementById("gasto-merchant");
+        var returnTo = document.getElementById("gasto-return-to");
+        var lastFocused = null;
+
+        // Se llena una sola vez: la página no cambia mientras el modal sigue
+        // abierto, así que basta con leer la URL actual al cargar.
+        returnTo.value = location.pathname.indexOf("/tarjetas") !== -1 ? "tarjetas" : "home";
+
+        /*
+          Enseña sólo las tarjetas de la cuenta elegida — mismo truco que
+          syncDestinations() en transfer-modal.jspf: oculta Y deshabilita
+          (una <option> sólo oculta se sigue pudiendo elegir con teclado).
+        */
+        function syncCards() {
+            var picked = accountId.value;
+            var available = 0;
+
+            Array.prototype.forEach.call(cardId.options, function (option) {
+                if (!option.dataset.source) return;   // el placeholder
+                var matches = option.dataset.source === picked;
+                option.hidden = !matches;
+                option.disabled = !matches;
+                if (matches) available++;
+            });
+
+            cardId.selectedIndex = 0;
+            cardId.disabled = available === 0;
+            noCards.hidden = !picked || available > 0;
+        }
+
+        function open(trigger) {
+            lastFocused = document.activeElement;
+            // Si el disparador ya sabe la cuenta (viene de una tarjeta
+            // concreta), se preselecciona; si no (viene del panel de
+            // Cuentas), se deja en "Selecciona una cuenta".
+            if (trigger.dataset.account) {
+                accountId.value = trigger.dataset.account;
+            } else {
+                accountId.selectedIndex = 0;
+            }
+            syncCards();
+            // Si además se sabe la tarjeta exacta (se abrió desde Mis
+            // tarjetas), se preselecciona también.
+            if (trigger.dataset.card) cardId.value = trigger.dataset.card;
+
+            amount.value = "";
+            merchant.value = "";
+            scrim.hidden = false;
+            (trigger.dataset.account ? amount : accountId).focus();
+        }
+
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        document.querySelectorAll("[data-open-gasto]").forEach(function (b) {
+            b.addEventListener("click", function () {
+                // Si venía de un detalle de tarjeta abierto, ciérralo primero:
+                // dos scrims apilados es peor que uno solo.
+                document.querySelectorAll("[id^='card-detail-']").forEach(function (m) { m.hidden = true; });
+                open(b);
+            });
+        });
+        document.querySelectorAll("[data-close-gasto]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        accountId.addEventListener("change", syncCards);
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+    })();
+</script>
