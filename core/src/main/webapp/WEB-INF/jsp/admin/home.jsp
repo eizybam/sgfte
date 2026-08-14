@@ -183,6 +183,16 @@
 </div>
 
 <script>
+    // El navegador no valida un input[type=hidden] aunque lleve required, así
+    // que el "elige una cuenta" se hace aquí. Es una cortesía: quien decide de
+    // verdad sigue siendo DispersionService, que rechaza un accountId nulo.
+    document.querySelector('#dispersion-modal form').addEventListener("submit", function (e) {
+        if (!document.getElementById("accountId").value) {
+            e.preventDefault();
+            document.getElementById("accountTrigger").focus();
+        }
+    });
+
     (function () {
         var scrim = document.getElementById("dispersion-modal");
         var firstField = document.getElementById("accountId");
