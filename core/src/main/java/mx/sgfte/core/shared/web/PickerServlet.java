@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import mx.sgfte.core.accounts.AccountDao;
 import mx.sgfte.core.cards.CardDao;
 import mx.sgfte.core.users.CardholderDao;
 
@@ -20,6 +21,9 @@ public class PickerServlet extends HttpServlet {
     private final CardholderDao cardholderDao = new CardholderDao();
     private final CardDao cardDao = new CardDao();
 
+    private final AccountDao accountDao = new AccountDao();
+
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -34,6 +38,8 @@ public class PickerServlet extends HttpServlet {
             }
         } else if ("issue-options".equals(type)) {
             issueOptions(req, resp);
+        }else if ("account".equals(type)) {
+            accounts(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown picker type: " + type);
         }
@@ -52,6 +58,24 @@ public class PickerServlet extends HttpServlet {
         req.setAttribute("pageCount", pageCount);
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/picker-cardholders.jsp").forward(req, resp);
+    }
+
+    private void accounts(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String search = trimToNull(req.getParameter("q"));
+
+        int total = accountDao.countForAdmin(search, "ACTIVE", null);
+        int pageCount = Math.max(1, (int) Math.ceil(total / (double) PAGE_SIZE));
+        int page = clamp(parsePage(req.getParameter("page")), pageCount);
+
+        req.setAttribute("rows",
+                accountDao.findForAdmin(search, "ACTIVE", null, (page - 1) * PAGE_SIZE, PAGE_SIZE));
+        req.setAttribute("total", total);
+        req.setAttribute("page", page);
+        req.setAttribute("pageCount", pageCount);
+
+        req.getRequestDispatcher("/WEB-INF/jsp/admin/picker-accounts.jsp").forward(req, resp);
     }
 
     private void issueOptions(HttpServletRequest req, HttpServletResponse resp)
