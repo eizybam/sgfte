@@ -89,6 +89,25 @@ public class DeletionService {
         }
     }
 
+    public void activateCardholder(long cardholderId) {
+        try (Connection conn = Db.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                if (deletionDao.cardholderIsActive(conn, cardholderId)) {
+                    throw new ValidationException(List.of("El tarjetahabiente ya se encuentra activo"));
+                }
+                deletionDao.activateCardholder(conn, cardholderId);
+                conn.commit();
+            } catch (RuntimeException | SQLException e) {
+                conn.rollback();
+                if (e instanceof RuntimeException) throw (RuntimeException) e;
+                throw new RuntimeException(e);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error in activateCardholder transaction", e);
+        }
+    }
+
     /**
      * The shared steps for one account: send balance back to the Concentrator (if any),
      * log a REINTEGRATION movement, invalidate its cards, deactivate the account.

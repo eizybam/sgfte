@@ -2,18 +2,22 @@ package mx.sgfte.core.users;
 
 import mx.sgfte.core.audit.AuditEvent;
 import mx.sgfte.core.auth.*;
+import mx.sgfte.core.categories.Category;
 import mx.sgfte.core.notifications.NotificationService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import mx.sgfte.core.deletion.DeletionService;
 
 /**
  * Business logic for cardholders. Validation lives here (pure Java, testable without Tomcat),
  * NOT in the servlet.
  */
 public class CardholderService {
+    private final DeletionService deletionService = new DeletionService();
 
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private final NotificationService notificationService =
@@ -118,5 +122,36 @@ public class CardholderService {
 
     private boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
+    }
+
+    /**
+     * Activa o desactiva a un tarjetahabiente. Devuelve su estado NUEVO.
+     *
+     * Desactivar no es un simple UPDATE: delega en DeletionService, que en una
+     * sola transacción reintegra el saldo de todas sus cuentas a la Concentradora,
+     * invalida sus tarjetas y lo deja INACTIVE. La fila del empleado y su
+     * histórico se conservan.
+     *
+     * Reactivar sí es un simple UPDATE: vuelve sin cuentas ni tarjetas, hay que
+     * asignárselas de nuevo.
+     */
+    public boolean toggleStatus(Long cardholderId) {
+        if (cardholderId == null) {
+            throw new ValidationException(List.of("No se indicó qué empleado cambiar."));
+        }
+
+        CardholderDetail found = dao.findDetail(cardholderId)
+                .orElseThrow(() -> new ValidationException(
+                        List.of("El tarjetahabiente ya no existe.")));
+
+        if (found.isActive()) {
+            deletionService.deleteCardholder(cardholderId);
+            return false;
+        } else {
+            deletionService.activateCardholder(cardholderId);
+            dao.setStatus(cardholderId, "ACTIVE");
+            return true;
+        }
+
     }
 }

@@ -27,6 +27,33 @@ public class UserDao {
         }
     }
 
+    /**
+     * El usuario que puede iniciar sesión con ese correo.
+     *
+     * Un tarjetahabiente desactivado no puede entrar aunque su app_user siga
+     * ACTIVE: el estado vive en cardholder, y aquí se consulta en lugar de
+     * duplicarlo. Los admins no tienen cardholder_id, por eso el LEFT JOIN
+     * y el "IS NULL".
+     */
+    public Optional<AppUser> findLoginByEmail(String email) {
+        String sql = "SELECT u.id, u.email, u.password_hash, u.full_name, "
+                + "       u.role, u.cardholder_id, u.status "
+                + "  FROM app_user u "
+                + "  LEFT JOIN cardholder ch ON ch.id = u.cardholder_id "
+                + " WHERE u.email = ? "
+                + "   AND (u.cardholder_id IS NULL OR ch.status = 'ACTIVE')";
+
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error looking up login by email", e);
+        }
+    }
+
     public Optional<AppUser> findById(Long id) {
         String sql = "SELECT id, email, password_hash, full_name, role, cardholder_id, status "
                 + "FROM app_user WHERE id = ?";

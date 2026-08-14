@@ -72,6 +72,14 @@ public class DeletionDao {
         }
     }
 
+    public void activateCardholder(Connection conn, long cardholderId) throws SQLException {
+        String sql = "UPDATE cardholder SET status = 'ACTIVE' WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            ps.executeUpdate();
+        }
+    }
+
     // ---- read-only lists (own connection) ----
 
     public List<CardholderRow> findActiveCardholders() {

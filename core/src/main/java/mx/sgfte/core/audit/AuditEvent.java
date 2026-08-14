@@ -50,6 +50,7 @@ public enum AuditEvent {
     // --- Empleados ---
     CARDHOLDER_CREATED (Severity.INFO, Module.EMPLEADOS, "Empleado registrado"),
     CARDHOLDER_DELETED (Severity.CRIT, Module.EMPLEADOS, "Usuario eliminado"),
+    CARDHOLDER_REINCORPORATED (Severity.CRIT, Module.EMPLEADOS, "Usuario reincorporado"),
 
     // --- Microservicios ---
     // Exportar el reporte es INFO: es una lectura legítima. Se registra igual,

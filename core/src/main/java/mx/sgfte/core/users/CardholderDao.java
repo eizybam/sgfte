@@ -40,7 +40,7 @@ public class CardholderDao {
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, search, status, department);
 
-        sql.append("ORDER BY ch.last_name, ch.first_name ")
+        sql.append("ORDER BY ch.status, ch.last_name, ch.first_name ")
            .append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         params.add(offset);
         params.add(limit);
@@ -247,4 +247,19 @@ public class CardholderDao {
             throw new RuntimeException("Error loading cardholders", e);
         }
     }
+
+    public void setStatus(long cardholderId, String status) {
+        String sql = "UPDATE CARDHOLDER SET status = ? WHERE id = ?";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setLong(2, cardholderId);
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("Cardholder " + cardholderId + " not found");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating the cardholder status", e);
+        }
+    }
+
 }
