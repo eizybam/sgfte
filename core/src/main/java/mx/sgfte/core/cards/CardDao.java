@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /** Persistence for cards. */
 public class CardDao {
@@ -104,6 +105,32 @@ public class CardDao {
             return targets;
         } catch (SQLException e) {
             throw new RuntimeException("Error loading card issue targets", e);
+        }
+    }
+
+    public Optional<IssueTarget> findIssueTarget(long accountId) {
+        String sql = "SELECT a.id, a.account_number, a.balance, "
+                + "       cat.name AS purpose, "
+                + "       ch.id AS cardholder_id, ch.first_name, ch.last_name "
+                + "FROM account a "
+                + "JOIN cardholder ch ON ch.id = a.cardholder_id "
+                + "JOIN category  cat ON cat.id = a.category_id "
+                + "WHERE a.id = ? AND a.status = 'ACTIVE' AND ch.status = 'ACTIVE'";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, accountId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                return Optional.of(new IssueTarget(
+                        rs.getLong("id"),
+                        rs.getString("account_number"),
+                        rs.getString("purpose"),
+                        rs.getBigDecimal("balance"),
+                        rs.getLong("cardholder_id"),
+                        rs.getString("first_name") + " " + rs.getString("last_name")));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading issue target " + accountId, e);
         }
     }
 

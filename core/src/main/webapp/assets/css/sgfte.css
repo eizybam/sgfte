@@ -3618,3 +3618,60 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 .info-modal__list li + li { margin-top: 4px; }
 
 .info-modal .btn--block { margin-top: 12px; }
+
+/* ==========================================================================
+   N · Selector con tabla (picker)
+
+   El modal de siempre, pero ancho: dentro va una tabla de 5 columnas, no un
+   formulario de dos campos. Lo demás son ajustes, no estilos nuevos: la tabla,
+   el buscador y el paginador son los mismos de /admin/empleados.
+   ========================================================================== */
+
+/* Por encima del modal que lo abrió (dispersión, alta de cuenta): z-index 50.
+   Explícito y no por orden en el DOM, que es demasiado fácil de romper al mover
+   un include de sitio. */
+.modal-scrim--picker { z-index: 60; }
+
+.modal--picker { width: 980px; padding: 32px 0 28px; }
+.modal--picker .modal__rule { margin: 24px 28px 0 29px; }
+
+.picker__body { padding: 0 28px; }
+.picker__toolbar { margin-top: 20px; }
+.picker__toolbar .btn { margin-left: auto; }
+
+/* 62px y no los 80px de la tabla grande: seis filas de 80 más cabecera,
+   buscador y paginador no caben en una pantalla de portátil. */
+.modal--picker .table td { height: 62px; }
+
+.picker__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    margin-top: 4px;
+}
+.picker__foot .pager { margin-top: 0; }
+.picker__foot .toolbar__count { margin-left: 0; }
+
+/* La fila entera es el botón de elegir. */
+.picker__row { cursor: pointer; }
+.picker__row:hover td { background: rgba(255, 255, 255, 0.04); }
+.picker__row:focus-visible { outline: 2px solid var(--sgfte-accent); outline-offset: -2px; }
+
+/* El paginador del selector son <button>: .pager__item ya trae background:none
+   y borde, así que sólo hay que quitarle lo que el navegador le pone por ser
+   botón. */
+button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-mono); font-size: 14px; }
+
+/* El disparador imita al campo que sustituye: .issue__input ya trae
+   background:none, border:0 y padding:0; a un <button> sólo hay que decirle que
+   no centre el texto. */
+.picker__trigger { text-align: left; cursor: pointer; }
+.picker__placeholder { color: var(--sgfte-placeholder); }
+
+@media (max-width: 1040px) {
+    .modal--picker { width: 100%; }
+    .picker__body { padding: 0 var(--sp-2); }
+    .modal--picker .table-card { padding: 0 var(--sp-2); overflow-x: auto; }
+    .modal--picker .table--staff { min-width: 720px; }
+}

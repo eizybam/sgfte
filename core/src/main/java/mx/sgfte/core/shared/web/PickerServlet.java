@@ -40,7 +40,7 @@ public class PickerServlet extends HttpServlet {
     }
 
     private void cardholders(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException, ServletException {
-        String search = trimToNull(req.getParameter("search"));
+        String search = trimToNull(req.getParameter("q"));
 
         int total = cardholderDao.countForPicker(search);
         int pageCount = Math.max(1, (int) Math.ceil(total / (double) PAGE_SIZE));
@@ -51,7 +51,7 @@ public class PickerServlet extends HttpServlet {
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
 
-        req.getRequestDispatcher("/WEB-INF/jsp/admin/picker-cardholder.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/jsp/admin/picker-cardholders.jsp").forward(req, resp);
     }
 
     private void issueOptions(HttpServletRequest req, HttpServletResponse resp)

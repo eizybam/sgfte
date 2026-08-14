@@ -29,11 +29,6 @@
         <section class="issue-card">
             <p class="issue__section">DATOS DE LA TARJETA</p>
 
-            <div class="issue__field">
-                <label class="issue__label" for="cardholderId">TARJETAHABIENTE</label>
-                <div class="issue__box">
-                    <%-- No se envía: sólo filtra el desplegable de cuentas. --%>
-                        <div class="issue__field">
                             <span class="issue__label">TARJETAHABIENTE</span>
                             <div class="issue__box">
                                 <button type="button" class="issue__input picker__trigger" id="holderTrigger"
@@ -52,25 +47,21 @@
                 </div>
             </div>
 
-            <div class="issue__field">
-                <label class="issue__label" for="accountId">CUENTA DESTINO</label>
-                <div class="issue__box">
-                    <select class="issue__input" id="accountId" name="accountId" required>
-                        <option value="" disabled selected>Selecciona la cuenta</option>
-                        <c:forEach var="t" items="${targets}">
-                            <option value="${t.accountId}"
-                                    data-holder-id="${t.cardholderId}"
-                                    data-holder="${fn:escapeXml(t.cardholderName)}"
-                                    data-account="${fn:escapeXml(t.accountNumber)}"
-                                    data-purpose="${fn:escapeXml(t.purpose)}"
-                                    data-balance="$<fmt:formatNumber value="${t.balance}" type="number"
-                                            groupingUsed="true" minFractionDigits="0" maxFractionDigits="2"/> MXN"
-                                    ${t.accountId == selectedAccountId ? 'selected' : ''}>Cuenta ${fn:escapeXml(t.purpose)} · ${fn:escapeXml(t.accountNumber)}</option>
-                        </c:forEach>
-                    </select>
-                    <svg class="issue__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
-                </div>
-            </div>
+    <div class="issue__field">
+        <label class="issue__label" for="accountId">CUENTA DESTINO</label>
+        <div class="issue__box">
+            <select class="issue__input" id="accountId" name="accountId" required
+            ${empty selectedHolderId ? 'disabled' : ''}>
+                <c:choose>
+                    <c:when test="${empty targets}">
+                        <option value="" disabled selected>Elige primero al tarjetahabiente</option>
+                    </c:when>
+                    <c:otherwise><jsp:include page="/WEB-INF/jsp/admin/picker-issue-options.jsp"/></c:otherwise>
+                </c:choose>
+            </select>
+            <svg class="issue__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+        </div>
+    </div>
 
             <div class="issue__field">
                 <label class="issue__label" for="cardName">NOMBRE EN LA TARJETA</label>
