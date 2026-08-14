@@ -1435,6 +1435,15 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .table--accounts .col-cards   { width: 15.43%; }
 .table--accounts .col-status  { width: 24.79%; }
 
+.picker__table--accounts .col-code    { width: 22%; }
+.picker__table--accounts .col-holder  { width: 30%; }
+.picker__table--accounts .col-purpose { width: 26%; }
+.picker__table--accounts .col-balance { width: 22%; }
+
+@media (max-width: 1040px) {
+    .modal--picker .table--accounts { min-width: 680px; }
+}
+
 /* El botón de crear es de dos líneas y ancho fijo en el marco */
 .btn--stacked { width: 207px; line-height: 1.15; text-align: center; }
 

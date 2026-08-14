@@ -136,12 +136,10 @@ public class DispersionServlet extends HttpServlet {
     private String labelOf(Long accountId) {
         if (accountId == null) return null;
         try {
-            return accountLookupDao.findActiveForSelect().stream()
-                    .filter(a -> a.getId() == accountId)
-                    .map(a -> a.getLabel())
-                    .findFirst()
-                    .orElse("Cuenta " + accountId);
+            return accountLookupDao.findLabel(accountId).orElse("Cuenta " + accountId);
         } catch (RuntimeException e) {
+            // La operación ya ocurrió: una tarjeta que no sabe nombrar la cuenta
+            // sigue siendo mejor que un 500 camino de enseñarla.
             return "Cuenta " + accountId;
         }
     }
