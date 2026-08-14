@@ -158,18 +158,6 @@ CREATE TABLE card (
                       CONSTRAINT chk_card_expiry CHECK (expires_at > created_at)
 );
 
--- Como mucho UNA tarjeta activa de cada tipo por cuenta: una física y una
--- digital. Índice único y no CHECK, porque un CHECK sólo ve la fila que se
--- inserta y aquí hay que mirar las hermanas.
---
--- El CASE lo limita a las ACTIVAS: en Oracle una entrada con todas sus columnas
--- en NULL no se indexa, así que las canceladas quedan fuera y reponer una
--- tarjeta perdida —invalidar y expedir otra— sigue siendo posible.
-CREATE UNIQUE INDEX uq_card_active_type ON card (
-    CASE WHEN status = 'ACTIVE' THEN account_id END,
-    CASE WHEN status = 'ACTIVE' THEN card_type  END
-);
-
 -- ============================================================
 -- 6) account_movement · Ledger inmutable de dinero (trazabilidad).
 --    Cada depósito, retiro, transferencia P2P y reintegración deja registro.
