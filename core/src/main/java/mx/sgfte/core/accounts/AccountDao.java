@@ -103,9 +103,8 @@ public class AccountDao {
 
         if (search != null && !search.isBlank()) {
             sql.append("AND (UPPER(ch.first_name || ' ' || ch.last_name) LIKE ? ")
-               .append("  OR UPPER(a.account_number) LIKE ?) ")
-                    .append("   OR UPPER(ch.employee_code) LIKE ?")
-            ;
+                    .append("  OR UPPER(a.account_number) LIKE ? ")
+                    .append("  OR UPPER(ch.employee_code) LIKE ?) ");
             String like = "%" + search.trim().toUpperCase() + "%";
             params.add(like);
             params.add(like);
