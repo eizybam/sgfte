@@ -29,22 +29,20 @@
         <section class="issue-card">
             <p class="issue__section">DATOS DE LA TARJETA</p>
 
-                            <span class="issue__label">TARJETAHABIENTE</span>
-                            <div class="issue__box">
-                                <button type="button" class="issue__input picker__trigger" id="holderTrigger"
-                                        data-picker="cardholder"
-                                        data-picker-target="cardholder"
-                                        data-picker-title="Elegir tarjetahabiente"
-                                        data-picker-placeholder="Buscar por nombre, ID de empleado o correo">
-                                    <span id="holderLabel" class="picker__placeholder">Selecciona al tarjetahabiente</span>
-                                </button>
-                                <svg class="issue__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
-                            </div>
-                            <%-- No se envía al servidor: sólo decide qué cuentas se piden. --%>
-                            <input type="hidden" id="cardholderId" value="${selectedHolderId}">
-                        </div>
+            <div class="issue__field">
+                <span class="issue__label">TARJETAHABIENTE</span>
+                <div class="issue__box">
+                    <button type="button" class="issue__input picker__trigger" id="holderTrigger"
+                            data-picker="cardholder"
+                            data-picker-target="cardholder"
+                            data-picker-title="Elegir tarjetahabiente"
+                            data-picker-placeholder="Buscar por nombre, ID de empleado o correo">
+                        <span id="holderLabel" class="picker__placeholder">Selecciona al tarjetahabiente</span>
+                    </button>
                     <svg class="issue__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
                 </div>
+                <%-- No se envía al servidor: sólo decide qué cuentas se piden. --%>
+                <input type="hidden" id="cardholderId" value="${selectedHolderId}">
             </div>
 
     <div class="issue__field">

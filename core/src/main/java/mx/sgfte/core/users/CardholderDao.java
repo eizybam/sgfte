@@ -72,7 +72,7 @@ public class CardholderDao {
     public List<CardholderAdminRow> findForPicker(String search, int offset, int limit) throws SQLException {
         StringBuilder sql = new StringBuilder(ADMIN_SELECT);
         List<Object> params = new ArrayList<>();
-        appendFilters(sql, params, search, "ACTIVE", null);
+        appendFilters(sql, params, search, "ACTIVE", null, true);
 
         sql.append("ORDER BY ch.last_name, ch.first_name ")
            .append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -105,7 +105,7 @@ public class CardholderDao {
     public int countForPicker(String search) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cardholder ch ");
         List<Object> params = new ArrayList<>();
-        appendFilters(sql, params, search, "ACTIVE", null);
+        appendFilters(sql, params, search, "ACTIVE", null, true);
 
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql.toString())) {
