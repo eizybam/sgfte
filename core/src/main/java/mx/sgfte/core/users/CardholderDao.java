@@ -331,6 +331,51 @@ public class CardholderDao {
         }
     }
 
+    /**
+     * UPDATE de la ficha. Recibe la conexión, no la abre: el correo también hay
+     * que cambiarlo en app_user y las dos cosas son una sola operación. Quien
+     * manda en la transacción es el servicio.
+     *
+     * employee_code y status NO están en el SET a propósito: el código no cambia
+     * nunca y el estado tiene su propia operación (alta/baja).
+     */
+    public void update(Connection conn, Cardholder ch) throws SQLException {
+        String sql = "UPDATE cardholder "
+                + "   SET first_name = ?, last_name = ?, email = ?, "
+                + "       phone = ?, department = ? "
+                + " WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, ch.getFirstName());
+            ps.setString(2, ch.getLastName());
+            ps.setString(3, ch.getEmail());
+            ps.setString(4, ch.getPhone());
+            ps.setString(5, ch.getDepartment());
+            ps.setLong(6, ch.getId());
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * ¿Ese correo ya es de OTRO tarjetahabiente?
+     *
+     * emailExists(email) no sirve para editar: guardar a alguien sin cambiarle
+     * el correo daría "ya está registrado" — contra sí mismo. De ahí el AND.
+     */
+    public boolean emailExistsForAnother(String email, long exceptId) {
+        String sql = "SELECT 1 FROM cardholder WHERE UPPER(email) = UPPER(?) AND id <> ?";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setLong(2, exceptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error checking cardholder email", e);
+        }
+    }
+
+
     public void setStatus(long cardholderId, String status) {
         String sql = "UPDATE CARDHOLDER SET status = ? WHERE id = ?";
         try (Connection c = Db.getConnection();
