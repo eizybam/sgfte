@@ -33,6 +33,7 @@ public class AccountDao {
         StringBuilder sql = new StringBuilder(
                   "SELECT a.id, a.account_number, a.status, "
                 + "       ch.first_name || ' ' || ch.last_name AS holder, "
+                + "       ch.email AS holder_email, "
                 + "       cat.name AS purpose, "
                 + "       " + mx.sgfte.core.categories.CategoryDao.PURPOSE_COLOR_SQL + " AS purpose_color, "
                 + "       a.balance, "
@@ -58,6 +59,7 @@ public class AccountDao {
                             rs.getLong("id"),
                             rs.getString("account_number"),
                             rs.getString("holder"),
+                            rs.getString("holder_email"),
                             rs.getString("purpose"),
                             rs.getInt("purpose_color"),
                             rs.getInt("active_cards"),
@@ -102,11 +104,14 @@ public class AccountDao {
         sql.append("WHERE 1 = 1 ");
 
         if (search != null && !search.isBlank()) {
+            // El correo entra en la búsqueda porque el selector de cuenta destino
+            // lo pinta: lo que se ve en la tabla se puede teclear en el buscador.
             sql.append("AND (UPPER(ch.first_name || ' ' || ch.last_name) LIKE ? ")
-               .append("  OR UPPER(a.account_number) LIKE ?) ")
-                    .append("   OR UPPER(ch.employee_code) LIKE ?")
-            ;
+                    .append("  OR UPPER(a.account_number) LIKE ? ")
+                    .append("  OR UPPER(ch.employee_code) LIKE ? ")
+                    .append("  OR UPPER(ch.email) LIKE ?) ");
             String like = "%" + search.trim().toUpperCase() + "%";
+            params.add(like);
             params.add(like);
             params.add(like);
             params.add(like);
@@ -136,6 +141,7 @@ public class AccountDao {
     public List<AccountRow> findByCardholder(long cardholderId) {
         String sql = "SELECT a.id, a.account_number, a.status, a.balance, "
                    + "       ch.first_name || ' ' || ch.last_name AS holder, "
+                   + "       ch.email AS holder_email, "
                    + "       cat.name AS purpose, "
                    + "       " + mx.sgfte.core.categories.CategoryDao.PURPOSE_COLOR_SQL + " AS purpose_color, "
                    + "       (SELECT COUNT(*) FROM card c "
@@ -153,7 +159,8 @@ public class AccountDao {
                 while (rs.next()) {
                     rows.add(new AccountRow(
                             rs.getLong("id"), rs.getString("account_number"),
-                            rs.getString("holder"), rs.getString("purpose"),
+                            rs.getString("holder"), rs.getString("holder_email"),
+                            rs.getString("purpose"),
                             rs.getInt("purpose_color"), rs.getInt("active_cards"),
                             rs.getBigDecimal("balance"), rs.getString("status")));
                 }

@@ -12,6 +12,17 @@ import java.util.List;
 
 /** Persistence for cardholders (JDBC over Oracle). */
 public class CardholderDao {
+    private static final String ADMIN_SELECT =
+            "SELECT ch.id, ch.first_name, ch.last_name, ch.status, "
+                    + "       ch.employee_code, ch.email, "
+                    + "  (SELECT COUNT(*) FROM account a "
+                    + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS accounts, "
+                    + "  (SELECT COUNT(*) FROM card k JOIN account ka ON ka.id = k.account_id "
+                    + "    WHERE ka.cardholder_id = ch.id AND ka.status = 'ACTIVE' "
+                    + "      AND k.status = 'ACTIVE') AS cards, "
+                    + "  (SELECT NVL(SUM(af.balance), 0) FROM account af "
+                    + "    WHERE af.cardholder_id = ch.id AND af.status = 'ACTIVE') AS funds "
+                    + "FROM cardholder ch ";
 
     /**
      * One page of the employee table, with the screen's search and status
@@ -25,17 +36,7 @@ public class CardholderDao {
      */
     public List<CardholderAdminRow> findForAdmin(String search, String status, String department,
                                                  int offset, int limit) {
-        StringBuilder sql = new StringBuilder(
-                  "SELECT ch.id, ch.first_name, ch.last_name, ch.status, "
-                + "       ch.employee_code, ch.email, "
-                + "  (SELECT COUNT(*) FROM account a "
-                + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS accounts, "
-                + "  (SELECT COUNT(*) FROM card k JOIN account ka ON ka.id = k.account_id "
-                + "    WHERE ka.cardholder_id = ch.id AND ka.status = 'ACTIVE' "
-                + "      AND k.status = 'ACTIVE') AS cards, "
-                + "  (SELECT NVL(SUM(af.balance), 0) FROM account af "
-                + "    WHERE af.cardholder_id = ch.id AND af.status = 'ACTIVE') AS funds "
-                + "FROM cardholder ch ");
+        StringBuilder sql = new StringBuilder(ADMIN_SELECT);
 
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, search, status, department);
@@ -65,6 +66,55 @@ public class CardholderDao {
             return rows;
         } catch (SQLException e) {
             throw new RuntimeException("Error loading admin cardholders", e);
+        }
+    }
+
+    public List<CardholderAdminRow> findForPicker(String search, int offset, int limit) throws SQLException {
+        StringBuilder sql = new StringBuilder(ADMIN_SELECT);
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, search, "ACTIVE", null, true);
+
+        sql.append("ORDER BY ch.last_name, ch.first_name ")
+           .append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add(offset);
+        params.add(limit);
+
+        List<CardholderAdminRow> rows = new ArrayList<>();
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bind(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(new CardholderAdminRow(
+                            rs.getLong("id"),
+                            rs.getString("first_name") + " " + rs.getString("last_name"),
+                            rs.getString("employee_code"),
+                            rs.getString("email"),
+                            rs.getInt("accounts"),
+                            rs.getInt("cards"),
+                            rs.getBigDecimal("funds"),
+                            rs.getString("status")));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading cardholders for picker", e);
+        }
+    }
+
+    public int countForPicker(String search) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cardholder ch ");
+        List<Object> params = new ArrayList<>();
+        appendFilters(sql, params, search, "ACTIVE", null, true);
+
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            bind(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error counting cardholders for picker", e);
         }
     }
 
@@ -147,6 +197,38 @@ public class CardholderDao {
             sql.append("AND ch.department = ? ");
             params.add(department);
         }
+    }
+
+    private void appendFilters(StringBuilder sql, List<Object> params,
+                               String search, String status, String department, boolean onlyIssuable) {
+        sql.append("WHERE 1 = 1 ");
+
+        if (search != null && !search.isBlank()) {
+            // "Buscar por nombre o ID de empleado": el ID es el código, no la
+            // clave primaria. El correo se deja porque cuesta nada y ayuda.
+            sql.append("AND (UPPER(ch.first_name || ' ' || ch.last_name) LIKE ? ")
+                    .append("  OR UPPER(ch.employee_code) LIKE ? ")
+                    .append("  OR UPPER(ch.email) LIKE ?) ");
+            String like = "%" + search.trim().toUpperCase() + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append("AND ch.status = ? ");
+            params.add(status);
+        }
+        if (department != null && !department.isBlank()) {
+            sql.append("AND ch.department = ? ");
+            params.add(department);
+        }
+
+        if (onlyIssuable) {
+            sql.append("AND EXISTS (SELECT 1 FROM account a ")
+                    .append("       WHERE a.cardholder_id = ch.id ")
+                    .append("           AND a.status = 'ACTIVE') ");
+        }
+
     }
 
     /** The departments actually in use — feeds the toolbar pill. */

@@ -69,10 +69,23 @@ public class ConcentratorServlet extends HttpServlet {
         // "Cuentas activas" pertenece al módulo de cuentas, no al ledger.
         req.setAttribute("activeAccounts", accountDao.countForAdmin(null, "ACTIVE", null));
 
-        // Destinos del modal de dispersión, igual que en la Vista Global.
-        req.setAttribute("accounts", accountLookupDao.findActiveForSelect());
-
         consumeFlash(req);
+
+            /*
+      Cuando el intento anterior falló, el modal se reabre con lo que el admin
+      había tecleado. Antes la cuenta elegida se recuperaba sola, porque estaban
+      TODAS en el <select> y bastaba con marcar la suya. Ahora el desplegable no
+      existe: hay que traer su etiqueta, y sólo la suya.
+    */
+        Object retryId = req.getAttribute(DispersionServlet.FLASH_ACCOUNT);
+        if (retryId != null && !retryId.toString().isBlank()) {
+            try {
+                accountLookupDao.findLabel(Long.parseLong(retryId.toString()))
+                        .ifPresent(l -> req.setAttribute("dispersionAccountLabel", l));
+            } catch (NumberFormatException ignored) {
+                // Un id ilegible sólo significa que el campo se reabre vacío.
+            }
+        }
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/concentradora.jsp").forward(req, resp);
     }

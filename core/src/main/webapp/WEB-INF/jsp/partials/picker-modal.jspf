@@ -1,0 +1,188 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%--
+  Selector con tabla, compartido.
+
+  Lo abre cualquier elemento con [data-picker], que además le dice qué buscar:
+
+      <button type="button"
+              data-picker="cardholder"          <-- type= del PickerServlet
+              data-picker-title="Elegir tarjetahabiente"
+              data-picker-placeholder="Buscar por nombre, ID o correo"
+              data-picker-target="cardholder">  <-- a qué "campo elegido" escribe
+
+  Nace vacío: el contenido lo trae fetch de /admin/picker. Un solo modal por
+  pantalla, no uno por campo — igual que gasto-modal.jspf sirve a todos los
+  disparadores del portal.
+
+  IMPORTANTE: inclúyelo FUERA de cualquier <form>. Lleva un <input> de búsqueda
+  dentro, y un formulario anidado dentro de otro es HTML inválido: el navegador
+  cierra el de fuera por su cuenta y el de expedición deja de enviar la mitad de
+  sus campos. Ponlo justo antes de admin-bottom.jspf.
+--%>
+<div class="modal-scrim modal-scrim--picker" id="picker-modal" hidden>
+    <div class="modal modal--picker" role="dialog" aria-modal="true"
+         aria-labelledby="picker-title">
+        <h2 class="modal__title" id="picker-title">Elegir</h2>
+        <div class="modal__rule"></div>
+
+        <div class="picker__body">
+            <div class="toolbar picker__toolbar">
+                <div class="search">
+                    <svg class="search__icon" width="18" height="18" aria-hidden="true"><use href="#i-search"/></svg>
+                    <%-- Sin <form>: la búsqueda dispara fetch, no un envío. --%>
+                    <input class="input" type="search" id="picker-q" autocomplete="off"
+                           placeholder="Buscar" aria-label="Buscar">
+                </div>
+                <button type="button" class="btn btn--secondary" data-close-picker>Cancelar</button>
+            </div>
+
+            <%-- aria-live: un lector de pantalla anuncia que la tabla cambió
+                 al buscar o paginar, aunque no haya habido navegación. --%>
+            <div class="table-card picker__results" id="picker-results" aria-live="polite"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim   = document.getElementById("picker-modal");
+        var title   = document.getElementById("picker-title");
+        var search  = document.getElementById("picker-q");
+        var results = document.getElementById("picker-results");
+        var ctx     = "${pageContext.request.contextPath}";
+
+        var type = null;      // qué se está eligiendo: "cardholder" | "account"
+        var target = null;    // a qué campo escribe el resultado
+        var page = 1;
+        var lastFocused = null;
+        var timer = null;     // antirrebote del buscador
+        var seq = 0;          // nº de petición, contra respuestas fuera de orden
+
+        /* ---- traer una página ------------------------------------------------ */
+
+        function load() {
+            var mine = ++seq;
+            var url = ctx + "/admin/picker?type=" + encodeURIComponent(type)
+                + "&page=" + page
+                + "&q=" + encodeURIComponent(search.value.trim());
+
+            fetch(url, { credentials: "same-origin" })
+                .then(function (res) {
+                    /*
+                      Sesión caducada: AuthFilter contesta con un 302 a /login, y
+                      fetch SIGUE las redirecciones sin avisar. Sin esta comprobación
+                      acabarías inyectando la página de login entera dentro del
+                      modal, y el admin vería un formulario de contraseña donde
+                      esperaba una tabla. res.redirected lo delata.
+                    */
+                    if (res.redirected) { window.location.reload(); return null; }
+                    if (!res.ok) throw new Error("HTTP " + res.status);
+                    return res.text();
+                })
+                .then(function (html) {
+                    if (html === null) return;
+                    // Llegó una respuesta de una búsqueda anterior: se descarta.
+                    // Sin esto, teclear rápido puede dejar en pantalla el resultado
+                    // de "Ju" después del de "Juan".
+                    if (mine !== seq) return;
+                    results.innerHTML = html;
+                })
+                .catch(function () {
+                    results.innerHTML =
+                        '<p class="table__empty">No se pudo cargar la lista. Reintenta.</p>';
+                });
+        }
+
+        /* ---- abrir y cerrar --------------------------------------------------- */
+
+        function open(trigger) {
+            lastFocused = trigger;
+            type   = trigger.dataset.picker;
+            target = trigger.dataset.pickerTarget;
+            page   = 1;
+
+            title.textContent = trigger.dataset.pickerTitle || "Elegir";
+            search.placeholder = trigger.dataset.pickerPlaceholder || "Buscar";
+            search.value = "";
+            results.innerHTML = "";
+
+            scrim.hidden = false;
+            search.focus();
+            load();
+        }
+
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        /* ---- elegir una fila -------------------------------------------------- */
+
+        function choose(row) {
+            /*
+              El modal no sabe qué hacer con lo elegido, y no debe saberlo: se lo
+              cuenta a la pantalla con un evento y se aparta. Así este archivo sirve
+              igual para elegir un empleado en Expedir Tarjeta que una cuenta en
+              Depositar, sin un if por pantalla.
+            */
+            document.dispatchEvent(new CustomEvent("picker:choose", {
+                detail: { target: target, type: type, data: row.dataset }
+            }));
+            close();
+        }
+
+        /* ---- cableado --------------------------------------------------------- */
+
+        document.querySelectorAll("[data-picker]").forEach(function (b) {
+            b.addEventListener("click", function () { open(b); });
+        });
+        document.querySelectorAll("[data-close-picker]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        // Delegación: las filas y el paginador se reemplazan en cada carga, así que
+        // no se les puede colgar el listener a ellos. Se le cuelga al contenedor,
+        // que no cambia nunca.
+        results.addEventListener("click", function (e) {
+            var pageBtn = e.target.closest("[data-page]");
+            if (pageBtn) { page = parseInt(pageBtn.dataset.page, 10) || 1; load(); return; }
+
+            var row = e.target.closest(".picker__row");
+            if (row) choose(row);
+        });
+
+        results.addEventListener("keydown", function (e) {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            var row = e.target.closest(".picker__row");
+            if (row) { e.preventDefault(); choose(row); }
+        });
+
+        // Antirrebote: 250 ms sin teclear antes de ir al servidor. Sin esto,
+        // "Ana López" son nueve consultas a Oracle.
+        search.addEventListener("input", function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () { page = 1; load(); }, 250);
+        });
+
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+
+        /*
+          Escape, en fase de CAPTURA.
+
+          Los modales de dispersión y de alta ya escuchan Escape en `document` para
+          cerrarse. Si el selector escuchara igual que ellos, un Escape con el
+          selector abierto cerraría los DOS: el selector y el modal de debajo, con
+          lo que el admin llevara tecleado.
+
+          Un listener en captura sobre `document` corre antes que los de burbuja, y
+          stopPropagation() impide que a esos les llegue el evento. Así Escape cierra
+          siempre y sólo el modal de más arriba.
+        */
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) {
+                e.stopPropagation();
+                close();
+            }
+        }, true);
+    })();
+</script>
