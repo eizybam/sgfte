@@ -3720,3 +3720,57 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
     .modal--picker .table-card { padding: 0 var(--sp-2); overflow-x: auto; }
     .modal--picker .table--staff { min-width: 720px; }
 }
+
+/* ==========================================================================
+   18 · Ajustes · /admin/ajustes y /app/ajustes
+   ========================================================================== */
+
+/*
+  Two cards on top and one wide at the bottom. auto-fit with a 380px minimum:
+  on narrow screens they stack on their own, without a media query per cut.
+*/
+.settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: var(--sp-3);
+    align-items: start;
+    max-width: 1040px;
+}
+
+.settings__card {
+    padding: var(--sp-4);
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+}
+
+.settings__card--wide { grid-column: 1 / -1; }
+
+.settings__title {
+    margin: 0 0 var(--sp-3);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--sgfte-cream);
+}
+
+.settings__list { margin: 0; }
+
+.settings__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: 44px;
+    border-bottom: 1px solid var(--sgfte-line);
+}
+.settings__row:last-child { border-bottom: none; }
+.settings__row dt { font-size: 14px; color: #a1918a; }
+.settings__row dd { margin: 0; font-size: 15px; color: var(--sgfte-cream); text-align: right; }
+
+.settings__note { margin: var(--sp-2) 0 0; font-size: 13px; color: var(--sgfte-muted); }
+
+.settings__actions { display: flex; justify-content: flex-end; margin-top: var(--sp-3); }
+
+@media (max-width: 860px) {
+    .settings { grid-template-columns: 1fr; }
+}
