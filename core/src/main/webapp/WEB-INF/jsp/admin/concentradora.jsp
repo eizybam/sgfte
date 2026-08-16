@@ -202,18 +202,36 @@
             <input type="hidden" name="returnTo" value="concentradora">
 
             <div class="modal__field">
-                <label class="modal__label" for="accountId">CUENTA DESTINO · Origen: Concentradora</label>
+                <span class="modal__label">CUENTA DESTINO · Origen: Concentradora</span>
                 <div class="modal__control modal__control--select">
                     <svg class="modal__icon-card" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
-                    <select class="modal__input" id="accountId" name="accountId" required>
-                        <option value="" disabled ${empty dispersionAccountId ? 'selected' : ''}>Selecciona la cuenta a fondear</option>
-                        <c:forEach var="a" items="${accounts}">
-                            <option value="${a.id}" ${dispersionAccountId == a.id ? 'selected' : ''}>${a.label}</option>
-                        </c:forEach>
-                    </select>
+                    <%--
+                      Antes: un <select> con todas las cuentas activas de la empresa, donde
+                      dos "Gómez, Carlos" salían idénticos. Ahora un botón que abre el
+                      selector con tabla — número de cuenta, titular, propósito y saldo, con
+                      buscador.
+
+                      Mismo aspecto que el campo fijo de cuenta-detalle.jsp: ahí la cuenta ya
+                      se sabe y es un <span>; aquí se elige y es un <button>. La caja es la
+                      misma en las dos.
+                    --%>
+                    <button type="button" class="modal__input picker__trigger" id="accountTrigger"
+                            data-picker="account"
+                            data-picker-target="dispersion-account"
+                            data-picker-title="Elegir cuenta destino"
+                            data-picker-placeholder="Buscar por cuenta, titular, correo o ID de empleado">
+            <span id="accountLabel" class="${empty dispersionAccountLabel ? 'picker__placeholder' : ''}">
+                ${empty dispersionAccountLabel
+                        ? 'Selecciona la cuenta a fondear'
+                        : fn:escapeXml(dispersionAccountLabel)}
+            </span>
+                    </button>
                     <svg class="modal__icon-chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
                 </div>
+                <%-- Esto es lo que viaja al servidor, igual que viajaba el value del select. --%>
+                <input type="hidden" id="accountId" name="accountId" value="${dispersionAccountId}" required>
             </div>
+
 
             <div class="modal__field">
                 <label class="modal__label modal__label--tracked" for="amount">MONTO</label>
@@ -287,6 +305,15 @@
 </div>
 
 <script>
+    // El navegador no valida un input[type=hidden] aunque lleve required, así
+    // que el "elige una cuenta" se hace aquí. Es una cortesía: quien decide de
+    // verdad sigue siendo DispersionService, que rechaza un accountId nulo.
+    document.querySelector('#dispersion-modal form').addEventListener("submit", function (e) {
+        if (!document.getElementById("accountId").value) {
+            e.preventDefault();
+            document.getElementById("accountTrigger").focus();
+        }
+    });
     // Un solo cableado para los dos modales: sólo cambian el velo, el disparador
     // y el campo que recibe el foco.
     (function () {
@@ -326,6 +353,18 @@
         wire("dispersion-modal", "data-open-dispersion", "data-close-dispersion", "accountId");
         wire("fund-modal", "data-open-fund", "data-close-fund", "fundAmount");
     })();
-</script>
 
+    // El selector avisa; la pantalla decide. Se filtra por target porque el
+    // evento es global y podría haber más de un selector en la página.
+    document.addEventListener("picker:choose", function (e) {
+        if (e.detail.target !== "dispersion-account") return;
+
+        var d = e.detail.data;
+        document.getElementById("accountId").value = d.id;
+        var label = document.getElementById("accountLabel");
+        label.textContent = d.holder + " — " + d.purpose + " · " + d.number;
+        label.classList.remove("picker__placeholder");
+    });
+</script>
+<%@ include file="/WEB-INF/jsp/partials/picker-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

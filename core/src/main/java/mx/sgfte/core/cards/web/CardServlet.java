@@ -46,11 +46,26 @@ public class CardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        List<IssueTarget> targets = cardDao.findIssueTargets();
+        /*
+          La pantalla arranca vacía: sin tarjetahabiente elegido no hay ninguna
+          cuenta que enseñar, y consultarlas todas para descartarlas en el
+          navegador era justamente el problema.
 
-        req.setAttribute("targets", targets);
-        req.setAttribute("holders", distinctHolders(targets));
-        req.setAttribute("selectedAccountId", parseId(req.getParameter("accountId")));
+          El único caso con datos es la vuelta de una expedición: el POST redirige
+          con ?accountId=, y ahí sí conviene dejar el formulario como estaba para
+          "Expedir otra". Como la cuenta ya se sabe, se averigua de quién era y se
+          cargan sólo las suyas — dos consultas acotadas, y sólo en ese camino.
+        */
+        Long selectedAccountId = parseId(req.getParameter("accountId"));
+        if (selectedAccountId != null) {
+            cardDao.findIssueTarget(selectedAccountId).ifPresent(t -> {
+                req.setAttribute("selectedAccountId", t.getAccountId());
+                req.setAttribute("selectedHolderId", t.getCardholderId());
+                req.setAttribute("selectedHolderName", t.getCardholderName());
+                req.setAttribute("targets", cardDao.findIssueTargets(t.getCardholderId()));
+            });
+        }
+
         consumeFlash(req);
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/expedicion.jsp").forward(req, resp);
@@ -101,18 +116,6 @@ public class CardServlet extends HttpServlet {
             back += "?accountId=" + URLEncoder.encode(accountId.toString(), StandardCharsets.UTF_8);
         }
         resp.sendRedirect(back);
-    }
-
-    /**
-     * The cardholders behind the targets, once each, keeping the query's order.
-     * A holder with three accounts must still appear once in the first dropdown.
-     */
-    private Map<Long, String> distinctHolders(List<IssueTarget> targets) {
-        Map<Long, String> holders = new LinkedHashMap<>();
-        for (IssueTarget t : targets) {
-            holders.putIfAbsent(t.getCardholderId(), t.getCardholderName());
-        }
-        return holders;
     }
 
     /** Reads the one-shot outcome left by the POST and clears it. */
