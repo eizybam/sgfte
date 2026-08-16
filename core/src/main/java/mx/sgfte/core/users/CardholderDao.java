@@ -144,7 +144,7 @@ public class CardholderDao {
      */
     public java.util.Optional<CardholderDetail> findDetail(long cardholderId) {
         String sql = "SELECT ch.id, ch.employee_code, ch.first_name, ch.last_name, "
-                   + "       ch.email, ch.department, ch.status, "
+                   + "       ch.email, ch.phone, ch.department, ch.status, "
                    + "  (SELECT NVL(SUM(a.balance), 0) FROM account a "
                    + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS total_balance, "
                    + "  (SELECT COUNT(*) FROM account a "
@@ -162,6 +162,7 @@ public class CardholderDao {
                         rs.getString("employee_code"),
                         rs.getString("first_name") + " " + rs.getString("last_name"),
                         rs.getString("email"),
+                        rs.getString("phone"),
                         rs.getString("department"),
                         rs.getString("status"),
                         rs.getBigDecimal("total_balance"),
