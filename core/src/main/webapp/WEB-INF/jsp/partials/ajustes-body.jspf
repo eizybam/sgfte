@@ -1,0 +1,97 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  Settings screen body, shared between the two areas.
+
+  Goes as a fragment rather than duplicated in both JSPs because they are
+  literally the same screen: only the shell changes (admin has a sidebar,
+  the portal does not). If a setting is added tomorrow, it is added once.
+--%>
+<div class="settings">
+
+    <%-- ---- Profile (read-only) ---------------------------------------- --%>
+    <section class="settings__card">
+        <h2 class="settings__title">Tu perfil</h2>
+
+        <dl class="settings__list">
+            <div class="settings__row">
+                <dt>Nombre</dt>
+                <dd>${fn:escapeXml(sessionScope.user.fullName)}</dd>
+            </div>
+            <div class="settings__row">
+                <dt>Correo</dt>
+                <dd>${fn:escapeXml(sessionScope.user.email)}</dd>
+            </div>
+            <div class="settings__row">
+                <dt>Rol</dt>
+                <dd>${sessionScope.user.admin ? 'Administrador' : 'Tarjetahabiente'}</dd>
+            </div>
+            <c:if test="${not empty sessionScope.user.employeeCode}">
+                <div class="settings__row">
+                    <dt>Código de empleado</dt>
+                    <dd class="mono">${fn:escapeXml(sessionScope.user.employeeCode)}</dd>
+                </div>
+            </c:if>
+            <div class="settings__row">
+                <dt>ID de usuario</dt>
+                <dd class="mono">${sessionScope.user.id}</dd>
+            </div>
+        </dl>
+
+        <p class="settings__note">
+            Estos datos los administra el área de administración. Si algo está
+            mal, pídeles que lo corrijan desde tu ficha de empleado.
+        </p>
+    </section>
+
+    <%-- ---- Password ---------------------------------------------------- --%>
+    <section class="settings__card">
+        <h2 class="settings__title">Cambiar contraseña</h2>
+
+        <c:if test="${not empty settingsErrors}">
+            <div class="alert alert--error">
+                <ul><c:forEach var="e" items="${settingsErrors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>
+
+        <form method="post" action="${ctx}${pageContext.request.servletPath}" autocomplete="off">
+
+            <label class="register__label" for="currentPassword">Contraseña actual</label>
+            <div class="register__control">
+                <input class="register__input" type="password" id="currentPassword"
+                       name="currentPassword" autocomplete="current-password" required>
+            </div>
+
+            <label class="register__label" for="newPassword">Nueva contraseña</label>
+            <div class="register__control">
+                <input class="register__input" type="password" id="newPassword"
+                       name="newPassword" minlength="8" autocomplete="new-password" required>
+            </div>
+
+            <label class="register__label" for="confirmPassword">Confirmar nueva contraseña</label>
+            <div class="register__control">
+                <input class="register__input" type="password" id="confirmPassword"
+                       name="confirmPassword" minlength="8" autocomplete="new-password" required>
+            </div>
+
+            <p class="settings__note">Mínimo 8 caracteres, distinta de la actual.</p>
+
+            <div class="settings__actions">
+                <button type="submit" class="btn btn--primary">Actualizar contraseña</button>
+            </div>
+        </form>
+    </section>
+
+    <%-- ---- Session --------------------------------------------------------- --%>
+    <section class="settings__card settings__card--wide">
+        <h2 class="settings__title">Sesión</h2>
+        <p class="settings__note">
+            Tu sesión se cierra sola tras 30 minutos sin actividad. Ciérrala a
+            mano si estás en un equipo compartido.
+        </p>
+        <form method="post" action="${ctx}/logout" class="settings__actions">
+            <button type="submit" class="btn btn--secondary">Cerrar sesión</button>
+        </form>
+    </section>
+</div>
