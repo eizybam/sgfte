@@ -23,7 +23,7 @@ public class AuthService {
             return Optional.empty();
         }
 
-        Optional<AppUser> found = userDao.findByEmail(email);
+        Optional<AppUser> found = userDao.findLoginByEmail(email);
         if (found.isEmpty()){
             PasswordHasher.matches(rawPassword, DUMMY_HASH); // burn comparable time
             return Optional.empty();

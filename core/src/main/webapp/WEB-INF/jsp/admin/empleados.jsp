@@ -93,10 +93,17 @@
                         groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/> MXN
                 </td>
                 <td>
-                    <c:choose>
-                        <c:when test="${e.active}"><span class="badge badge--ok">Activa</span></c:when>
-                        <c:otherwise><span class="badge badge--error">Inactiva</span></c:otherwise>
-                    </c:choose>
+                    <form method="post" action="${ctx}/cardholders">
+                        <input type="hidden" name="action" value="toggle">
+                        <input type="hidden" name="cardholderId" value="${e.id}">
+                        <input type="hidden" name="cardholderName" value="${fn:escapeXml(e.fullName)}">
+                        <button type="submit" class="cat-toggle"
+                                title="${e.active ? 'Retirar del catálogo' : 'Reactivar'}">
+                            <span class="badge ${e.active ? 'badge--ok' : 'badge--neutral'}">
+                                    ${e.active ? 'ACTIVA' : 'INACTIVA'}
+                            </span>
+                        </button>
+                    </form>
                 </td>
             </tr>
         </c:forEach>

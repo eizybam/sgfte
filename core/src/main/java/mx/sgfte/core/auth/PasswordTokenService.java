@@ -80,7 +80,7 @@ public class PasswordTokenService {
      * feature.
      */
     public void requestPasswordReset(String email) {
-        Optional<AppUser> found = userDao.findByEmail(email);
+        Optional<AppUser> found = userDao.findLoginByEmail(email);
         if (found.isEmpty() || "INACTIVE".equals(found.get().getStatus())) {
             return;
         }

@@ -43,33 +43,39 @@ public class CardholderServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
-        String fullName = req.getParameter("fullName");
-        String email = req.getParameter("email");
-        String department = req.getParameter("department");
-
         HttpSession session = req.getSession();
-        try {
-            long newId = service.registerFromFullName(fullName, email, department);
-            audit.record(AuditEvent.CARDHOLDER_CREATED, fullName + " · " + email, req);
+        String action = req.getParameter("action");
 
-            mx.sgfte.core.shared.web.OperationResult.success("¡Empleado registrado!",
-                            "Ya puede tener cuentas y tarjetas a su nombre",
-                            "ALTA CONFIRMADA",
-                            "El código de empleado se asignó automáticamente y no cambia.")
-                    .detail("Empleado", fullName)
-                    .detail("Código", employeeCodeOf(newId))
-                    .detail("Correo", email)
-                    .detail("Departamento", department)
-                    .when(java.time.LocalDateTime.now())
-                    .secondary("Ver empleados", "/admin/empleados")
-                    .flash(session);
-        } catch (ValidationException e) {
-            session.setAttribute(FLASH_ERRORS, e.getErrors());
-            session.setAttribute(FLASH_NAME, fullName);
-            session.setAttribute(FLASH_EMAIL, email);
+        if ("toggle".equals(action)) {
+            toggle(req, session);
+        } else {
+
+            String fullName = req.getParameter("fullName");
+            String email = req.getParameter("email");
+            String department = req.getParameter("department");
+
+
+            try {
+                long newId = service.registerFromFullName(fullName, email, department);
+                audit.record(AuditEvent.CARDHOLDER_CREATED, fullName + " · " + email, req);
+
+                mx.sgfte.core.shared.web.OperationResult.success("¡Empleado registrado!",
+                                "Ya puede tener cuentas y tarjetas a su nombre",
+                                "ALTA CONFIRMADA",
+                                "El código de empleado se asignó automáticamente y no cambia.")
+                        .detail("Empleado", fullName)
+                        .detail("Código", employeeCodeOf(newId))
+                        .detail("Correo", email)
+                        .detail("Departamento", department)
+                        .when(java.time.LocalDateTime.now())
+                        .secondary("Ver empleados", "/admin/empleados")
+                        .flash(session);
+            } catch (ValidationException e) {
+                session.setAttribute(FLASH_ERRORS, e.getErrors());
+                session.setAttribute(FLASH_NAME, fullName);
+                session.setAttribute(FLASH_EMAIL, email);
+            }
         }
-
         resp.sendRedirect(req.getContextPath() + "/admin/empleados");
     }
 
@@ -88,5 +94,25 @@ public class CardholderServlet extends HttpServlet {
         } catch (RuntimeException e) {
             return null;   // el alta ya ocurrió; la tarjeta puede vivir sin el código
         }
+    }
+
+    private void toggle(HttpServletRequest req, HttpSession session) {
+        Long id = parseLong(req.getParameter("cardholderId"));
+        try {
+            boolean nowActive = service.toggleStatus(id);
+
+        } catch (ValidationException e) {
+            session.setAttribute(FLASH_ERRORS, e.getErrors());
+        }
+    }
+
+    private Integer parseInt(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try { return Integer.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
+    }
+
+    private Long parseLong(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try { return Long.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
     }
 }
