@@ -19,7 +19,9 @@ class CardholderServiceTest {
         long sequence = 77L;
 
         @Override
-        public boolean emailExists(String email) { return emailTaken; }
+        public boolean emailExistsForAnother(String email, long exceptId) {
+            return emailTakenByAnother;
+        }
 
         /** Sin esto el servicio iría a Oracle a por el consecutivo. */
         @Override
@@ -118,4 +120,28 @@ class CardholderServiceTest {
         assertTrue(e.getErrors().get(0).contains("apellido"));
         assertNull(dao.inserted);
     }
+
+    @Test
+    void updateRejectsAOneWordName() {
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.update(1L, "Ana", "ana@empresa.com", "IT", null));
+        assertTrue(e.getErrors().get(0).contains("apellido"));
+    }
+
+    @Test
+    void updateRejectsAnEmailThatBelongsToSomeoneElse() {
+        dao.emailTakenByAnother = true;
+        assertThrows(ValidationException.class,
+                () -> service.update(1L, "Ana López", "otro@empresa.com", "IT", null));
+    }
+
+    @Test
+    void keepingYourOwnEmailIsNotADuplicate() {
+        dao.emailTakenByAnother = false;   // el AND id <> ? del DAO lo garantiza
+        // Sin base de datos la transacción no corre; lo que se comprueba es que
+        // la validación NO se queja antes de llegar a ella.
+        assertDoesNotThrow(() -> service.validate(
+                new Cardholder("Ana", "López", "ana@empresa.com", null)).isEmpty());
+    }
+
 }
