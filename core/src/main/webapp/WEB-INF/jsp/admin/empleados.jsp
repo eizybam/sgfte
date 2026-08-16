@@ -93,17 +93,16 @@
                         groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/> MXN
                 </td>
                 <td>
-                    <form method="post" action="${ctx}/cardholders">
-                        <input type="hidden" name="action" value="toggle">
-                        <input type="hidden" name="cardholderId" value="${e.id}">
-                        <input type="hidden" name="cardholderName" value="${fn:escapeXml(e.fullName)}">
-                        <button type="submit" class="cat-toggle"
-                                title="${e.active ? 'Retirar del catálogo' : 'Reactivar'}">
-                            <span class="badge ${e.active ? 'badge--ok' : 'badge--neutral'}">
-                                    ${e.active ? 'ACTIVA' : 'INACTIVA'}
-                            </span>
-                        </button>
-                    </form>
+                    <button type="button" class="cat-toggle"
+                            data-toggle-open
+                            data-id="${e.id}"
+                            data-name="${fn:escapeXml(e.fullName)}"
+                            data-active="${e.active}"
+                            title="${e.active ? 'Desactivar empleado' : 'Reactivar empleado'}">
+        <span class="badge ${e.active ? 'badge--ok' : 'badge--neutral'}">
+                ${e.active ? 'ACTIVA' : 'INACTIVA'}
+        </span>
+                    </button>
                 </td>
             </tr>
         </c:forEach>
@@ -214,6 +213,29 @@
         </form>
     </div>
 </div>
+<div class="modal-scrim" id="toggle-modal" hidden>
+    <div class="modal modal--form" role="dialog" aria-modal="true"
+         aria-labelledby="toggle-title">
+        <h2 class="modal__title" id="toggle-title" data-toggle-title></h2>
+        <div class="modal__rule"></div>
+
+        <div class="modal__body">
+            <p data-toggle-lead style="margin:0 40px"></p>
+            <ul data-toggle-list style="margin:.6rem 40px 0"></ul>
+
+            <form method="post" action="${ctx}/cardholders">
+                <input type="hidden" name="action" value="toggle">
+                <input type="hidden" name="cardholderId"   data-toggle-id>
+                <input type="hidden" name="cardholderName" data-toggle-name>
+                <div class="register__actions">
+                    <button type="button" class="btn btn--secondary"
+                            data-close-toggle>Cancelar</button>
+                    <button type="submit" data-toggle-confirm></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
     (function () {
@@ -274,4 +296,67 @@
     })();
 </script>
 
+
+<%-- Script to open/close the activation / reactivation modal. --%>
+<script>
+    (function () {
+        var scrim = document.getElementById("toggle-modal");
+        if (!scrim) return;
+        var title   = scrim.querySelector("[data-toggle-title]");
+        var lead    = scrim.querySelector("[data-toggle-lead]");
+        var list    = scrim.querySelector("[data-toggle-list]");
+        var idIn    = scrim.querySelector("[data-toggle-id]");
+        var nameIn  = scrim.querySelector("[data-toggle-name]");
+        var confirm = scrim.querySelector("[data-toggle-confirm]");
+        var lastFocused = null;
+
+        function open(btn) {
+            var active = btn.getAttribute("data-active") === "true";
+            var name   = btn.getAttribute("data-name");
+            idIn.value   = btn.getAttribute("data-id");
+            nameIn.value = name;
+
+            if (active) {
+                title.textContent = "¿Desactivar a " + name + "?";
+                lead.textContent  = "Al confirmar:";
+                list.innerHTML =
+                    "<li>Todas sus cuentas se eliminan</li>" +
+                    "<li>Sus tarjetas quedan invalidadas.</li>" +
+                    "<li>Pierde el acceso a la plataforma.</li>" +
+                    "<li>Puedes reactivarlo en cualquier momento, pero no recuperara sus cuentas ni tarjetas anteriores.</li>";
+
+                confirm.textContent = "Sí, desactivar";
+                confirm.className   = "btn btn--danger";
+            } else {
+                title.textContent = "¿Reactivar a " + name + "?";
+                lead.textContent  = "Vuelve a tener acceso, pero empieza desde cero:";
+                list.innerHTML =
+                    "<li>Sin cuentas y sin tarjetas.</li>" +
+                    "<li>Habrá que asignárselas de nuevo.</li>";
+                confirm.textContent = "Sí, reactivar";
+                confirm.className   = "btn btn--primary";
+            }
+            lastFocused = document.activeElement;
+            scrim.hidden = false;
+            confirm.focus();
+        }
+        function close() {
+            scrim.hidden = true;
+            if (lastFocused) lastFocused.focus();
+        }
+
+        document.querySelectorAll("[data-toggle-open]").forEach(function (b) {
+            b.addEventListener("click", function () { open(b); });
+        });
+        scrim.querySelectorAll("[data-close-toggle]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+        scrim.addEventListener("mousedown", function (e) {
+            if (e.target === scrim) close();
+        });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+    })();
+</script>
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

@@ -149,7 +149,6 @@ public class CardholderService {
             return false;
         } else {
             deletionService.activateCardholder(cardholderId);
-            dao.setStatus(cardholderId, "ACTIVE");
             return true;
         }
 

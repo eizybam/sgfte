@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import mx.sgfte.core.shared.web.OperationResult;
 import mx.sgfte.core.users.CardholderService;
 import mx.sgfte.core.users.ValidationException;
 
@@ -98,11 +99,41 @@ public class CardholderServlet extends HttpServlet {
 
     private void toggle(HttpServletRequest req, HttpSession session) {
         Long id = parseLong(req.getParameter("cardholderId"));
+        String name = req.getParameter("cardholderName");
         try {
             boolean nowActive = service.toggleStatus(id);
+            if  (nowActive) {
+                audit.record(AuditEvent.CARDHOLDER_REINCORPORATED, "Empleado " + id, req);
+                OperationResult.success("Empleado reincorporado",
+                        "Ya puede ingresar nuevamente al sistema",
+                        "REINCORPORACIÓN CONFIRMADA",
+                        "Empieza desde cero: deben de asignarse cuentas y tarjetas nuevas.")
+                        .detail("Empleado", name)
+                        .when(java.time.LocalDateTime.now())
+                        .secondary("Ver empleados", "/admin/empleados")
+                        .flash(session);
+            } else {
+                audit.record(AuditEvent.CARD_INVALIDATED, "Empleado " + id, req);
+                OperationResult.success("Empleado dado de baja",
+                        "Ya no puede ingresar al sistema",
+                        "BAJA CONFIRMADA",
+                        "Sus cuentas y tarjetas han sido eliminadas")
+                        .detail("Empleado", name)
+                        .when(java.time.LocalDateTime.now())
+                        .secondary("Ver empleados", "/admin/empleados")
+                        .flash(session);
+            }
 
         } catch (ValidationException e) {
-            session.setAttribute(FLASH_ERRORS, e.getErrors());
+            OperationResult.rejected("No se pudo cambiar el estado",
+                            "La operación no se realizó",
+                            String.join(" ", e.getErrors()))
+                    .flash(session);
+        } catch (RuntimeException e) {
+            OperationResult.rejected("No se pudo cambiar el estado",
+                            "La operación no se realizó",
+                            "Ocurrió un error inesperado. Intenta de nuevo.")
+                    .flash(session);
         }
     }
 
