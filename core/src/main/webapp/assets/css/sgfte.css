@@ -1435,10 +1435,46 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 .table--accounts .col-cards   { width: 15.43%; }
 .table--accounts .col-status  { width: 24.79%; }
 
-.picker__table--accounts .col-code    { width: 22%; }
-.picker__table--accounts .col-holder  { width: 30%; }
-.picker__table--accounts .col-purpose { width: 26%; }
-.picker__table--accounts .col-balance { width: 22%; }
+/*
+  El selector no reparte igual: la primera columna carga con la identidad entera
+  de la cuenta (código, titular y correo), así que se lleva un tercio.
+*/
+.picker__table--accounts .col-code    { width: 34%; }
+.picker__table--accounts .col-purpose { width: 24%; }
+.picker__table--accounts .col-cards   { width: 16%; }
+.picker__table--accounts .col-balance { width: 26%; }
+
+/*
+  Celda de tres líneas: el código manda —es lo que identifica la cuenta— y
+  debajo va de quién es, en el mismo gris que el correo del selector de
+  empleados. El correo es la línea que desempata dos homónimos.
+*/
+.picker__table--accounts .acct-code {
+    display: block;
+    font-family: var(--sgfte-font-mono);
+    font-size: 15px;
+    line-height: 20px;
+    color: var(--sgfte-cream);
+}
+.picker__table--accounts .acct-holder {
+    display: block;
+    margin-top: 3px;
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--sgfte-cream);
+}
+.picker__table--accounts .acct-mail {
+    display: block;
+    font-size: 12px;
+    line-height: 16px;
+    color: #a1918a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Cero tarjetas activas: el depósito entraría y no se podría gastar */
+.picker__table--accounts .num.is-warn { color: var(--sgfte-primary); }
 
 @media (max-width: 1040px) {
     .modal--picker .table--accounts { min-width: 680px; }

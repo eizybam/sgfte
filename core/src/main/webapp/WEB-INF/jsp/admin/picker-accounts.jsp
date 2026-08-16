@@ -5,14 +5,21 @@
 <%--
   Fragmento: una página de cuentas activas para el selector de dispersión.
 
-  Es la tabla de /admin/cuentas con dos columnas cambiadas, y las dos por el
-  mismo motivo — aquí no se está administrando, se está eligiendo a dónde va el
-  dinero:
+  Es la tabla de /admin/cuentas reordenada, y cada cambio por el mismo motivo —
+  aquí no se está administrando, se está eligiendo a dónde va el dinero:
 
     · Fuera "Estado": todas las filas son ACTIVE, el servlet lo fija.
-    · Fuera "Tarjetas", dentro "Saldo": cuántos plásticos cuelgan de la cuenta
-      no ayuda a decidir un depósito; cuánto tiene, sí. AccountRow ya lo trae
-      (lo usa el detalle del tarjetahabiente).
+    · Dentro "Saldo": cuánto tiene la cuenta es la mitad de la decisión de
+      cuánto depositarle. AccountRow ya lo traía (lo usa el detalle del
+      tarjetahabiente).
+    · Fuera la columna "Titular", y el titular pasa DEBAJO del número de cuenta,
+      con su correo — la misma celda de dos líneas del selector de empleados
+      (picker-cardholders.jsp). Dos "Raúl Torres" en la lista se distinguen por
+      el correo, no por el nombre; como columna propia repetía el nombre y no
+      resolvía nada.
+    · En el hueco que deja, "Tarjetas": no es contar plásticos, es la otra mitad
+      de la decisión. Una cuenta con 0 tarjetas activas no puede gastar lo que
+      le deposites — el dinero queda parado hasta que alguien expida una.
 
   El badge de propósito conserva su color: purposeColor sale de la consulta como
   un rank sobre el catálogo, así que "Gasolina" es del mismo color aquí, en la
@@ -25,8 +32,8 @@
     <thead>
     <tr>
         <th class="col-code">Cuenta</th>
-        <th class="col-holder">Titular</th>
         <th class="col-purpose">Propósito</th>
+        <th class="col-cards">Tarjetas</th>
         <th class="col-balance">Saldo</th>
     </tr>
     </thead>
@@ -37,9 +44,14 @@
             data-number="${fn:escapeXml(a.accountNumber)}"
             data-holder="${fn:escapeXml(a.holderName)}"
             data-purpose="${fn:escapeXml(a.purpose)}">
-            <td class="mono">${fn:escapeXml(a.accountNumber)}</td>
-            <td>${fn:escapeXml(a.holderName)}</td>
+            <td>
+                <span class="acct-code">${fn:escapeXml(a.accountNumber)}</span>
+                <span class="acct-holder">${fn:escapeXml(a.holderName)}</span>
+                <span class="acct-mail">${fn:escapeXml(a.holderEmail)}</span>
+            </td>
             <td><span class="badge badge--p${a.purposeColor}">${fn:escapeXml(a.purpose)}</span></td>
+            <%-- Sin tarjetas activas el depósito no se puede gastar: se avisa. --%>
+            <td class="num ${a.activeCards == 0 ? 'is-warn' : ''}">${a.activeCards}</td>
             <td class="mono">
                 $<fmt:formatNumber value="${a.balance}" type="number"
                                    groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>

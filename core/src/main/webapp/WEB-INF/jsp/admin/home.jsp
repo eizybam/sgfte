@@ -130,7 +130,7 @@
         <form class="modal__body" method="post" action="${ctx}/admin/dispersion">
 
             <div class="modal__field">
-                <span class="modal__label">CUENTA DESTINO · Origen: Concentradora</span>
+                <span class="modal__label">CUENTA DESTINO</span>
                 <div class="modal__control modal__control--select">
                     <svg class="modal__icon-card" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
                     <%--
@@ -147,10 +147,10 @@
                             data-picker="account"
                             data-picker-target="dispersion-account"
                             data-picker-title="Elegir cuenta destino"
-                            data-picker-placeholder="Buscar por número de cuenta, titular o ID de empleado">
+                            data-picker-placeholder="Buscar por cuenta, titular, correo o ID de empleado">
             <span id="accountLabel" class="${empty dispersionAccountLabel ? 'picker__placeholder' : ''}">
                 ${empty dispersionAccountLabel
-                        ? 'Selecciona la cuenta a fondear'
+                        ? 'Cuenta a fondear'
                         : fn:escapeXml(dispersionAccountLabel)}
             </span>
                     </button>
