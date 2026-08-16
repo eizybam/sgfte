@@ -113,7 +113,8 @@ public class CardholderServlet extends HttpServlet {
                         .secondary("Ver empleados", "/admin/empleados")
                         .flash(session);
             } else {
-                audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + id + " · " + name, req);                OperationResult.success("Empleado dado de baja",
+                audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + id + " · " + name, req);
+                OperationResult.success("Empleado dado de baja",
                         "Ya no puede ingresar al sistema",
                         "BAJA CONFIRMADA",
                         "Sus cuentas y tarjetas han sido eliminadas")
@@ -127,11 +128,13 @@ public class CardholderServlet extends HttpServlet {
             OperationResult.rejected("No se pudo cambiar el estado",
                             "La operación no se realizó",
                             String.join(" ", e.getErrors()))
+                    .secondary("Ver empleados", "/admin/empleados")
                     .flash(session);
         } catch (RuntimeException e) {
             OperationResult.rejected("No se pudo cambiar el estado",
                             "La operación no se realizó",
                             "Ocurrió un error inesperado. Intenta de nuevo.")
+                    .secondary("Ver empleados", "/admin/empleados")
                     .flash(session);
         }
     }
