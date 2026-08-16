@@ -55,7 +55,8 @@
         </nav>
 
         <div class="app-header__user">
-            <a href="${ctx}/admin/home" title="Ajustes">
+            <a href="${ctx}/admin/ajustes" title="Ajustes"
+               class="${activeNav == 'settings' ? 'is-active' : ''}">
                 <img class="app-header__gear" src="${ctx}/assets/img/icons/settings.png" alt="Ajustes">
             </a>
             <%--
