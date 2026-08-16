@@ -113,8 +113,7 @@ public class CardholderServlet extends HttpServlet {
                         .secondary("Ver empleados", "/admin/empleados")
                         .flash(session);
             } else {
-                audit.record(AuditEvent.CARD_INVALIDATED, "Empleado " + id, req);
-                OperationResult.success("Empleado dado de baja",
+                audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + id + " · " + name, req);                OperationResult.success("Empleado dado de baja",
                         "Ya no puede ingresar al sistema",
                         "BAJA CONFIRMADA",
                         "Sus cuentas y tarjetas han sido eliminadas")
