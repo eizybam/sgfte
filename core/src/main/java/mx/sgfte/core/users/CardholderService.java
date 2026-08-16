@@ -5,12 +5,15 @@ import mx.sgfte.core.auth.*;
 import mx.sgfte.core.categories.Category;
 import mx.sgfte.core.notifications.NotificationService;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import mx.sgfte.core.deletion.DeletionService;
+import mx.sgfte.core.shared.db.Db;
 
 /**
  * Business logic for cardholders. Validation lives here (pure Java, testable without Tomcat),
@@ -152,5 +155,52 @@ public class CardholderService {
             return true;
         }
 
+    }
+
+    public void update(long id, String fullName, String email,
+                       String department, String phone) {
+
+        String[] parts = splitName(fullName);
+        if (parts == null) {
+            throw new ValidationException(List.of("Escribe el nombre y al menos un apellido"));
+        }
+
+        Cardholder ch = new Cardholder(parts[0], parts[1], trim(email), trim(phone));
+        ch.setId(id);
+        ch.setDepartment(trim(department));
+
+        List<String> errors = validate(ch);          // el MISMO validador del alta
+        if (!errors.isEmpty()) throw new ValidationException(errors);
+
+        if (dao.emailExistsForAnother(ch.getEmail(), id)) {
+            throw new ValidationException(List.of("El correo ya está registrado"));
+        }
+
+        String full = (ch.getFirstName() + " " + ch.getLastName()).trim();
+
+        try (Connection conn = Db.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                dao.update(conn, ch);
+                userDao.updateIdentity(conn, id, ch.getEmail(), full);
+                conn.commit();
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                /*
+                  ORA-00001 = choque con un UNIQUE. Llega aquí pese al chequeo de
+                  arriba por dos motivos, y los dos son reales:
+                    · el correo puede estar tomado por un ADMIN, que no tiene
+                      ficha de cardholder y por tanto no sale en esa consulta;
+                    · entre el chequeo y el UPDATE cabe otra alta.
+                  La base es la que decide de verdad; aquí sólo se traduce.
+                */
+                if (e instanceof SQLException sql && sql.getErrorCode() == 1) {
+                    throw new ValidationException(List.of("El correo ya está registrado"));
+                }
+                throw (e instanceof RuntimeException re) ? re : new RuntimeException(e);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error in update cardholder transaction", e);
+        }
     }
 }
