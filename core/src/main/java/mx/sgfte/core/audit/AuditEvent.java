@@ -44,8 +44,13 @@ public enum AuditEvent {
     CATEGORY_ACTIVATED (Severity.INFO,   Module.CUENTAS, "Categoría reactivada"),
 
     // --- Tarjetas ---
-    CARD_ISSUED      (Severity.INFO, Module.TARJETAS, "Nueva tarjeta asignada"),
-    CARD_INVALIDATED (Severity.CRIT, Module.TARJETAS, "Tarjeta invalidada"),
+    // Bloquear es ALERTA y no INFO: casi siempre significa "la perdí" o "la
+    // usaron sin mi permiso", y eso es justo lo que alguien querrá encontrar
+    // después filtrando la bitácora. Reactivar no tiene esa carga.
+    CARD_ISSUED      (Severity.INFO,   Module.TARJETAS, "Nueva tarjeta asignada"),
+    CARD_BLOCKED     (Severity.ALERTA, Module.TARJETAS, "Tarjeta bloqueada"),
+    CARD_UNBLOCKED   (Severity.INFO,   Module.TARJETAS, "Tarjeta reactivada"),
+    CARD_INVALIDATED (Severity.CRIT,   Module.TARJETAS, "Tarjeta invalidada"),
 
     // --- Empleados ---
     // Catálogo de áreas. Retirar es ALERTA por el mismo motivo que en
