@@ -3724,3 +3724,81 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
     .modal--picker .table-card { padding: 0 var(--sp-2); overflow-x: auto; }
     .modal--picker .table--staff { min-width: 720px; }
 }
+
+/* ==========================================================================
+   29 · Ajustes · /admin/ajustes y /app/ajustes
+   ========================================================================== */
+
+/*
+  Dos tarjetas arriba y una ancha abajo. auto-fit con un mínimo de 380px: en
+  pantalla estrecha se apilan solas, sin una media query por cada corte.
+
+  Las dos áreas comparten estas reglas porque comparten el fragmento
+  (ajustes-body.jspf); lo único que cambia es el cascarón que lo envuelve.
+*/
+.settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: var(--sp-3);
+    align-items: start;
+    max-width: 1040px;
+}
+
+.settings__card {
+    padding: var(--sp-4);
+    background: var(--sgfte-surface);
+    border: 1px solid var(--sgfte-line);
+    border-radius: var(--sgfte-radius);
+}
+
+/* La tarjeta de sesión ocupa la fila entera: no compite con nada. */
+.settings__card--wide { grid-column: 1 / -1; }
+
+.settings__title {
+    margin: 0 0 var(--sp-3);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--sgfte-cream);
+}
+
+.settings__list { margin: 0; }
+
+.settings__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: 44px;
+    border-bottom: 1px solid var(--sgfte-line);
+}
+.settings__row:last-child { border-bottom: none; }
+.settings__row dt { font-size: 14px; color: var(--sgfte-mono-muted); }
+.settings__row dd { margin: 0; font-size: 15px; color: var(--sgfte-cream); text-align: right; }
+.settings__row dd.mono { font-family: var(--sgfte-font-mono); font-size: 14px; }
+
+.settings__note { margin: var(--sp-2) 0 0; font-size: 13px; line-height: 1.5; color: var(--sgfte-muted); }
+
+.settings__actions { display: flex; justify-content: flex-end; margin-top: var(--sp-3); }
+
+/*
+  Los campos vienen del modal de alta (.register__*), que está dimensionado para
+  un modal de 40px de padding: 17-18px de tipografía y etiquetas en rosa. Dentro
+  de una tarjeta de ajustes eso se ve enorme, así que aquí se ajusta la escala
+  sin tocar el modal, que sigue igual en su sitio.
+*/
+.settings .register__label {
+    margin-top: var(--sp-3);
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0.3px;
+}
+.settings .register__label:first-of-type { margin-top: 0; }
+.settings .register__control { height: 44px; padding: 0 14px; border-radius: 6px; }
+.settings .register__input   { font-size: 15px; }
+
+.settings .alert { margin-bottom: var(--sp-3); }
+
+@media (max-width: 860px) {
+    .settings { grid-template-columns: 1fr; }
+    .settings__card { padding: var(--sp-3); }
+}
