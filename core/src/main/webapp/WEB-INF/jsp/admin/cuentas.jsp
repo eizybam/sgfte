@@ -41,9 +41,11 @@
         <a class="segmented__item ${empty status ? 'is-active' : ''}"
            href="${baseUrl}?page=1${qParam}${purposeParam}">Todas</a>
         <a class="segmented__item ${status == 'ACTIVE' ? 'is-active' : ''}"
-           href="${baseUrl}?page=1&status=ACTIVE${qParam}${purposeParam}">Activas</a>
+           href="${baseUrl}?page=1&status=ACTIVE${qParam}${purposeParam}">Abiertas</a>
+        <%-- El valor del filtro sigue siendo INACTIVE: esto es vocabulario de
+             pantalla, no de esquema. La base no cambia. --%>
         <a class="segmented__item ${status == 'INACTIVE' ? 'is-active' : ''}"
-           href="${baseUrl}?page=1&status=INACTIVE${qParam}${purposeParam}">Inactivas</a>
+           href="${baseUrl}?page=1&status=INACTIVE${qParam}${purposeParam}">Cerradas</a>
     </nav>
 
     <%-- La píldora del marco es un desplegable; aquí es un <select> que navega. --%>
@@ -74,7 +76,6 @@
             <th class="col-purpose">Proposito</th>
             <th class="col-cards">Tarjetas</th>
             <th class="col-status">Estado</th>
-            <th class="col-actions">Acciones</th>
         </tr>
         </thead>
         <tbody>
@@ -87,31 +88,48 @@
                 <td>${fn:escapeXml(a.holderName)}</td>
                 <td><span class="badge badge--p${a.purposeColor}">${fn:escapeXml(a.purpose)}</span></td>
                 <td class="num">${a.activeCards}</td>
+                <%--
+                  El badge de estado ES la acción, igual que en /admin/empleados
+                  —una acción por fila no merece una columna entera—, pero con
+                  una diferencia deliberada: allí el badge es un interruptor de
+                  dos posiciones y aquí no. Cerrar una cuenta es definitivo, así
+                  que sólo la abierta es un <button>; la cerrada es un <span>
+                  que ni se ilumina ni recibe el foco. Un badge que responde al
+                  ratón y no hace nada invita a un clic que nunca contesta.
+                --%>
                 <td>
                     <c:choose>
-                        <c:when test="${a.active}"><span class="badge badge--ok">Activa</span></c:when>
-                        <c:otherwise><span class="badge badge--error">Inactiva</span></c:otherwise>
-                    </c:choose>
-                </td>
-                    <td>
-                        <c:if test="${a.active}">
+                        <c:when test="${a.active}">
+                            <%-- Los datos van en hidden, no en el botón:
+                                 confirm-modal.jspf envía con form.submit() y el
+                                 name/value del botón pulsado no viaja. --%>
                             <form method="post" action="${ctx}/admin/cuentas">
                                 <input type="hidden" name="accountId" value="${a.id}">
-                                <button type="submit" class="btn-danger-link"
+                                <button type="submit" class="cat-toggle"
+                                        title="Cerrar la cuenta y reintegrar su saldo"
                                         data-confirm data-confirm-danger
-                                        data-confirm-title="¿Eliminar la cuenta ${fn:escapeXml(a.accountNumber)}?"
+                                        data-confirm-title="¿Cerrar la cuenta ${fn:escapeXml(a.accountNumber)}?"
                                         data-confirm-text="Al confirmar:"
-                                        data-confirm-list="El saldo vuelve completo a la Concentradora.|Las tarjetas de esta cuenta quedan invalidadas.|La cuenta queda inactiva; su historial se conserva.|No se puede deshacer."
-                                        data-confirm-ok="Eliminar y reintegrar">
-                                    Eliminar
+                                        data-confirm-list="El saldo vuelve completo a la Concentradora.|Sus tarjetas quedan invalidadas.|Se cierra para siempre: una cuenta cerrada no se reabre.|Su historial de movimientos se conserva."
+                                        data-confirm-ok="Cerrar y reintegrar">
+                                    <span class="badge badge--ok">ABIERTA</span>
                                 </button>
                             </form>
-                        </c:if>
-                    </td>
+                        </c:when>
+                        <%-- Neutral y no --error: cerrar una cuenta es una
+                             operación normal y bien terminada, no un fallo. --%>
+                        <c:otherwise>
+                            <span class="badge badge--neutral"
+                                  title="Su saldo se reintegró a la Concentradora. Una cuenta cerrada no se reabre; si vuelve a hacer falta ese propósito, se crea una cuenta nueva.">
+                                CERRADA
+                            </span>
+                        </c:otherwise>
+                    </c:choose>
+                </td>
             </tr>
         </c:forEach>
         <c:if test="${empty rows}">
-            <tr><td colspan="6" class="table__empty">No hay cuentas que coincidan con el filtro.</td></tr>
+            <tr><td colspan="5" class="table__empty">No hay cuentas que coincidan con el filtro.</td></tr>
         </c:if>
         </tbody>
     </table>

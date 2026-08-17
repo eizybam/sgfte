@@ -111,10 +111,10 @@
                                 <td class="moves__state">
                                     <c:choose>
                                         <c:when test="${a.active}">
-                                            <span class="state-badge state-badge--done">ACTIVA</span>
+                                            <span class="state-badge state-badge--done">ABIERTA</span>
                                         </c:when>
                                         <c:otherwise>
-                                            <span class="state-badge state-badge--off">INACTIVA</span>
+                                            <span class="state-badge state-badge--off">CERRADA</span>
                                         </c:otherwise>
                                     </c:choose>
                                 </td>

@@ -91,10 +91,13 @@ public class AccountAdminServlet extends HttpServlet {
 
             // La reintegración es lo importante del desenlace: el dinero no
             // desaparece con la cuenta, vuelve a la Concentradora.
-            mx.sgfte.core.shared.web.OperationResult.success("Cuenta eliminada",
+            // "Cerrada" y no "eliminada": la fila se queda con su historial, y
+            // el cierre es definitivo — no hay reapertura, la pantalla lo dice
+            // igual en el badge, en el aviso previo y aquí.
+            mx.sgfte.core.shared.web.OperationResult.success("Cuenta cerrada",
                             "Los fondos regresaron a la Concentradora",
                             "REINTEGRACIÓN CONFIRMADA",
-                            "El saldo se devolvió a la Cuenta Concentradora y sus tarjetas quedaron invalidadas.")
+                            "El saldo se devolvió a la Cuenta Concentradora y sus tarjetas quedaron invalidadas. La cuenta no se reabre; su historial se conserva.")
                     .detail("Cuenta", "Nº " + accountId)
                     .when(java.time.LocalDateTime.now())
                     .secondary("Ver cuentas", "/admin/cuentas")
