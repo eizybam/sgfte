@@ -79,7 +79,26 @@ public class CardServlet extends HttpServlet {
         HttpSession session = req.getSession();
 
         try {
-            if ("invalidate".equals(action)) {
+            if ("block".equals(action) || "unblock".equals(action)) {
+                Long cardId = parseId(req.getParameter("cardId"));
+                boolean blocking = "block".equals(action);
+                if (blocking) cardService.block(cardId); else cardService.unblock(cardId);
+
+                audit.record(blocking ? AuditEvent.CARD_BLOCKED : AuditEvent.CARD_UNBLOCKED,
+                             "Tarjeta " + cardId, req);
+
+                mx.sgfte.core.shared.web.OperationResult.success(
+                                blocking ? "Tarjeta bloqueada" : "Tarjeta reactivada",
+                                blocking ? "Queda suspendida temporalmente" : "Vuelve a poder usarse",
+                                blocking ? "BLOQUEO CONFIRMADO" : "REACTIVACIÓN CONFIRMADA",
+                                blocking
+                                    ? "Deja de pagar de inmediato, pero no se anula: puede reactivarse."
+                                    : "Vuelve a pagar con el saldo disponible de la cuenta.")
+                        .detail("Tarjeta", "Nº " + cardId)
+                        .when(java.time.LocalDateTime.now())
+                        .secondary("Volver", "/admin/cards")
+                        .flash(session);
+            } else if ("invalidate".equals(action)) {
                 Long cardId = parseId(req.getParameter("cardId"));
                 cardService.invalidate(cardId);
                 audit.record(AuditEvent.CARD_INVALIDATED, "Tarjeta " + cardId, req);
@@ -87,7 +106,7 @@ public class CardServlet extends HttpServlet {
                 mx.sgfte.core.shared.web.OperationResult.success("Tarjeta invalidada",
                                 "La tarjeta ya no puede usarse",
                                 "INVALIDACIÓN CONFIRMADA",
-                                "El saldo de la cuenta no se toca; sólo se anula el plástico.")
+                                "Es definitivo: el saldo de la cuenta no se toca, pero la tarjeta no vuelve. Para dar servicio otra vez hay que expedir una nueva.")
                         .detail("Tarjeta", "Nº " + cardId)
                         .when(java.time.LocalDateTime.now())
                         .secondary("Volver", "/admin/cards")
