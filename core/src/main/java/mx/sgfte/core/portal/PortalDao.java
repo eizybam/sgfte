@@ -422,17 +422,18 @@ public class PortalDao {
      * at a glance, so this joins through account/category itself rather than
      * bolting a second per-card lookup onto the admin DAO's result.
      *
-     * Only ACTIVE cards, same as the account view: an invalidated card isn't
-     * something a cardholder needs to see day to day, only administration's
-     * concern.
+     * Activas y bloqueadas: una tarjeta invalidada no es asunto del empleado,
+     * pero una bloqueada sí — es suya, la bloqueó él, y tiene que poder verla
+     * para reactivarla. Las INACTIVE se quedan fuera.
      */
     public List<PortalCard> findCards(long cardholderId) {
         String sql = "SELECT k.id, k.account_id, k.card_type, k.masked_pan, k.created_at, k.expires_at, "
-                   + "       a.account_number, cat.name AS purpose, cat.color_index "
+                   + "       k.status, a.account_number, cat.name AS purpose, cat.color_index "
                    + "  FROM card k "
                    + "  JOIN account  a   ON a.id = k.account_id "
                    + "  JOIN category cat ON cat.id = a.category_id "
-                   + " WHERE a.cardholder_id = ? AND a.status = 'ACTIVE' AND k.status = 'ACTIVE' "
+                   + " WHERE a.cardholder_id = ? AND a.status = 'ACTIVE' "
+                   + "   AND k.status IN ('ACTIVE', 'BLOCKED') "
                    + " ORDER BY cat.name, k.card_type";
         List<PortalCard> cards = new ArrayList<>();
         try (Connection c = Db.getConnection();
@@ -449,7 +450,8 @@ public class PortalDao {
                             rs.getString("card_type"),
                             rs.getString("masked_pan"),
                             toLocalDate(rs.getTimestamp("created_at")),
-                            toLocalDate(rs.getDate("expires_at"))));
+                            toLocalDate(rs.getDate("expires_at")),
+                            rs.getString("status")));
                 }
             }
             return cards;
@@ -474,4 +476,69 @@ public class PortalDao {
             else ps.setString(i + 1, String.valueOf(p));
         }
     }
+    /**
+     * Bloquea una tarjeta DEL EMPLEADO QUE LA PIDE.
+     *
+     * El cardholderId no es un filtro de comodidad: es lo único que impide que
+     * alguien bloquee la tarjeta de otro cambiando un número en el formulario.
+     * Va dentro del WHERE y no en un if del servlet — si se olvidara aquí, la
+     * consulta no encontraría nada; si se olvidara en un if, la tarjeta ajena
+     * ya estaría bloqueada.
+     *
+     * Devuelve false cuando no era suya, no existe o no estaba activa. Las tres
+     * respuestas son la misma a propósito: distinguirlas confirmaría que la
+     * tarjeta de otro existe.
+     */
+    public boolean blockOwnCard(long cardId, long cardholderId) {
+        String sql = "UPDATE card SET status = 'BLOCKED' "
+                   + " WHERE id = ? AND status = 'ACTIVE' "
+                   + "   AND account_id IN (SELECT a.id FROM account a "
+                   + "                       WHERE a.cardholder_id = ? AND a.status = 'ACTIVE')";
+        return updateOwnCard(sql, cardId, cardholderId);
+    }
+
+    public boolean unblockOwnCard(long cardId, long cardholderId) {
+        String sql = "UPDATE card SET status = 'ACTIVE' "
+                   + " WHERE id = ? AND status = 'BLOCKED' "
+                   + "   AND account_id IN (SELECT a.id FROM account a "
+                   + "                       WHERE a.cardholder_id = ? AND a.status = 'ACTIVE')";
+        return updateOwnCard(sql, cardId, cardholderId);
+    }
+
+    private boolean updateOwnCard(String sql, long cardId, long cardholderId) {
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardId);
+            ps.setLong(2, cardholderId);
+            return ps.executeUpdate() == 1;
+        } catch (java.sql.SQLIntegrityConstraintViolationException e) {
+            throw new mx.sgfte.core.users.ValidationException(java.util.List.of(
+                    "Administración expidió otra tarjeta de ese tipo. Pídeles que reactiven ésta."));
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating own card status", e);
+        }
+    }
+
+    /**
+     * ¿Esta tarjeta puede pagar en esta cuenta, y las dos son de esta persona?
+     *
+     * Una sola consulta con las tres condiciones —es dueño, la tarjeta cuelga
+     * de esa cuenta, y está activa—. Tres consultas separadas serían tres
+     * sitios donde olvidarse del dueño.
+     */
+    public boolean cardUsable(long cardId, long accountId, long cardholderId) {
+        String sql = "SELECT 1 FROM card k JOIN account a ON a.id = k.account_id "
+                   + " WHERE k.id = ? AND k.account_id = ? AND a.cardholder_id = ? "
+                   + "   AND k.status = 'ACTIVE' AND a.status = 'ACTIVE'";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, cardId);
+            ps.setLong(2, accountId);
+            ps.setLong(3, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error checking card usability", e);
+        }
+    }
 }
+

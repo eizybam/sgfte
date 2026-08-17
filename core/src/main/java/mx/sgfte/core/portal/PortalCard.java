@@ -25,9 +25,11 @@ public class PortalCard {
     private final String maskedPan;
     private final LocalDate issuedAt;
     private final LocalDate expiresAt;
+    private final String status;      // ACTIVE | BLOCKED
 
     public PortalCard(long id, long accountId, String accountNumber, String purpose, int colorIndex,
-                      String cardType, String maskedPan, LocalDate issuedAt, LocalDate expiresAt) {
+                      String cardType, String maskedPan, LocalDate issuedAt, LocalDate expiresAt,
+                      String status) {
         this.id = id;
         this.accountId = accountId;
         this.accountNumber = accountNumber;
@@ -37,6 +39,7 @@ public class PortalCard {
         this.maskedPan = maskedPan;
         this.issuedAt = issuedAt;
         this.expiresAt = expiresAt;
+        this.status = status;
     }
 
     public long getId() { return id; }
@@ -45,6 +48,10 @@ public class PortalCard {
     public String getPurpose() { return purpose; }
     public int getColorIndex() { return colorIndex; }
     public String getMaskedPan() { return maskedPan; }
+    public String getStatus() { return status; }
+
+    /** Suspendida por su dueño o por administración: existe, pero no paga. */
+    public boolean isBlocked() { return "BLOCKED".equals(status); }
 
     public boolean isPhysical() { return "PHYSICAL".equals(cardType); }
     public String getTypeLabel() { return isPhysical() ? "Física" : "Digital"; }
