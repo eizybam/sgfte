@@ -29,15 +29,23 @@ trazabilidad. Son los que hay que poder demostrar el día de la entrega.
 | CP-01 | OBJ-01 | HU-01 | RF-02 | Registrar tarjetahabiente con cuenta | QA_M2 · E1, C1 | | | |
 | CP-02 | OBJ-01 | HU-02 | RF-06 | Dispersar fondos a una cuenta | QA_M1 · D1, D2 | | | |
 | CP-03 | OBJ-02 | HU-03 | RF-04 | Emitir tarjeta ligada a una cuenta | QA_M2 · T1, T4 | | | |
-| CP-04 | OBJ-03 | HU-04 | RF-07 | Eliminar cuenta y verificar reintegración | _pendiente_ ⚠️ | | | |
-| CP-05 | OBJ-03 | HU-05 | RF-07 | Eliminar tarjetahabiente e invalidar tarjetas | _pendiente_ ⚠️ | | | |
+| CP-04 | OBJ-03 | HU-04 | RF-07 | Cerrar cuenta y verificar reintegración | QA_M4 · R1–R4 | | | |
+| CP-05 | OBJ-03 | HU-05 | RF-07 | Dar de baja a un empleado e invalidar sus tarjetas | QA_M4 · R5–R8 | | | |
 | CP-06 | OBJ-03 | HU-07 | RF-08 | Transferir P2P del mismo propósito | QA_M3 · T1, T2 | | | |
 | CP-07 | OBJ-04 | HU-06 | RF-10 | Notificar depósito, acceso y eliminación | QA_MICRO · N1–N3 | | | |
 | CP-08 | OBJ-04 | HU-08 | RF-09 | Verificar inmutabilidad de los logs | QA_MICRO · A1–A4 | | | |
 | CP-09 | OBJ-04 | HU-09 | RF-11 | Analítica por propósito y periodo | QA_MICRO · G1–G3, G7 | | | |
 
-⚠️ **CP-04 y CP-05 dependen de RF-07 (reintegración automática), en desarrollo.**
-Su plan de pruebas se escribe cuando el módulo aterrice. Hasta entonces: `BLOQUEADO`.
+✅ **CP-04 y CP-05 ya son ejecutables desde la interfaz** (2026-08-17). La
+reintegración estaba implementada en `DeletionService` desde hace semanas, pero
+ninguna pantalla podía dispararla: el cierre de cuenta no tenía botón. Hoy vive
+en el badge de ESTADO de `/admin/cuentas`, y la baja de empleado en el de
+`/admin/empleados`, las dos con confirmación previa.
+
+**Cómo se verifican:** apunta el saldo de la Concentradora antes, ejecuta, y
+comprueba que subió *exactamente* el saldo que tenía la cuenta (o la suma de
+todas las del empleado), que quedó un movimiento `REINTEGRATION` por cuenta con
+saldo, y que ninguna de sus tarjetas sigue activa.
 
 ---
 
@@ -45,18 +53,18 @@ Su plan de pruebas se escribe cuando el módulo aterrice. Hasta entonces: `BLOQU
 
 | RF | Requerimiento | Plan de pruebas | Casos | Resultado global |
 |----|---------------|-----------------|-------|------------------|
-| RF-01 | Autenticación | QA_SEGURIDAD_ROLES | S1, S7–S12 | |
-| RF-02 | Gestión de tarjetahabientes | QA_M2 | E1–E8 | |
+| RF-01 | Autenticación | QA_SEGURIDAD_ROLES | S1, S7–S12 | login · activación · recuperación · **cambio de contraseña en /ajustes** |
+| RF-02 | Gestión de tarjetahabientes | QA_M2 | E1–E8 | alta · **edición de ficha** · baja/reincorporación · catálogo de departamentos |
 | RF-03 | Gestión de cuentas | QA_M2 | C1–C10 | |
-| RF-04 | Gestión de tarjetas | QA_M2 | T1–T9 | |
+| RF-04 | Gestión de tarjetas | QA_M2 | T1–T9 | expedir · **bloquear/reactivar** · invalidar |
 | RF-05 | Cuenta Concentradora | QA_M1 | F1–F7 | |
 | RF-06 | Dispersión de fondos | QA_M1 | D1–D8 | |
-| RF-07 | **Reintegración automática** | _pendiente_ | — | ⚠️ sin implementar |
+| RF-07 | **Reintegración automática** | QA_M4 | R1–R8 | ✅ implementada y disparable desde la UI |
 | RF-08 | Transferencias P2P | QA_M3 + QA_PORTAL | T1–T8 | |
 | RF-09 | Auditoría / Logs | QA_MICROSERVICIOS | A1–A11 | |
 | RF-10 | Notificaciones | QA_MICROSERVICIOS | N1–N5 | |
-| RF-11 | Analítica | QA_MICROSERVICIOS | G1–G8 | ⚠️ G7 sin filtros |
-| RF-12 | Categorías / propósitos | _pendiente_ | — | ⚠️ solo lectura |
+| RF-11 | Analítica | QA_MICROSERVICIOS | G1–G8 | filtro por periodo + exportación CSV |
+| RF-12 | Categorías / propósitos | QA_M2 | — | ✅ ABC completo: alta, edición, retiro y reactivación |
 | RF-13 | Usuarios y roles | QA_SEGURIDAD_ROLES | S1–S6 | |
 
 ---
@@ -71,7 +79,7 @@ Su plan de pruebas se escribe cuando el módulo aterrice. Hasta entonces: `BLOQU
 | RNF-05 | Privacidad | QA_PORTAL §3 (aislamiento entre empleados) + QA_SEGURIDAD_ROLES S4–S5 | |
 | RNF-06 | Rendimiento | Buscar un usuario/cuenta responde en < 3 s con datos de prueba | |
 | RNF-09 | Solo MXN | `SELECT DISTINCT currency FROM account;` → únicamente `MXN` | |
-| RNF-02 | Usabilidad | Recorrer las 11 pantallas en escritorio y tablet | |
+| RNF-02 | Usabilidad | Recorrer las 11 pantallas en escritorio y tablet, **pulsando todo lo que parezca un enlace**: ningún elemento debe quedarse quieto | |
 
 ### Invariante financiera — ejecutar al inicio y al final de cada corrida
 
