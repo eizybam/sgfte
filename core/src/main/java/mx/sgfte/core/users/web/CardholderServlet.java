@@ -132,6 +132,7 @@ public class CardholderServlet extends HttpServlet {
                     .secondary("Ver empleados", "/admin/empleados")
                     .flash(session);
         } catch (RuntimeException e) {
+            System.err.println("[CARDHOLDER] falló el cambio de estado de " + id + ": " + e);
             OperationResult.rejected("No se pudo cambiar el estado",
                             "La operación no se realizó",
                             "Ocurrió un error inesperado. Intenta de nuevo.")
