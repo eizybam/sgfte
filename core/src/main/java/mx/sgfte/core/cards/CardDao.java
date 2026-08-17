@@ -61,13 +61,46 @@ public class CardDao {
 
     /** Invalidates one card (soft: status -> INACTIVE). Deleting a card does NOT move money. */
     public boolean invalidate(long cardId) {
-        String sql = "UPDATE card SET status = 'INACTIVE' WHERE id = ? AND status = 'ACTIVE'";
+        String sql = "UPDATE card SET status = 'INACTIVE' WHERE id = ? AND status IN ('ACTIVE', 'BLOCKED')";
+        return updateStatus(sql, cardId);
+    }
+
+    /**
+     * Suspende una tarjeta temporalmente.
+     *
+     * El estado de partida va en el WHERE y no en un if: así dos peticiones
+     * simultáneas no pueden bloquear dos veces, y una tarjeta ya invalidada
+     * nunca "revive" a BLOCKED. Devuelve si de verdad cambió algo.
+     */
+    public boolean block(long cardId) {
+        String sql = "UPDATE card SET status = 'BLOCKED' WHERE id = ? AND status = 'ACTIVE'";
+        return updateStatus(sql, cardId);
+    }
+
+    /**
+     * Devuelve al servicio una tarjeta bloqueada.
+     *
+     * Puede chocar contra uq_card_active_type aunque la tarjeta exista y esté
+     * BLOCKED: ese índice sólo cuenta las ACTIVAS, así que mientras estuvo
+     * bloqueada se pudo expedir otra del mismo tipo. No es un fallo, es la
+     * regla defendiéndose; se traduce a mensaje en vez de esquivarla.
+     */
+    public boolean unblock(long cardId) {
+        String sql = "UPDATE card SET status = 'ACTIVE' WHERE id = ? AND status = 'BLOCKED'";
+        return updateStatus(sql, cardId);
+    }
+
+    private boolean updateStatus(String sql, long cardId) {
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setLong(1, cardId);
             return ps.executeUpdate() == 1;
+        } catch (java.sql.SQLIntegrityConstraintViolationException e) {
+            throw new mx.sgfte.core.users.ValidationException(java.util.List.of(
+                    "Ya hay otra tarjeta activa de ese tipo en la cuenta. "
+                  + "Invalida la nueva antes de reactivar ésta."));
         } catch (SQLException e) {
-            throw new RuntimeException("Error invalidating card", e);
+            throw new RuntimeException("Error updating card status", e);
         }
     }
 

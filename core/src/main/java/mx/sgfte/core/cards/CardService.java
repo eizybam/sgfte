@@ -60,6 +60,25 @@ public class CardService {
         }
     }
 
+    /**
+     * Bloqueo temporal: la tarjeta deja de pagar pero sigue existiendo.
+     *
+     * Es el término medio que faltaba entre "activa" e "invalidada". Perder una
+     * tarjeta el martes y encontrarla el jueves no debería costar un plástico
+     * nuevo con otro PAN.
+     */
+    public void block(long cardId) {
+        if (!dao.block(cardId)) {
+            throw new ValidationException(List.of("La tarjeta no está activa."));
+        }
+    }
+
+    public void unblock(long cardId) {
+        if (!dao.unblock(cardId)) {
+            throw new ValidationException(List.of("La tarjeta no está bloqueada."));
+        }
+    }
+
     public List<Card> cardsOf(long accountId) {
         return dao.findByAccount(accountId);
     }
