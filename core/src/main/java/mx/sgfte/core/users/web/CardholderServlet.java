@@ -33,6 +33,7 @@ public class CardholderServlet extends HttpServlet {
     public static final String FLASH_ERRORS = "registerErrors";
     public static final String FLASH_NAME   = "registerName";
     public static final String FLASH_EMAIL  = "registerEmail";
+    public static final String FLASH_EDIT_ERRORS = "editErrors";
 
     private final CardholderService service = new CardholderService();
     private final AuditLogService audit = new AuditLogService();
@@ -49,6 +50,10 @@ public class CardholderServlet extends HttpServlet {
 
         if ("toggle".equals(action)) {
             toggle(req, session);
+        } else if ("update".equals(action)) {
+            // La edición vuelve al detalle de esa persona, no al listado.
+            resp.sendRedirect(update(req, session));
+            return;
         } else {
 
             String fullName = req.getParameter("fullName");

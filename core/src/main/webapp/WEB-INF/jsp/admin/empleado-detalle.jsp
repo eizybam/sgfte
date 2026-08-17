@@ -68,7 +68,7 @@
             <%-- Los dos botones del marco miden 160x48 y van apilados a la derecha. --%>
             <div class="balance__actions balance__actions--narrow">
                 <a class="btn btn--primary" href="${ctx}/accounts">Nueva cuenta</a>
-                <a class="btn btn--secondary" href="${ctx}/admin/empleados">Editar perfil</a>
+                <button type="button" class="btn btn--secondary" data-open-edit>Editar perfil</button>
             </div>
         </section>
 
@@ -173,5 +173,103 @@
         </section>
     </div>
 </div>
+
+<c:set var="editFailed" value="${not empty editErrors}"/>
+
+<div class="modal-scrim" id="edit-modal" ${editFailed ? '' : 'hidden'}>
+    <div class="modal modal--form" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+        <h2 class="modal__title" id="edit-title">Editar perfil</h2>
+        <div class="modal__rule"></div>
+
+        <c:if test="${editFailed}">
+            <div class="alert alert--error modal__alert" style="margin: var(--sp-3) 40px 0;">
+                <ul><c:forEach var="e" items="${editErrors}"><li>${e}</li></c:forEach></ul>
+            </div>
+        </c:if>
+
+        <form class="modal__body" method="post" action="${ctx}/cardholders">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="cardholderId" value="${person.id}">
+
+            <label class="register__label" for="editName">Nombre completo</label>
+            <div class="register__control">
+                <input class="register__input" type="text" id="editName" name="fullName"
+                       value="${fn:escapeXml(person.fullName)}" autocomplete="off" required>
+            </div>
+
+            <div class="register__row">
+                <div>
+                    <label class="register__label" for="editCode">Id de empleado</label>
+                    <div class="register__control">
+                        <%-- No se edita: se asigna al registrar y es lo que la
+                             persona reconoce como suyo. --%>
+                        <input class="register__input" type="text" id="editCode"
+                               value="${fn:escapeXml(person.employeeCode)}"
+                               readonly tabindex="-1" title="El código no cambia">
+                    </div>
+                </div>
+                <div>
+                    <label class="register__label" for="editDept">Departamento</label>
+                    <div class="register__control">
+                        <select class="register__input" id="editDept" name="department" required>
+                            <option value="IT" ${person.department == 'IT' ? 'selected' : ''}>IT</option>
+                        </select>
+                        <svg class="register__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <label class="register__label" for="editEmail">Correo corporativo</label>
+            <div class="register__control">
+                <input class="register__input" type="email" id="editEmail" name="email"
+                       value="${fn:escapeXml(person.email)}" autocomplete="off" required>
+            </div>
+
+            <label class="register__label" for="editPhone">Teléfono</label>
+            <div class="register__control">
+                <input class="register__input" type="tel" id="editPhone" name="phone"
+                       value="${fn:escapeXml(person.phone)}" autocomplete="off"
+                       placeholder="Opcional · 10 dígitos">
+            </div>
+
+            <p class="register__note">
+                <svg width="18" height="18" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>El correo es también el usuario con el que el empleado entra al
+                    sistema: al cambiarlo aquí, cambia su acceso.</span>
+            </p>
+
+            <div class="register__actions">
+                <button type="button" class="btn btn--secondary" data-close-edit>Cancelar</button>
+                <button type="submit" class="btn btn--primary">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("edit-modal");
+        var first = document.getElementById("editName");
+        var lastFocused = null;
+
+        function open()  { lastFocused = document.activeElement; scrim.hidden = false; first.focus(); }
+        function close() { scrim.hidden = true; if (lastFocused) lastFocused.focus(); }
+
+        document.querySelectorAll("[data-open-edit]").forEach(function (b) {
+            b.addEventListener("click", open);
+        });
+        document.querySelectorAll("[data-close-edit]").forEach(function (b) {
+            b.addEventListener("click", close);
+        });
+
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) close();
+        });
+
+        // Si el POST falló, el modal nace abierto: no se pierde lo tecleado.
+        if (!scrim.hidden) first.focus();
+    })();
+</script>
 
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

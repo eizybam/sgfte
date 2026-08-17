@@ -111,6 +111,34 @@ public class UserDao {
         }
     }
 
+    public int updateIdentity(Connection conn, long cardholderId, String email, String fullName)
+            throws SQLException {
+        String sql = "UPDATE app_user SET email = ?, full_name = ? WHERE cardholder_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setString(2, fullName);
+            ps.setLong(3, cardholderId);
+            return ps.executeUpdate();
+        }
+    }
+
+
+    /**
+     * Changes only the password. Unlike setPasswordAndActivate, does NOT touch
+     * the status: a suspended login stays suspended after the change.
+     */
+    public void updatePassword(long id, String passwordHash) {
+        String sql = "UPDATE app_user SET password_hash = ? WHERE id = ?";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, passwordHash);
+            ps.setLong(2, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating password", e);
+        }
+    }
+
 
     private AppUser mapRow(ResultSet resultSet) throws SQLException {
         AppUser user = new AppUser();

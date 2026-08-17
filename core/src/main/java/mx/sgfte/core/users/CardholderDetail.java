@@ -9,19 +9,21 @@ public class CardholderDetail {
     private final String employeeCode;
     private final String fullName;
     private final String email;
+    private final String phone;
     private final String department;
     private final String status;
     private final BigDecimal totalBalance;
     private final int activeAccounts;
     private final int cardCount;
 
-    public CardholderDetail(long id, String employeeCode, String fullName, String email,
+    public CardholderDetail(long id, String employeeCode, String fullName, String email, String phone,
                             String department, String status, BigDecimal totalBalance,
                             int activeAccounts, int cardCount) {
         this.id = id;
         this.employeeCode = employeeCode;
         this.fullName = fullName;
         this.email = email;
+        this.phone = phone;
         this.department = department;
         this.status = status;
         this.totalBalance = totalBalance;
@@ -33,6 +35,7 @@ public class CardholderDetail {
     public String getEmployeeCode() { return employeeCode; }
     public String getFullName() { return fullName; }
     public String getEmail() { return email; }
+    public String getPhone() { return phone; }
     public String getDepartment() { return department; }
     public String getStatus() { return status; }
     public BigDecimal getTotalBalance() { return totalBalance; }

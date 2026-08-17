@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.accounts.AccountDao;
 import mx.sgfte.core.accounts.AccountRow;
 import mx.sgfte.core.cards.CardDao;
@@ -57,6 +58,17 @@ public class CardholderDetailServlet extends HttpServlet {
         req.setAttribute("accounts", accounts);
         req.setAttribute("cards", cardDao.findByCardholder(person.getId()));
         req.setAttribute("purposeSummary", purposeSummary(accounts));
+
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            Object errors = session.getAttribute(
+                    mx.sgfte.core.users.web.CardholderServlet.FLASH_EDIT_ERRORS);
+            if (errors != null) {
+                req.setAttribute("editErrors", errors);
+                session.removeAttribute(
+                        mx.sgfte.core.users.web.CardholderServlet.FLASH_EDIT_ERRORS);
+            }
+        }
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/empleado-detalle.jsp").forward(req, resp);
     }
