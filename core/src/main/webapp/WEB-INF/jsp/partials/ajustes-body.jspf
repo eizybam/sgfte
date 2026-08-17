@@ -55,7 +55,7 @@
             </div>
         </c:if>
 
-        <form method="post" action="${ctx}${pageContext.request.servletPath}" autocomplete="off">
+        <form method="post" action="${ctx}${requestScope['jakarta.servlet.forward.servlet_path']}" autocomplete="off">
 
             <label class="register__label" for="currentPassword">Contraseña actual</label>
             <div class="register__control">
