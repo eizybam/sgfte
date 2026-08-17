@@ -140,12 +140,6 @@ public class CardholderServlet extends HttpServlet {
                     .flash(session);
         }
     }
-
-    private Integer parseInt(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try { return Integer.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
-    }
-
     private Long parseLong(String raw) {
         if (raw == null || raw.isBlank()) return null;
         try { return Long.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
