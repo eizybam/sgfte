@@ -46,6 +46,15 @@ class CardServiceTest {
 
         @Override
         public boolean invalidate(long cardId) { return invalidateSucceeds; }
+
+        boolean blockSucceeds = true;
+        boolean unblockSucceeds = true;
+
+        @Override
+        public boolean block(long cardId) { return blockSucceeds; }
+
+        @Override
+        public boolean unblock(long cardId) { return unblockSucceeds; }
     }
 
     private final FakeCardDao dao = new FakeCardDao();
@@ -149,5 +158,34 @@ class CardServiceTest {
         service.issue(1L, "PHYSICAL");
 
         assertEquals("PHYSICAL", dao.inserted.get(0).getCardType());
+    }
+
+    /* ---- Bloqueo temporal (RF-04) --------------------------------------- */
+
+    @Test
+    void blockingACardTouchesNoBalance() {
+        service.block(7L);
+        // La prueba estructural: CardService no conoce AccountDao, así que
+        // ninguna transición de estado puede mover dinero ni por descuido.
+        assertTrue(dao.inserted.isEmpty());
+    }
+
+    @Test
+    void blockingACardThatIsNotActiveIsRejected() {
+        dao.blockSucceeds = false;   // el WHERE del DAO no encontró la fila
+        ValidationException e = assertThrows(ValidationException.class, () -> service.block(7L));
+        assertTrue(e.getErrors().get(0).contains("activa"));
+    }
+
+    @Test
+    void unblockingACardThatIsNotBlockedIsRejected() {
+        dao.unblockSucceeds = false;
+        ValidationException e = assertThrows(ValidationException.class, () -> service.unblock(7L));
+        assertTrue(e.getErrors().get(0).contains("bloqueada"));
+    }
+
+    @Test
+    void unblockingSucceedsWhenTheDaoFoundTheRow() {
+        assertDoesNotThrow(() -> service.unblock(7L));
     }
 }
