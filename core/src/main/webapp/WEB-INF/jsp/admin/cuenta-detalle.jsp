@@ -133,6 +133,9 @@
                                 <form method="post" action="${ctx}/admin/cards">
                                     <input type="hidden" name="accountId" value="${account.id}">
                                     <input type="hidden" name="cardId" value="${k.id}">
+                                    <%-- Literal de la whitelist de CardServlet.backTo():
+                                         la operación se hizo aquí, se vuelve aquí. --%>
+                                    <input type="hidden" name="returnTo" value="cuenta">
                                     <input type="hidden" name="action"
                                            value="${k.status == 'BLOCKED' ? 'unblock' : 'block'}">
                                     <button type="submit" class="btn-link">
@@ -142,6 +145,7 @@
                                 <form method="post" action="${ctx}/admin/cards">
                                     <input type="hidden" name="accountId" value="${account.id}">
                                     <input type="hidden" name="cardId" value="${k.id}">
+                                    <input type="hidden" name="returnTo" value="cuenta">
                                     <input type="hidden" name="action" value="invalidate">
                                     <button type="submit" class="btn-link btn-link--danger"
                                             data-confirm data-confirm-danger

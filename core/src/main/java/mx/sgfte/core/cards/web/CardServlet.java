@@ -96,7 +96,7 @@ public class CardServlet extends HttpServlet {
                                     : "Vuelve a pagar con el saldo disponible de la cuenta.")
                         .detail("Tarjeta", "Nº " + cardId)
                         .when(java.time.LocalDateTime.now())
-                        .secondary("Volver", "/admin/cards")
+                        .secondary("Volver", backTo(req, accountId))
                         .flash(session);
             } else if ("invalidate".equals(action)) {
                 Long cardId = parseId(req.getParameter("cardId"));
@@ -109,7 +109,7 @@ public class CardServlet extends HttpServlet {
                                 "Es definitivo: el saldo de la cuenta no se toca, pero la tarjeta no vuelve. Para dar servicio otra vez hay que expedir una nueva.")
                         .detail("Tarjeta", "Nº " + cardId)
                         .when(java.time.LocalDateTime.now())
-                        .secondary("Volver", "/admin/cards")
+                        .secondary("Volver", backTo(req, accountId))
                         .flash(session);
             } else {
                 cardService.issue(accountId, req.getParameter("cardType"));
@@ -130,11 +130,30 @@ public class CardServlet extends HttpServlet {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
         }
 
-        String back = req.getContextPath() + "/admin/cards";
-        if (accountId != null) {
-            back += "?accountId=" + URLEncoder.encode(accountId.toString(), StandardCharsets.UTF_8);
+        resp.sendRedirect(req.getContextPath() + backTo(req, accountId));
+    }
+
+    /**
+     * A dónde volver después del POST.
+     *
+     * Bloquear o invalidar una tarjeta se hace DESDE el detalle de la cuenta, y
+     * mandar al admin a "Expedir tarjeta" después de anular una es cambiarle de
+     * pantalla sin motivo: pierde el contexto y tiene que volver a navegar.
+     * Expedir sí se queda donde estaba, porque ahí encadena "Expedir otra".
+     *
+     * returnTo se compara contra un literal y NUNCA se usa como URL — misma
+     * regla que PortalPurchaseServlet.backTo(): un parámetro que se concatena a
+     * un sendRedirect es una redirección abierta.
+     */
+    private String backTo(HttpServletRequest req, Long accountId) {
+        if ("cuenta".equals(req.getParameter("returnTo")) && accountId != null) {
+            return "/admin/cuenta?id=" + accountId;
         }
-        resp.sendRedirect(back);
+        if (accountId != null) {
+            return "/admin/cards?accountId="
+                 + URLEncoder.encode(accountId.toString(), StandardCharsets.UTF_8);
+        }
+        return "/admin/cards";
     }
 
     /** Reads the one-shot outcome left by the POST and clears it. */

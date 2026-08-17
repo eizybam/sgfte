@@ -3868,7 +3868,20 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
 
 /* Acciones por tarjeta en el detalle de cuenta: texto, no botones grandes —
    la lista es estrecha y son operaciones puntuales. */
-.linked__actions { display: flex; gap: var(--sp-2); margin-left: auto; }
+/*
+  Abajo a la derecha, en absoluto, igual que .linked__state lo está arriba: la
+  fila mide 80px fijos y tiene el chip y el texto a la izquierda, así que meter
+  dos enlaces en el flujo flex empujaba el último fuera de la tarjeta.
+*/
+.linked__actions {
+    position: absolute;
+    right: 20px;
+    bottom: 13px;
+    display: flex;
+    gap: 14px;
+    white-space: nowrap;
+}
+.linked__actions .btn-link { font-size: 12px; }
 
 /* Botón que se lee como enlace: acciones puntuales dentro de una lista */
 .btn-link {
