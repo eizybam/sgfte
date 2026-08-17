@@ -40,6 +40,7 @@ public enum AuditEvent {
     // Retirar es ALERTA y no INFO: no rompe nada de lo existente, pero cambia lo
     // que se puede crear a partir de ese momento, y eso conviene que se vea.
     CATEGORY_CREATED   (Severity.INFO,   Module.CUENTAS, "Categoría creada"),
+    CATEGORY_UPDATED   (Severity.INFO,   Module.CUENTAS, "Categoría actualizada"),
     CATEGORY_RETIRED   (Severity.ALERTA, Module.CUENTAS, "Categoría retirada"),
     CATEGORY_ACTIVATED (Severity.INFO,   Module.CUENTAS, "Categoría reactivada"),
 

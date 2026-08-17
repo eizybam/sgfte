@@ -33,6 +33,8 @@ public class CategoryAdminServlet extends HttpServlet {
     public static final String FLASH_DESCRIPTION = "createDescription";
     public static final String FLASH_COLOR       = "createColor";
     public static final String FLASH_SUCCESS     = "success";
+    /** Del modal en modo edición: FLASH_EDIT_ID además dice CUÁL reabrir. */
+    public static final String FLASH_EDIT_ID     = "editCategoryId";
 
     private final CategoryService service = new CategoryService();
     /*
@@ -62,6 +64,8 @@ public class CategoryAdminServlet extends HttpServlet {
 
         if ("toggle".equals(action)) {
             toggle(req, session);
+        } else if ("update".equals(action)) {
+            update(req, session);
         } else {
             create(req, session);
         }
@@ -94,6 +98,34 @@ public class CategoryAdminServlet extends HttpServlet {
                     .flash(session);
         } catch (ValidationException e) {
             session.setAttribute(FLASH_ERRORS, e.getErrors());
+            session.setAttribute(FLASH_NAME, name);
+            session.setAttribute(FLASH_DESCRIPTION, description);
+            session.setAttribute(FLASH_COLOR, req.getParameter("colorIndex"));
+        }
+    }
+
+    private void update(HttpServletRequest req, HttpSession session) {
+        Long id = parseLong(req.getParameter("categoryId"));
+        String name = req.getParameter("name");
+        String description = req.getParameter("description");
+        Integer color = parseInt(req.getParameter("colorIndex"));
+
+        try {
+            service.update(id, name, description, color);
+            audit.record(AuditEvent.CATEGORY_UPDATED, name, req);
+
+            mx.sgfte.core.shared.web.OperationResult.success("Categoría actualizada",
+                            "El catálogo de propósitos quedó al día",
+                            "ACTUALIZACIÓN CONFIRMADA",
+                            "Las cuentas que ya usaban esta categoría reflejan el cambio en toda la aplicación.")
+                    .detail("Categoría", name)
+                    .detail("Descripción", description)
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver categorías", "/admin/categorias")
+                    .flash(session);
+        } catch (ValidationException e) {
+            session.setAttribute(FLASH_ERRORS, e.getErrors());
+            session.setAttribute(FLASH_EDIT_ID, id);
             session.setAttribute(FLASH_NAME, name);
             session.setAttribute(FLASH_DESCRIPTION, description);
             session.setAttribute(FLASH_COLOR, req.getParameter("colorIndex"));
@@ -138,6 +170,7 @@ public class CategoryAdminServlet extends HttpServlet {
         if (session == null) return;
         for (String key : new String[] {
                 FLASH_SUCCESS, FLASH_ERRORS, FLASH_NAME, FLASH_DESCRIPTION, FLASH_COLOR,
+                FLASH_EDIT_ID,
                 // Del modal de departamentos: si falló, se reabre con lo tecleado.
                 mx.sgfte.core.departments.web.DepartmentServlet.FLASH_ERRORS,
                 mx.sgfte.core.departments.web.DepartmentServlet.FLASH_NAME,

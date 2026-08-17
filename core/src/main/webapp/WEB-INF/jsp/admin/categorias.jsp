@@ -41,14 +41,23 @@
         <c:forEach var="cat" items="${rows}">
             <tr>
                 <td>
-                    <div class="cat-cell">
-                        <span class="cat-swatch"
-                              style="background: var(--sgfte-purpose-${cat.colorIndex});"></span>
-                        <span>
-                            <span class="cat-name">${fn:escapeXml(cat.name)}</span>
-                            <span class="cat-kind">Propósito de fondos</span>
-                        </span>
-                    </div>
+                    <%-- El nombre ES el botón de editar, como en la tabla de
+                         departamentos: una acción no merece una columna. --%>
+                    <button type="button" class="cat-edit" data-edit-cat
+                            data-id="${cat.id}"
+                            data-name="${fn:escapeXml(cat.name)}"
+                            data-description="${fn:escapeXml(cat.description)}"
+                            data-color="${cat.colorIndex}"
+                            title="Editar ${fn:escapeXml(cat.name)}">
+                        <div class="cat-cell">
+                            <span class="cat-swatch"
+                                  style="background: var(--sgfte-purpose-${cat.colorIndex});"></span>
+                            <span>
+                                <span class="cat-name">${fn:escapeXml(cat.name)}</span>
+                                <span class="cat-kind">Propósito de fondos</span>
+                            </span>
+                        </div>
+                    </button>
                 </td>
 
                 <td class="cat-desc ${empty cat.description ? 'cat-desc--empty' : ''}">
@@ -206,7 +215,7 @@
 <div class="modal-scrim" id="create-modal" ${createFailed ? '' : 'hidden'}>
     <div class="modal modal--stack" role="dialog" aria-modal="true" aria-labelledby="create-title">
         <h2 class="modal__title" id="create-title">Nueva categoría</h2>
-        <p class="modal__lead">Define un nuevo propósito de cuenta</p>
+        <p class="modal__lead" id="create-lead">Define un nuevo propósito de cuenta</p>
 
         <c:if test="${createFailed}">
             <div class="alert alert--error modal__alert" style="margin: var(--sp-3) 40px 0;">
@@ -215,7 +224,8 @@
         </c:if>
 
         <form class="modal__body" method="post" action="${ctx}/admin/categorias">
-            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="action" id="catAction" value="create">
+            <input type="hidden" name="categoryId" id="catId" value="">
 
             <label class="modal__label modal__label--tracked" for="name">NOMBRE DE LA CATEGORÍA</label>
             <div class="register__control">
@@ -248,18 +258,22 @@
                 </c:forEach>
             </div>
 
-            <span class="modal__label modal__label--tracked">ESTADO</span>
-            <div class="switch">
-                <input class="switch__input" type="checkbox" id="active" name="active" checked>
-                <label class="switch__track" for="active" aria-label="Categoría activa"></label>
-                <span class="switch__label">Activa</span>
+            <%-- Sólo al crear: el estado de una categoría que ya existe se
+                 cambia con el badge de la tabla, que además lo registra. --%>
+            <div id="catStateField">
+                <span class="modal__label modal__label--tracked">ESTADO</span>
+                <div class="switch">
+                    <input class="switch__input" type="checkbox" id="active" name="active" checked>
+                    <label class="switch__track" for="active" aria-label="Categoría activa"></label>
+                    <span class="switch__label">Activa</span>
+                </div>
             </div>
 
             <div class="register__actions">
                 <button type="button" class="btn btn--secondary" data-close-create>Cancelar</button>
-                <button type="submit" class="btn btn--primary">
+                <button type="submit" class="btn btn--primary" id="catSubmit">
                     <img src="${ctx}/assets/img/icons/plus.png" alt="">
-                    Crear categoría
+                    <span id="catSubmitLabel">Crear categoría</span>
                 </button>
             </div>
         </form>
@@ -270,9 +284,36 @@
     (function () {
         var scrim = document.getElementById("create-modal");
         var firstField = document.getElementById("name");
+        var title  = document.getElementById("create-title");
+        var lead   = document.getElementById("create-lead");
+        var action = document.getElementById("catAction");
+        var idIn   = document.getElementById("catId");
+        var desc   = document.getElementById("description");
+        var state  = document.getElementById("catStateField");
+        var label  = document.getElementById("catSubmitLabel");
         var lastFocused = null;
 
-        function open() {
+        /*
+          El mismo modal en dos modos: con fila = editar, sin fila = crear.
+          Duplicarlo habría duplicado también cada arreglo futuro suyo.
+        */
+        function fillFor(row) {
+            var editing = !!row;
+
+            title.textContent = editing ? "Editar categoría" : "Nueva categoría";
+            lead.textContent  = editing ? "Corrige el propósito, su descripción o su color"
+                                        : "Define un nuevo propósito de cuenta";
+            action.value      = editing ? "update" : "create";
+            idIn.value        = editing ? row.getAttribute("data-id") : "";
+            firstField.value  = editing ? row.getAttribute("data-name") : "";
+            desc.value        = editing ? row.getAttribute("data-description") : "";
+            label.textContent = editing ? "Guardar cambios" : "Crear categoría";
+            state.hidden      = editing;
+
+            var color = editing ? row.getAttribute("data-color") : "1";
+            var radio = document.querySelector('.swatch__input[value="' + color + '"]');
+            if (radio) radio.checked = true;
+
             lastFocused = document.activeElement;
             scrim.hidden = false;
             firstField.focus();
@@ -284,7 +325,10 @@
         }
 
         document.querySelectorAll("[data-open-create]").forEach(function (b) {
-            b.addEventListener("click", open);
+            b.addEventListener("click", function () { fillFor(null); });
+        });
+        document.querySelectorAll("[data-edit-cat]").forEach(function (b) {
+            b.addEventListener("click", function () { fillFor(b); });
         });
         document.querySelectorAll("[data-close-create]").forEach(function (b) {
             b.addEventListener("click", close);
@@ -295,7 +339,22 @@
             if (e.key === "Escape" && !scrim.hidden) close();
         });
 
-        if (!scrim.hidden) firstField.focus();
+        // Si el POST falló, el modal vuelve abierto con lo tecleado; y si lo que
+        // falló era una edición, vuelve en modo edición sobre la misma fila.
+        if (!scrim.hidden) {
+            var failedId = "${editCategoryId}";
+            if (failedId) {
+                var row = document.querySelector('[data-edit-cat][data-id="' + failedId + '"]');
+                if (row) {
+                    title.textContent = "Editar categoría";
+                    action.value      = "update";
+                    idIn.value        = failedId;
+                    label.textContent = "Guardar cambios";
+                    state.hidden      = true;
+                }
+            }
+            firstField.focus();
+        }
     })();
 </script>
 
