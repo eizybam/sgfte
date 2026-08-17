@@ -33,6 +33,7 @@ public class CardholderServlet extends HttpServlet {
     public static final String FLASH_ERRORS = "registerErrors";
     public static final String FLASH_NAME   = "registerName";
     public static final String FLASH_EMAIL  = "registerEmail";
+    public static final String FLASH_EDIT_ERRORS = "editErrors";
 
     private final CardholderService service = new CardholderService();
     private final AuditLogService audit = new AuditLogService();
@@ -49,6 +50,10 @@ public class CardholderServlet extends HttpServlet {
 
         if ("toggle".equals(action)) {
             toggle(req, session);
+        } else if ("update".equals(action)) {
+            // La edición vuelve al detalle de esa persona, no al listado.
+            resp.sendRedirect(update(req, session));
+            return;
         } else {
 
             String fullName = req.getParameter("fullName");
@@ -136,6 +141,43 @@ public class CardholderServlet extends HttpServlet {
                     .flash(session);
         }
     }
+
+    private String update(HttpServletRequest req, HttpSession session) {
+        Long id = parseLong(req.getParameter("cardholderId"));
+        String fullName   = req.getParameter("fullName");
+        String email      = req.getParameter("email");
+        String department = req.getParameter("department");
+        String phone      = req.getParameter("phone");
+
+        if (id == null) {
+            return req.getContextPath() + "/admin/empleados";
+        }
+
+        try {
+            service.update(id, fullName, email, department, phone);
+
+            // La bitácora se escribe DESPUÉS del commit, nunca dentro: un
+            // registro de algo que se deshizo es peor que no tener registro.
+            audit.record(AuditEvent.CARDHOLDER_UPDATED,
+                    "Empleado " + id + " · " + fullName + " · " + email, req);
+
+            mx.sgfte.core.shared.web.OperationResult.success("Perfil actualizado",
+                            "Los datos del empleado quedaron guardados",
+                            "ACTUALIZACIÓN CONFIRMADA",
+                            "El código de empleado y el estado no cambian; sus cuentas y tarjetas siguen igual.")
+                    .detail("Empleado", fullName)
+                    .detail("Correo", email)
+                    .detail("Departamento", department)
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver empleados", "/admin/empleados")
+                    .flash(session);
+
+        } catch (ValidationException e) {
+            session.setAttribute(FLASH_EDIT_ERRORS, e.getErrors());
+        }
+        return req.getContextPath() + "/admin/empleado?id=" + id;
+    }
+
 
     private Integer parseInt(String raw) {
         if (raw == null || raw.isBlank()) return null;

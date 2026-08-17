@@ -111,6 +111,17 @@ public class UserDao {
         }
     }
 
+    public int updateIdentity(Connection conn, long cardholderId, String email, String fullName)
+            throws SQLException {
+        String sql = "UPDATE app_user SET email = ?, full_name = ? WHERE cardholder_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setString(2, fullName);
+            ps.setLong(3, cardholderId);
+            return ps.executeUpdate();
+        }
+    }
+
 
     /**
      * Changes only the password. Unlike setPasswordAndActivate, does NOT touch

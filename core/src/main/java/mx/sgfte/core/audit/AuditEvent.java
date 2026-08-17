@@ -49,6 +49,7 @@ public enum AuditEvent {
 
     // --- Empleados ---
     CARDHOLDER_CREATED (Severity.INFO, Module.EMPLEADOS, "Empleado registrado"),
+    CARDHOLDER_UPDATED (Severity.INFO, Module.EMPLEADOS, "Empleado actualizado"),
     CARDHOLDER_DELETED (Severity.CRIT, Module.EMPLEADOS, "Usuario eliminado"),
     CARDHOLDER_REINCORPORATED (Severity.CRIT, Module.EMPLEADOS, "Usuario reincorporado"),
 
