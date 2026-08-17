@@ -120,7 +120,7 @@
                         <span class="linked__chip"></span>
                         <span>
                             <span class="linked__type">${k.cardType == 'PHYSICAL' ? 'Física' : 'Digital'}</span>
-                            <span class="linked__pan">••••&nbsp;&nbsp;${fn:substring(k.maskedPan, fn:length(k.maskedPan) - 4, fn:length(k.maskedPan))}</span>
+                            <span class="linked__pan">&nbsp;&nbsp;${fn:substring(k.maskedPan, fn:length(k.maskedPan) - 4, fn:length(k.maskedPan))}</span>
                         </span>
                         <%-- Tres estados desde RF-04: activa, bloqueada
                              (temporal) e invalidada (definitiva). --%>
