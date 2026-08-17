@@ -22,7 +22,7 @@
     <c:param name="moduleFilter" value="${moduleFilter}"/>
 </c:url>
     <a  class="btn btn--primary btn--logs"
-          href="/admin/logs.csv"  title="Exportación de logs pendiente">
+          href="${exportUrl}" title="Descarga los registros que se están mostrando">
         <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="5" y="3" width="18" height="22" rx="2"/>

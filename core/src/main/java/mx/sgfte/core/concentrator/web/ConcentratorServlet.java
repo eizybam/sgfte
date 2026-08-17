@@ -47,6 +47,12 @@ public class ConcentratorServlet extends HttpServlet {
 
     /** Cuántas filas caben en cada panel del marco: 5 y 2. */
     private static final int MOVEMENT_ROWS = 5;
+    /*
+      "Ver historial completo" no es una pantalla nueva: es este mismo panel con
+      otro tope. Lo único que separaba "los últimos" de "todos" era el número.
+     */
+    private static final int MOVEMENT_ROWS_ALL = 100;
+    private static final int REINTEGRATION_ROWS_ALL = 100;
     private static final int REINTEGRATION_ROWS = 2;
 
     private static final DateTimeFormatter DAY_YEAR =
@@ -57,9 +63,16 @@ public class ConcentratorServlet extends HttpServlet {
             throws ServletException, IOException {
 
         req.setAttribute("concentrator", service.getConcentrator());
-        req.setAttribute("movements", ledger.findRecent(MOVEMENT_ROWS));
+        boolean fullLedger = "all".equals(req.getParameter("ledger"));
+        boolean fullReint   = "all".equals(req.getParameter("reint"));
+        req.setAttribute("fullLedger", fullLedger);
+        req.setAttribute("fullReint", fullReint);
+
+        req.setAttribute("movements",
+                ledger.findRecent(fullLedger ? MOVEMENT_ROWS_ALL : MOVEMENT_ROWS));
         req.setAttribute("reintegrations",
-                ledger.findRecentByType("REINTEGRATION", REINTEGRATION_ROWS));
+                ledger.findRecentByType("REINTEGRATION",
+                        fullReint ? REINTEGRATION_ROWS_ALL : REINTEGRATION_ROWS));
 
         ConcentratorSummary summary = ledger.summary();
         req.setAttribute("summary", summary);

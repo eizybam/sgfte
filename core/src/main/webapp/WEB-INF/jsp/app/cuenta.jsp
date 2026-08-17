@@ -165,8 +165,9 @@
             </c:otherwise>
         </c:choose>
 
-        <%-- Sin destino todavía: no existe la pantalla de historial del portal. --%>
-        <span class="pactivity__more is-pending" title="Pantalla pendiente">Ver historial completo</span>
+        <%-- /app/movimientos existe y acepta ?account=: no hacía falta pantalla
+             nueva, sólo apuntar el enlace a la que ya estaba hecha. --%>
+        <a class="pactivity__more" href="${ctx}/app/movimientos?account=${account.id}">Ver historial completo</a>
     </aside>
 </div>
 

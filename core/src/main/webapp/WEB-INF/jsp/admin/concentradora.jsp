@@ -71,13 +71,12 @@
             <div class="moves__head">
                 <p class="panel__label">MOVIMIENTOS RECIENTES</p>
                 <%--
-                  Sin destino todavía: no existe una vista paginada del ledger de
-                  la Concentradora. /admin/logs?mod=FONDOS parecería servir, pero
-                  la bitácora es otra cosa —quién hizo qué, no el saldo—, así que
-                  enlazarla mostraría lo que no es. Se deja inerte, como el botón
-                  de exportar de Logs y Analíticas.
+                  El mismo panel con otro tope (?ledger=all). No se enlaza a la
+                  bitácora porque es otra cosa: quién hizo qué, no el saldo.
                 --%>
-                <span class="moves__more is-pending" title="Historial completo del ledger pendiente">Ver historial completo</span>
+                <a class="moves__more" href="${ctx}/admin/concentradora?ledger=${fullLedger ? '' : 'all'}">
+                    ${fullLedger ? 'Ver sólo los recientes' : 'Ver historial completo'}
+                </a>
             </div>
 
             <c:choose>
@@ -148,7 +147,9 @@
                 </c:if>
             </div>
 
-            <span class="linked__add is-pending" title="Listado completo de reintegraciones pendiente">Ver todas las reintegraciones</span>
+            <a class="linked__add" href="${ctx}/admin/concentradora?reint=${fullReint ? '' : 'all'}">
+                ${fullReint ? 'Ver sólo las últimas' : 'Ver todas las reintegraciones'}
+            </a>
         </section>
 
         <section class="panel month" style="margin-top: 28px;">
