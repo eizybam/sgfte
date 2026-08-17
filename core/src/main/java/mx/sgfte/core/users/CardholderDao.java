@@ -144,14 +144,16 @@ public class CardholderDao {
      */
     public java.util.Optional<CardholderDetail> findDetail(long cardholderId) {
         String sql = "SELECT ch.id, ch.employee_code, ch.first_name, ch.last_name, "
-                   + "       ch.email, ch.phone, ch.department, ch.status, "
+                   + "       ch.email, ch.phone, d.name AS department, ch.status, "
                    + "  (SELECT NVL(SUM(a.balance), 0) FROM account a "
                    + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS total_balance, "
                    + "  (SELECT COUNT(*) FROM account a "
                    + "    WHERE a.cardholder_id = ch.id AND a.status = 'ACTIVE') AS active_accounts, "
                    + "  (SELECT COUNT(*) FROM card k JOIN account ka ON ka.id = k.account_id "
                    + "    WHERE ka.cardholder_id = ch.id AND k.status = 'ACTIVE') AS card_count "
-                   + "FROM cardholder ch WHERE ch.id = ?";
+                   + "FROM cardholder ch "
+                   + "  LEFT JOIN department d ON d.id = ch.department_id "
+                   + " WHERE ch.id = ?";
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setLong(1, cardholderId);
@@ -195,7 +197,7 @@ public class CardholderDao {
             params.add(status);
         }
         if (department != null && !department.isBlank()) {
-            sql.append("AND ch.department = ? ");
+            sql.append("AND ch.department_id = (SELECT d.id FROM department d WHERE d.name = ?) ");
             params.add(department);
         }
     }
@@ -220,7 +222,7 @@ public class CardholderDao {
             params.add(status);
         }
         if (department != null && !department.isBlank()) {
-            sql.append("AND ch.department = ? ");
+            sql.append("AND ch.department_id = (SELECT d.id FROM department d WHERE d.name = ?) ");
             params.add(department);
         }
 
@@ -232,10 +234,16 @@ public class CardholderDao {
 
     }
 
-    /** The departments actually in use — feeds the toolbar pill. */
+    /**
+     * Los departamentos que se pueden filtrar en la píldora de la barra.
+     *
+     * Sale del catálogo y no de un DISTINCT sobre cardholder: desde V10 el área
+     * es una FK, así que la lista de áreas es el catálogo. Un DISTINCT dejaría
+     * fuera un área recién creada a la que todavía no pertenece nadie, y la
+     * píldora enseñaría menos opciones de las que existen.
+     */
     public List<String> distinctDepartments() {
-        String sql = "SELECT DISTINCT department FROM cardholder "
-                   + "WHERE department IS NOT NULL ORDER BY department";
+        String sql = "SELECT name FROM department WHERE status = 'ACTIVE' ORDER BY name";
         List<String> names = new ArrayList<>();
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
@@ -245,6 +253,13 @@ public class CardholderDao {
         } catch (SQLException e) {
             throw new RuntimeException("Error loading departments", e);
         }
+    }
+
+    /** department_id es NULL-able: un empleado puede no tener área asignada. */
+    private void setDepartment(PreparedStatement ps, int index, Long departmentId)
+            throws SQLException {
+        if (departmentId == null) ps.setNull(index, java.sql.Types.NUMERIC);
+        else ps.setLong(index, departmentId);
     }
 
     private void bind(PreparedStatement ps, List<Object> params) throws SQLException {
@@ -288,7 +303,7 @@ public class CardholderDao {
 
     public long insert(Cardholder ch) {
         String sql = "INSERT INTO cardholder "
-                   + "(first_name, last_name, email, phone, employee_code, department) "
+                   + "(first_name, last_name, email, phone, employee_code, department_id) "
                    + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, new String[]{"id"})) {
@@ -297,7 +312,7 @@ public class CardholderDao {
             ps.setString(3, ch.getEmail());
             ps.setString(4, ch.getPhone());
             ps.setString(5, ch.getEmployeeCode());
-            ps.setString(6, ch.getDepartment());
+            setDepartment(ps, 6, ch.getDepartmentId());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -342,14 +357,14 @@ public class CardholderDao {
     public void update(Connection conn, Cardholder ch) throws SQLException {
         String sql = "UPDATE cardholder "
                 + "   SET first_name = ?, last_name = ?, email = ?, "
-                + "       phone = ?, department = ? "
+                + "       phone = ?, department_id = ? "
                 + " WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, ch.getFirstName());
             ps.setString(2, ch.getLastName());
             ps.setString(3, ch.getEmail());
             ps.setString(4, ch.getPhone());
-            ps.setString(5, ch.getDepartment());
+            setDepartment(ps, 5, ch.getDepartmentId());
             ps.setLong(6, ch.getId());
             ps.executeUpdate();
         }

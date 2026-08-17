@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.audit.AuditEvent;
 import mx.sgfte.core.audit.AuditLogService;
 import mx.sgfte.core.categories.CategoryService;
+import mx.sgfte.core.departments.DepartmentService;
 import mx.sgfte.core.users.ValidationException;
 
 import java.io.IOException;
@@ -34,6 +35,13 @@ public class CategoryAdminServlet extends HttpServlet {
     public static final String FLASH_SUCCESS     = "success";
 
     private final CategoryService service = new CategoryService();
+    /*
+      La pantalla enseña los DOS catálogos que alimentan desplegables: los
+      propósitos de cuenta y las áreas de la empresa. Son tablas hermanas y no
+      merecían una pantalla cada una; las escrituras de departamento van a
+      /admin/departamentos, que redirige aquí.
+     */
+    private final DepartmentService departmentService = new DepartmentService();
     private final AuditLogService audit = new AuditLogService();
 
     @Override
@@ -41,6 +49,7 @@ public class CategoryAdminServlet extends HttpServlet {
             throws ServletException, IOException {
 
         req.setAttribute("rows", service.catalogue());
+        req.setAttribute("departments", departmentService.catalogue());
         req.setAttribute("colors", colorRange());
         consumeFlash(req);
         req.getRequestDispatcher("/WEB-INF/jsp/admin/categorias.jsp").forward(req, resp);
@@ -128,7 +137,12 @@ public class CategoryAdminServlet extends HttpServlet {
         HttpSession session = req.getSession(false);
         if (session == null) return;
         for (String key : new String[] {
-                FLASH_SUCCESS, FLASH_ERRORS, FLASH_NAME, FLASH_DESCRIPTION, FLASH_COLOR }) {
+                FLASH_SUCCESS, FLASH_ERRORS, FLASH_NAME, FLASH_DESCRIPTION, FLASH_COLOR,
+                // Del modal de departamentos: si falló, se reabre con lo tecleado.
+                mx.sgfte.core.departments.web.DepartmentServlet.FLASH_ERRORS,
+                mx.sgfte.core.departments.web.DepartmentServlet.FLASH_NAME,
+                mx.sgfte.core.departments.web.DepartmentServlet.FLASH_DESCRIPTION,
+                mx.sgfte.core.departments.web.DepartmentServlet.FLASH_EDIT_ID }) {
             Object value = session.getAttribute(key);
             if (value != null) {
                 req.setAttribute(key, value);

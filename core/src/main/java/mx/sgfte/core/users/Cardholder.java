@@ -13,6 +13,13 @@ public class Cardholder {
     private String phone;
     private String status; // ACTIVE / INACTIVE
     private String employeeCode;  // "DJE0077" — se asigna al registrar y no cambia
+
+    /*
+      El área a la que pertenece. Desde V10 es una FK al catálogo department:
+      departmentId es lo que se guarda, y department el nombre que se lee para
+      pintarlo. Escribir el nombre no cambia nada en la base — es sólo lectura.
+     */
+    private Long departmentId;
     private String department;
 
     public Cardholder() {}
@@ -45,6 +52,9 @@ public class Cardholder {
 
     public String getEmployeeCode() { return employeeCode; }
     public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
+
+    public Long getDepartmentId() { return departmentId; }
+    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
 
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }

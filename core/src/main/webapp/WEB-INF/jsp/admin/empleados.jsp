@@ -189,10 +189,17 @@
                 <div>
                     <label class="register__label" for="department">Departamento</label>
                     <div class="register__control">
-                        <%-- Una sola opción por ahora; cuando exista el catálogo se llena desde ahí. --%>
-                        <select class="register__input" id="department" name="department" required>
-                            <option value="IT" selected>IT</option>
+                        <%-- Se llena desde el catálogo de departamentos (V10).
+                             Viaja el id, que es lo que guarda cardholder; el
+                             nombre va aparte y sólo lo usa el desenlace. --%>
+                        <select class="register__input" id="department" name="departmentId" required
+                                onchange="this.form.departmentName.value = this.options[this.selectedIndex].text">
+                            <c:forEach var="d" items="${departmentOptions}">
+                                <option value="${d.id}">${fn:escapeXml(d.name)}</option>
+                            </c:forEach>
                         </select>
+                        <input type="hidden" name="departmentName"
+                               value="${empty departmentOptions ? '' : fn:escapeXml(departmentOptions[0].name)}">
                         <svg class="register__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
                     </div>
                 </div>

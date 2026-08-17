@@ -86,13 +86,15 @@ public class CardholderService {
      * "Diego" / "Jarillo Estrada". A one-word name is rejected rather than
      * guessed at, because a blank last_name would violate the schema.
      */
-    public long registerFromFullName(String fullName, String email, String department) {
+    public long registerFromFullName(String fullName, String email, Long departmentId) {
         String[] parts = splitName(fullName);
         if (parts == null) {
             throw new ValidationException(List.of("Escribe el nombre y al menos un apellido"));
         }
         Cardholder ch = new Cardholder(parts[0], parts[1], trim(email), null);
-        ch.setDepartment(trim(department));
+        // El área llega como id del catálogo (V10), no como texto: la FK es
+        // quien garantiza que exista, así que aquí no hay nada que validar.
+        ch.setDepartmentId(departmentId);
         return register(ch);
     }
 
@@ -158,7 +160,7 @@ public class CardholderService {
     }
 
     public void update(long id, String fullName, String email,
-                       String department, String phone) {
+                       Long departmentId, String phone) {
 
         String[] parts = splitName(fullName);
         if (parts == null) {
@@ -167,7 +169,7 @@ public class CardholderService {
 
         Cardholder ch = new Cardholder(parts[0], parts[1], trim(email), trim(phone));
         ch.setId(id);
-        ch.setDepartment(trim(department));
+        ch.setDepartmentId(departmentId);
 
         List<String> errors = validate(ch);          // el MISMO validador del alta
         if (!errors.isEmpty()) throw new ValidationException(errors);

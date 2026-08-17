@@ -58,11 +58,12 @@ public class CardholderServlet extends HttpServlet {
 
             String fullName = req.getParameter("fullName");
             String email = req.getParameter("email");
-            String department = req.getParameter("department");
+            Long departmentId = parseLong(req.getParameter("departmentId"));
+            String department  = req.getParameter("departmentName");   // sólo para el desenlace
 
 
             try {
-                long newId = service.registerFromFullName(fullName, email, department);
+                long newId = service.registerFromFullName(fullName, email, departmentId);
                 audit.record(AuditEvent.CARDHOLDER_CREATED, fullName + " · " + email, req);
 
                 mx.sgfte.core.shared.web.OperationResult.success("¡Empleado registrado!",
@@ -156,7 +157,8 @@ public class CardholderServlet extends HttpServlet {
         Long id = parseLong(req.getParameter("cardholderId"));
         String fullName   = req.getParameter("fullName");
         String email      = req.getParameter("email");
-        String department = req.getParameter("department");
+        Long departmentId = parseLong(req.getParameter("departmentId"));
+        String department = req.getParameter("departmentName");   // sólo para el desenlace
         String phone      = req.getParameter("phone");
 
         if (id == null) {
@@ -164,7 +166,7 @@ public class CardholderServlet extends HttpServlet {
         }
 
         try {
-            service.update(id, fullName, email, department, phone);
+            service.update(id, fullName, email, departmentId, phone);
 
             // La bitácora se escribe DESPUÉS del commit, nunca dentro: un
             // registro de algo que se deshizo es peor que no tener registro.

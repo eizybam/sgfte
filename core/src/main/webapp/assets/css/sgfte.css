@@ -3802,3 +3802,44 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
     .settings { grid-template-columns: 1fr; }
     .settings__card { padding: var(--sp-3); }
 }
+
+/* ---- Departamentos: segundo catálogo de la misma pantalla ---------------- */
+
+/*
+  Separación entre los dos catálogos. Es una sección más de la pantalla, no una
+  tabla suelta: por eso lleva su propio encabezado con botón, igual que el
+  page-head lleva el de categorías.
+*/
+.cat-section { margin-top: 56px; }
+
+.cat-section__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: 22px;
+}
+
+.cat-section__title { margin: 0; font-size: 28px; font-weight: 700; color: var(--sgfte-cream); }
+.cat-section__lead  { margin: 6px 0 0; font-size: 16px; color: var(--sgfte-pink-text); }
+
+/* Sin color, la primera columna no necesita hueco para la muestra */
+.table--departments .col-cat { width: 260px; }
+
+/* El nombre es el botón de editar: se comporta como el resto de celdas y sólo
+   se delata al pasar por encima. */
+.cat-edit {
+    display: block;
+    padding: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.cat-edit:hover .cat-name { color: var(--sgfte-accent); }
+.cat-edit:focus-visible { outline: 2px solid var(--sgfte-accent); outline-offset: 4px; border-radius: 6px; }
+
+@media (max-width: 860px) {
+    .cat-section__head { flex-direction: column; align-items: stretch; }
+}

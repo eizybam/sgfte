@@ -211,9 +211,18 @@
                 <div>
                     <label class="register__label" for="editDept">Departamento</label>
                     <div class="register__control">
-                        <select class="register__input" id="editDept" name="department" required>
-                            <option value="IT" ${person.department == 'IT' ? 'selected' : ''}>IT</option>
+                        <%-- Del catálogo (V10). Se compara por nombre porque es
+                             lo que trae la ficha; el que viaja es el id. --%>
+                        <select class="register__input" id="editDept" name="departmentId" required
+                                onchange="this.form.departmentName.value = this.options[this.selectedIndex].text">
+                            <c:forEach var="d" items="${departmentOptions}">
+                                <option value="${d.id}" ${d.name == person.department ? 'selected' : ''}>
+                                    ${fn:escapeXml(d.name)}
+                                </option>
+                            </c:forEach>
                         </select>
+                        <input type="hidden" name="departmentName"
+                               value="${fn:escapeXml(person.department)}">
                         <svg class="register__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
                     </div>
                 </div>

@@ -36,6 +36,8 @@ public class CardholderDetailServlet extends HttpServlet {
     private final CardholderDao cardholderDao = new CardholderDao();
     private final AccountDao accountDao = new AccountDao();
     private final CardDao cardDao = new CardDao();
+    private final mx.sgfte.core.departments.DepartmentDao departmentDao =
+            new mx.sgfte.core.departments.DepartmentDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -58,6 +60,8 @@ public class CardholderDetailServlet extends HttpServlet {
         req.setAttribute("accounts", accounts);
         req.setAttribute("cards", cardDao.findByCardholder(person.getId()));
         req.setAttribute("purposeSummary", purposeSummary(accounts));
+        // Para el desplegable del modal "Editar perfil".
+        req.setAttribute("departmentOptions", departmentDao.findAllActive());
 
         HttpSession session = req.getSession(false);
         if (session != null) {

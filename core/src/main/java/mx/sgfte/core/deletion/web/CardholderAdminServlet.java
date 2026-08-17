@@ -39,6 +39,8 @@ public class CardholderAdminServlet extends HttpServlet {
 
     private final DeletionService deletionService = new DeletionService();
     private final CardholderDao cardholderDao = new CardholderDao();
+    private final mx.sgfte.core.departments.DepartmentDao departmentDao =
+            new mx.sgfte.core.departments.DepartmentDao();
     private final AuditLogService audit = new AuditLogService();
 
     @Override
@@ -61,6 +63,8 @@ public class CardholderAdminServlet extends HttpServlet {
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
         req.setAttribute("departments", cardholderDao.distinctDepartments());
+        // El desplegable del modal de alta necesita el id, no sólo el nombre.
+        req.setAttribute("departmentOptions", departmentDao.findAllActive());
         req.setAttribute("q", search);
         req.setAttribute("status", status == null ? "" : status);
         req.setAttribute("dept", department == null ? "" : department);

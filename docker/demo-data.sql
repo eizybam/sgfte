@@ -22,6 +22,8 @@ DECLARE
     TYPE t_str_arr IS TABLE OF VARCHAR2(60);
     v_first_names t_str_arr := t_str_arr('Ana', 'Diego', 'Marta', 'Luis');
     v_last_names  t_str_arr := t_str_arr('Ramirez', 'Vega', 'Solis', 'Ortega');
+    -- Deben existir en el catálogo department (schema.sql los siembra).
+    v_departments t_str_arr := t_str_arr('Finanzas', 'Operaciones', 'Ventas', 'Recursos Humanos');
 
     v_merchants_gas t_str_arr := t_str_arr('Pemex Reforma', 'Gasolinera BP Insurgentes', 'Pemex Autopista km 54', 'Circle K Combustible');
     v_merchants_ali t_str_arr := t_str_arr('OXXO Centro', 'Walmart Supercenter', 'Starbucks Polanco', 'Restaurante La Terraza', 'Superama');
@@ -66,14 +68,16 @@ BEGIN
         v_cardholder_ids.EXTEND; v_cardholder_ids(v_cardholder_ids.COUNT) := r.id;
     END LOOP;
 
+    -- Cada uno en un área distinta: con todos en 'IT' el filtro por
+    -- departamento de /admin/empleados no tendría nada que demostrar.
     FOR i IN 1..v_first_names.COUNT LOOP
-        INSERT INTO cardholder (first_name, last_name, email, phone, employee_code, department, created_at)
+        INSERT INTO cardholder (first_name, last_name, email, phone, employee_code, department_id, created_at)
         VALUES (v_first_names(i), v_last_names(i),
                 LOWER(v_first_names(i) || '.' || v_last_names(i) || '@empresa.com'),
                 '555000' || LPAD(i, 4, '0'),
                 UPPER(SUBSTR(v_first_names(i), 1, 1) || SUBSTR(v_last_names(i), 1, 1))
                     || LPAD(seq_employee_code.NEXTVAL, 4, '0'),
-                'IT',
+                (SELECT id FROM department WHERE name = v_departments(i)),
                 v_now - (300 - i * 30))
         RETURNING id INTO v_new_ch_id;
         v_cardholder_ids.EXTEND; v_cardholder_ids(v_cardholder_ids.COUNT) := v_new_ch_id;

@@ -48,6 +48,14 @@ public enum AuditEvent {
     CARD_INVALIDATED (Severity.CRIT, Module.TARJETAS, "Tarjeta invalidada"),
 
     // --- Empleados ---
+    // Catálogo de áreas. Retirar es ALERTA por el mismo motivo que en
+    // categorías: no rompe nada de lo existente, pero cambia lo que se puede
+    // asignar a partir de ese momento.
+    DEPARTMENT_CREATED   (Severity.INFO,   Module.EMPLEADOS, "Departamento creado"),
+    DEPARTMENT_UPDATED   (Severity.INFO,   Module.EMPLEADOS, "Departamento actualizado"),
+    DEPARTMENT_RETIRED   (Severity.ALERTA, Module.EMPLEADOS, "Departamento retirado"),
+    DEPARTMENT_ACTIVATED (Severity.INFO,   Module.EMPLEADOS, "Departamento reactivado"),
+
     CARDHOLDER_CREATED (Severity.INFO, Module.EMPLEADOS, "Empleado registrado"),
     CARDHOLDER_UPDATED (Severity.INFO, Module.EMPLEADOS, "Empleado actualizado"),
     CARDHOLDER_DELETED (Severity.CRIT, Module.EMPLEADOS, "Empleado eliminado"),
