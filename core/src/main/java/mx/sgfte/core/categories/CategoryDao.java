@@ -134,6 +134,34 @@ public class CategoryDao {
     }
 
     /**
+     * Corrige nombre, descripción o color de una categoría existente.
+     *
+     * status no está en el SET: retirar y reactivar es otra operación
+     * (setStatus), con su propio evento en la bitácora. Si estuviera aquí, un
+     * formulario de edición podría retirar una categoría sin que quedara
+     * escrito como tal.
+     *
+     * El UNIQUE del nombre decide igual que en el alta; se traduce arriba.
+     */
+    public void update(Category category) {
+        String sql = "UPDATE category SET name = ?, description = ?, color_index = ? WHERE id = ?";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, category.getName());
+            ps.setString(2, category.getDescription());
+            ps.setInt(3, category.getColorIndex());
+            ps.setLong(4, category.getId());
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("Category " + category.getId() + " not found");
+            }
+        } catch (java.sql.SQLIntegrityConstraintViolationException e) {
+            throw new DuplicateCategoryException(category.getName());
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating the category", e);
+        }
+    }
+
+    /**
      * Retires or brings back a purpose.
      *
      * There is no delete on purpose: account.category_id is NOT NULL and points

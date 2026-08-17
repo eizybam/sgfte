@@ -34,6 +34,47 @@ public class CategoryService {
      * following attempt.
      */
     public long create(String name, String description, Integer colorIndex, boolean active) {
+        Category category = validated(name, description, colorIndex);
+        category.setStatus(active ? "ACTIVE" : "INACTIVE");
+        try {
+            return dao.create(category);
+        } catch (DuplicateCategoryException e) {
+            // El UNIQUE es quien decide; aquí sólo se traduce para la pantalla.
+            throw new ValidationException(List.of(e.getMessage()));
+        }
+    }
+
+    /**
+     * Corrige una categoría existente.
+     *
+     * El color no es decorativo: es lo que distingue los propósitos en la tabla
+     * de cuentas, en el selector de dispersión y en el dashboard, y sale de la
+     * misma columna en los tres. Cambiarlo aquí los cambia todos a la vez, que
+     * es justo lo que se quiere.
+     */
+    public void update(Long categoryId, String name, String description, Integer colorIndex) {
+        if (categoryId == null) {
+            throw new ValidationException(List.of("No se indicó qué categoría editar."));
+        }
+        dao.findById(categoryId).orElseThrow(
+                () -> new ValidationException(List.of("La categoría ya no existe.")));
+
+        Category category = validated(name, description, colorIndex);
+        category.setId(categoryId);
+        try {
+            dao.update(category);
+        } catch (DuplicateCategoryException e) {
+            throw new ValidationException(List.of(e.getMessage()));
+        }
+    }
+
+    /**
+     * Valida y normaliza lo que llega del formulario, para el alta y para la
+     * edición. Si el alta exige nombre y color de la paleta, la edición tiene
+     * que exigir lo mismo: dos validadores para la misma entidad se separan en
+     * cuanto alguien toca uno.
+     */
+    private Category validated(String name, String description, Integer colorIndex) {
         List<String> errors = new ArrayList<>();
 
         String cleanName = name == null ? "" : name.trim();
@@ -61,14 +102,7 @@ public class CategoryService {
         category.setName(cleanName);
         category.setDescription(cleanDescription);
         category.setColorIndex(colorIndex);
-        category.setStatus(active ? "ACTIVE" : "INACTIVE");
-
-        try {
-            return dao.create(category);
-        } catch (DuplicateCategoryException e) {
-            // El UNIQUE es quien decide; aquí sólo se traduce para la pantalla.
-            throw new ValidationException(List.of(e.getMessage()));
-        }
+        return category;
     }
 
     /**
