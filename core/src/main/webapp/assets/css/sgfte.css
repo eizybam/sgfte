@@ -1433,11 +1433,24 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
   tabla conserve sus proporciones aunque el contenido no mida 1093px exactos.
 */
 .table--accounts { }
-.table--accounts .col-code    { width: 15.43%; }
-.table--accounts .col-holder  { width: 23.14%; }
-.table--accounts .col-purpose { width: 21.21%; }
-.table--accounts .col-cards   { width: 15.43%; }
-.table--accounts .col-status  { width: 24.79%; }
+.table--accounts .col-code    { width: 14%; }
+.table--accounts .col-holder  { width: 21%; }
+.table--accounts .col-purpose { width: 19%; }
+.table--accounts .col-cards   { width: 12%; }
+.table--accounts .col-status  { width: 20%; }
+.table--accounts .col-actions { width: 14%; }
+
+.btn-danger-link {
+    padding: 6px 14px;
+    background: none;
+    border: 1px solid var(--sgfte-danger);
+    border-radius: var(--sgfte-radius-badge);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--sgfte-danger);
+    cursor: pointer;
+}
+.btn-danger-link:hover { background: var(--sgfte-danger); color: var(--sgfte-primary-text); }
 
 /*
   El selector no reparte igual: la primera columna carga con la identidad entera

@@ -74,6 +74,7 @@
             <th class="col-purpose">Proposito</th>
             <th class="col-cards">Tarjetas</th>
             <th class="col-status">Estado</th>
+            <th class="col-actions">Acciones</th>
         </tr>
         </thead>
         <tbody>
@@ -92,10 +93,25 @@
                         <c:otherwise><span class="badge badge--error">Inactiva</span></c:otherwise>
                     </c:choose>
                 </td>
+                    <td>
+                        <c:if test="${a.active}">
+                            <form method="post" action="${ctx}/admin/cuentas">
+                                <input type="hidden" name="accountId" value="${a.id}">
+                                <button type="submit" class="btn-danger-link"
+                                        data-confirm data-confirm-danger
+                                        data-confirm-title="¿Eliminar la cuenta ${fn:escapeXml(a.accountNumber)}?"
+                                        data-confirm-text="Al confirmar:"
+                                        data-confirm-list="El saldo vuelve completo a la Concentradora.|Las tarjetas de esta cuenta quedan invalidadas.|La cuenta queda inactiva; su historial se conserva.|No se puede deshacer."
+                                        data-confirm-ok="Eliminar y reintegrar">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </c:if>
+                    </td>
             </tr>
         </c:forEach>
         <c:if test="${empty rows}">
-            <tr><td colspan="5" class="table__empty">No hay cuentas que coincidan con el filtro.</td></tr>
+            <tr><td colspan="6" class="table__empty">No hay cuentas que coincidan con el filtro.</td></tr>
         </c:if>
         </tbody>
     </table>
@@ -253,4 +269,5 @@
     })();
 </script>
 
+<%@ include file="/WEB-INF/jsp/partials/confirm-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>
