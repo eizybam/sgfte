@@ -145,6 +145,49 @@ public class CardholderServlet extends HttpServlet {
                     .flash(session);
         }
     }
+
+    /**
+     * Guarda los cambios de la ficha y devuelve A DÓNDE hay que redirigir.
+     *
+     * Post/redirect/get como todo lo demás, y se vuelve al detalle —no al
+     * listado— porque es donde estaba el admin cuando abrió el modal.
+     */
+    private String update(HttpServletRequest req, HttpSession session) {
+        Long id = parseLong(req.getParameter("cardholderId"));
+        String fullName   = req.getParameter("fullName");
+        String email      = req.getParameter("email");
+        String department = req.getParameter("department");
+        String phone      = req.getParameter("phone");
+
+        if (id == null) {
+            return req.getContextPath() + "/admin/empleados";
+        }
+
+        try {
+            service.update(id, fullName, email, department, phone);
+
+            // La bitácora se escribe DESPUÉS del commit, nunca dentro: un
+            // registro de algo que se deshizo es peor que no tener registro.
+            audit.record(AuditEvent.CARDHOLDER_UPDATED,
+                    "Empleado " + id + " · " + fullName + " · " + email, req);
+
+            OperationResult.success("Perfil actualizado",
+                            "Los datos del empleado quedaron guardados",
+                            "ACTUALIZACIÓN CONFIRMADA",
+                            "El código de empleado y el estado no cambian; sus cuentas y tarjetas siguen igual.")
+                    .detail("Empleado", fullName)
+                    .detail("Correo", email)
+                    .detail("Departamento", department)
+                    .when(java.time.LocalDateTime.now())
+                    .secondary("Ver empleados", "/admin/empleados")
+                    .flash(session);
+
+        } catch (ValidationException e) {
+            session.setAttribute(FLASH_EDIT_ERRORS, e.getErrors());
+        }
+        return req.getContextPath() + "/admin/empleado?id=" + id;
+    }
+
     private Long parseLong(String raw) {
         if (raw == null || raw.isBlank()) return null;
         try { return Long.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
