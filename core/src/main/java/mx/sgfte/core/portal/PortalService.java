@@ -6,6 +6,7 @@ import mx.sgfte.core.movements.Movement;
 import mx.sgfte.core.movements.MovementQueryDao;
 import mx.sgfte.core.purchases.PurchaseService;
 import mx.sgfte.core.transfers.TransferService;
+import mx.sgfte.core.users.ValidationException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -120,9 +121,35 @@ public class PortalService {
      * employee could post someone else's accountId and drain their balance
      * through a fake purchase instead of a fake transfer.
      */
-    public void spend(long cardholderId, long accountId, BigDecimal amount, String merchant) {
+    /**
+     * Un gasto ocurre CON UNA TARJETA.
+     *
+     * Hasta aquí sólo se comprobaba la cuenta, así que se podía "pagar" desde
+     * una cuenta sin plásticos y una tarjeta bloqueada seguía pagando. La
+     * tarjeta pasa a ser parte de la operación, y su propiedad se comprueba en
+     * la misma consulta que su estado.
+     */
+    public void spend(long cardholderId, long accountId, long cardId,
+                      BigDecimal amount, String merchant) {
         requireOwnership(cardholderId, accountId);
+        if (!portalDao.cardUsable(cardId, accountId, cardholderId)) {
+            throw new ValidationException(List.of(
+                    "La tarjeta no está activa o no pertenece a esa cuenta."));
+        }
         purchaseService.spend(accountId, amount, merchant);
+    }
+
+    /** Bloqueo desde el portal: el empleado se protege sin esperar a nadie. */
+    public void blockMyCard(long cardholderId, long cardId) {
+        if (!portalDao.blockOwnCard(cardId, cardholderId)) {
+            throw new ValidationException(List.of("La tarjeta no está disponible para bloquear."));
+        }
+    }
+
+    public void unblockMyCard(long cardholderId, long cardId) {
+        if (!portalDao.unblockOwnCard(cardId, cardholderId)) {
+            throw new ValidationException(List.of("La tarjeta no está bloqueada."));
+        }
     }
 
     private void requireOwnership(long cardholderId, long accountId) {

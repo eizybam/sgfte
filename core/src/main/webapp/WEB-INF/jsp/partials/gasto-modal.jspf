@@ -51,14 +51,20 @@
             <label class="xfer__label" for="gasto-card-id">TARJETA</label>
             <div class="xfer__control">
                 <svg class="xfer__icon" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
-                <%-- Sin name: es sólo para elegir con cuál tarjeta se simula
-                     la compra, no algo que el servidor necesite guardar. --%>
-                <select class="xfer__input" id="gasto-card-id" disabled required>
+                <%-- Con name: el servidor comprueba que la tarjeta esté activa
+                     y sea de esa cuenta antes de mover un peso. Un gasto ocurre
+                     CON UNA TARJETA; sin esto se podía "pagar" desde una cuenta
+                     sin plásticos. --%>
+                <select class="xfer__input" id="gasto-card-id" name="cardId" disabled required>
                     <option value="" disabled selected>Elige primero la cuenta</option>
+                    <%-- Las bloqueadas no se ofrecen. El servicio las rechaza
+                         igual, pero una opción que siempre falla no debe estar. --%>
                     <c:forEach var="k" items="${cards}">
-                        <option value="${k.id}" data-source="${k.accountId}">
-                            ${fn:toUpperCase(k.typeLabel)} · ${fn:escapeXml(k.maskedPan)}
-                        </option>
+                        <c:if test="${not k.blocked}">
+                            <option value="${k.id}" data-source="${k.accountId}">
+                                ${fn:toUpperCase(k.typeLabel)} · ${fn:escapeXml(k.maskedPan)}
+                            </option>
+                        </c:if>
                     </c:forEach>
                 </select>
                 <svg class="xfer__chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>

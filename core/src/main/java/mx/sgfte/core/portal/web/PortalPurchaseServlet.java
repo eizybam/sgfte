@@ -32,12 +32,18 @@ public class PortalPurchaseServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         long cardholderId = PortalSupport.cardholderId(req);
         Long accountId = PortalSupport.parseId(req.getParameter("accountId"));
+        Long cardId = PortalSupport.parseId(req.getParameter("cardId"));
         BigDecimal amount = PortalSupport.parseAmount(req.getParameter("amount"));
         String merchant = req.getParameter("merchant");
         String backTo = backTo(req);
 
         try {
-            portalService.spend(cardholderId, accountId == null ? -1 : accountId, amount, merchant);
+            // Un id nulo cae en la validación del servicio y sale por el
+            // camino de "Gasto rechazado", que ya existe.
+            portalService.spend(cardholderId,
+                                accountId == null ? -1 : accountId,
+                                cardId == null ? -1 : cardId,
+                                amount, merchant);
 
             mx.sgfte.core.shared.web.OperationResult.success("¡Gasto registrado!",
                             "Tu compra se aplicó correctamente",
