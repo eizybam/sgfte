@@ -320,10 +320,10 @@
                 title.textContent = "¿Desactivar a " + name + "?";
                 lead.textContent  = "Al confirmar:";
                 list.innerHTML =
-                    "<li>Todas sus cuentas se eliminan</li>" +
-                    "<li>Sus tarjetas quedan invalidadas.</li>" +
+                    "<li>El saldo de todas sus cuentas vuelve a la Concentradora.</li>" +
+                    "<li>Sus cuentas quedan inactivas y sus tarjetas invalidadas.</li>" +
                     "<li>Pierde el acceso a la plataforma.</li>" +
-                    "<li>Puedes reactivarlo en cualquier momento, pero no recuperara sus cuentas ni tarjetas anteriores.</li>";
+                    "<li>Puedes reactivarlo cuando quieras, pero no recuperará sus cuentas ni sus tarjetas.</li>";
 
                 confirm.textContent = "Sí, desactivar";
                 confirm.className   = "btn btn--danger";

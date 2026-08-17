@@ -115,12 +115,13 @@ public class CardholderServlet extends HttpServlet {
             } else {
                 audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + id + " · " + name, req);
                 OperationResult.success("Empleado dado de baja",
-                        "Ya no puede ingresar al sistema",
-                        "BAJA CONFIRMADA",
-                        "Sus cuentas y tarjetas han sido eliminadas")
+                                "Los fondos regresaron a la Concentradora",
+                                "REINTEGRACIÓN CONFIRMADA",
+                                "El saldo de todas sus cuentas se devolvió a la Concentradora y sus tarjetas quedaron invalidadas. Su historial se conserva.")
                         .detail("Empleado", name)
                         .when(java.time.LocalDateTime.now())
                         .secondary("Ver empleados", "/admin/empleados")
+                        .primary("Ver Concentradora", "/admin/concentradora")
                         .flash(session);
             }
 
