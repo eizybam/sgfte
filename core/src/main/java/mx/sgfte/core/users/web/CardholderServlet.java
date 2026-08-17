@@ -118,14 +118,15 @@ public class CardholderServlet extends HttpServlet {
                         .secondary("Ver empleados", "/admin/empleados")
                         .flash(session);
             } else {
-                audit.record(AuditEvent.CARD_INVALIDATED, "Empleado " + id, req);
+                audit.record(AuditEvent.CARDHOLDER_DELETED, "Empleado " + id + " · " + name, req);
                 OperationResult.success("Empleado dado de baja",
-                        "Ya no puede ingresar al sistema",
-                        "BAJA CONFIRMADA",
-                        "Sus cuentas y tarjetas han sido eliminadas")
+                                "Los fondos regresaron a la Concentradora",
+                                "REINTEGRACIÓN CONFIRMADA",
+                                "El saldo de todas sus cuentas se devolvió a la Concentradora y sus tarjetas quedaron invalidadas. Su historial se conserva.")
                         .detail("Empleado", name)
                         .when(java.time.LocalDateTime.now())
                         .secondary("Ver empleados", "/admin/empleados")
+                        .primary("Ver Concentradora", "/admin/concentradora")
                         .flash(session);
             }
 
@@ -133,57 +134,17 @@ public class CardholderServlet extends HttpServlet {
             OperationResult.rejected("No se pudo cambiar el estado",
                             "La operación no se realizó",
                             String.join(" ", e.getErrors()))
+                    .secondary("Ver empleados", "/admin/empleados")
                     .flash(session);
         } catch (RuntimeException e) {
+            System.err.println("[CARDHOLDER] falló el cambio de estado de " + id + ": " + e);
             OperationResult.rejected("No se pudo cambiar el estado",
                             "La operación no se realizó",
                             "Ocurrió un error inesperado. Intenta de nuevo.")
-                    .flash(session);
-        }
-    }
-
-    private String update(HttpServletRequest req, HttpSession session) {
-        Long id = parseLong(req.getParameter("cardholderId"));
-        String fullName   = req.getParameter("fullName");
-        String email      = req.getParameter("email");
-        String department = req.getParameter("department");
-        String phone      = req.getParameter("phone");
-
-        if (id == null) {
-            return req.getContextPath() + "/admin/empleados";
-        }
-
-        try {
-            service.update(id, fullName, email, department, phone);
-
-            // La bitácora se escribe DESPUÉS del commit, nunca dentro: un
-            // registro de algo que se deshizo es peor que no tener registro.
-            audit.record(AuditEvent.CARDHOLDER_UPDATED,
-                    "Empleado " + id + " · " + fullName + " · " + email, req);
-
-            mx.sgfte.core.shared.web.OperationResult.success("Perfil actualizado",
-                            "Los datos del empleado quedaron guardados",
-                            "ACTUALIZACIÓN CONFIRMADA",
-                            "El código de empleado y el estado no cambian; sus cuentas y tarjetas siguen igual.")
-                    .detail("Empleado", fullName)
-                    .detail("Correo", email)
-                    .detail("Departamento", department)
-                    .when(java.time.LocalDateTime.now())
                     .secondary("Ver empleados", "/admin/empleados")
                     .flash(session);
-
-        } catch (ValidationException e) {
-            session.setAttribute(FLASH_EDIT_ERRORS, e.getErrors());
         }
-        return req.getContextPath() + "/admin/empleado?id=" + id;
     }
-
-
-    private Integer parseInt(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try { return Integer.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
-    }
-
     private Long parseLong(String raw) {
         if (raw == null || raw.isBlank()) return null;
         try { return Long.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }

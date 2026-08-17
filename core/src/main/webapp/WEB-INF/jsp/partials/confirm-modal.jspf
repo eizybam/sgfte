@@ -1,0 +1,77 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%--
+ Confirmación para operaciones que no se pueden deshacer.
+ Uno por pantalla, no uno por botón: el texto se lo presta quien lo dispara.
+--%>
+<div class="modal-scrim" id="confirm-modal" hidden>
+    <div class="modal modal--form" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h2 class="modal__title" id="confirm-title"></h2>
+        <div class="modal__rule"></div>
+
+        <div class="modal__body">
+            <p class="confirm__text" id="confirm-text"></p>
+            <ul class="confirm__list" id="confirm-list" hidden></ul>
+
+            <div class="register__actions">
+                <button type="button" class="btn btn--secondary" id="confirm-cancel">Cancelar</button>
+                <button type="button" class="btn btn--primary" id="confirm-ok"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var scrim = document.getElementById("confirm-modal");
+        var title = document.getElementById("confirm-title");
+        var text = document.getElementById("confirm-text");
+        var list = document.getElementById("confirm-list");
+        var ok = document.getElementById("confirm-ok");
+        var cancel = document.getElementById("confirm-cancel");
+
+        var pendingForm = null;
+        var lastFocused = null;
+
+        function close() { scrim.hidden = true; pendingForm = null; if (lastFocused) lastFocused.focus(); }
+
+        document.addEventListener("click", function (e) {
+            var trigger = e.target.closest("[data-confirm]");
+            if (!trigger) return;
+            var form = trigger.closest("form");
+            if (!form) return;
+
+            e.preventDefault();
+            pendingForm = form;
+            lastFocused = trigger;
+
+            title.textContent = trigger.dataset.confirmTitle || "¿Confirmas?";
+            text.textContent = trigger.dataset.confirmText || "Esta acción no se puede deshacer.";
+            ok.textContent = trigger.dataset.confirmOk || "Confirmar";
+            ok.className = "btn " + (trigger.hasAttribute("data-confirm-danger")
+                ? "btn--danger" : "btn--primary");
+
+            var items = trigger.dataset.confirmList;
+            list.hidden = !items;
+            list.innerHTML = items
+                ? items.split("|").map(function (i) { return "<li>" + i + "</li>"; }).join("")
+                : "";
+
+            scrim.hidden = false;
+            cancel.focus();
+        });
+
+        ok.addEventListener("click", function () {
+            if (!pendingForm) return;
+            var form = pendingForm;
+            pendingForm = null;
+            scrim.hidden = true;
+            form.submit();
+        });
+
+        cancel.addEventListener("click", close);
+        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && !scrim.hidden) { e.stopPropagation(); close(); }
+        }, true);
+    })();
+</script>
