@@ -53,7 +53,8 @@
                                 ${fn:escapeXml(k.purpose)} · ${fn:escapeXml(k.accountNumber)}
                             </span>
 
-                            <div class="tarjeta tarjeta--still tarjeta--pick" tabindex="0" role="button"
+                            <div class="tarjeta tarjeta--still tarjeta--pick ${k.blocked ? 'tarjeta--blocked' : ''}"
+                                 tabindex="0" role="button"
                                  aria-haspopup="dialog" data-card="card-detail-${k.id}">
                                 <span class="tarjeta__top">
                                     <span class="tarjeta__key">TIPO DE LA TARJETA</span>
@@ -146,10 +147,30 @@
 
                 <%-- Simula una compra real con esta tarjeta. Un solo modal
                      compartido (gasto-modal.jspf) lee la cuenta de aquí. --%>
-                <button type="button" class="btn btn--secondary btn--hero btn--block" data-open-gasto
-                        data-account="${k.accountId}" data-card="${k.id}">
-                    Hacer un gasto
-                </button>
+                <%-- Una tarjeta bloqueada no puede pagar: el botón de gasto
+                     desaparece en vez de ofrecer una operación que el servidor
+                     va a rechazar. --%>
+                <c:if test="${not k.blocked}">
+                    <button type="button" class="btn btn--secondary btn--hero btn--block" data-open-gasto
+                            data-account="${k.accountId}" data-card="${k.id}">
+                        Hacer un gasto
+                    </button>
+                </c:if>
+
+                <%-- Bloquear es la acción de urgencia: se busca con prisa, así
+                     que va visible y no escondida en un menú. --%>
+                <form method="post" action="${ctx}/app/tarjetas" style="margin-top: var(--sp-2);">
+                    <input type="hidden" name="cardId" value="${k.id}">
+                    <input type="hidden" name="action" value="${k.blocked ? 'unblock' : 'block'}">
+                    <button type="submit" class="btn btn--hero btn--block ${k.blocked ? 'btn--primary' : 'btn--secondary'}"
+                            ${k.blocked ? '' : 'data-confirm data-confirm-danger'}
+                            data-confirm-title="¿Bloquear esta tarjeta?"
+                            data-confirm-text="Al confirmar:"
+                            data-confirm-list="Deja de pagar de inmediato.|Tu saldo no se toca.|Puedes reactivarla tú mismo cuando la encuentres."
+                            data-confirm-ok="Sí, bloquear">
+                        ${k.blocked ? 'Reactivar tarjeta' : 'Bloquear tarjeta'}
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -189,4 +210,5 @@
     })();
 </script>
 
+<%@ include file="/WEB-INF/jsp/partials/confirm-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/app-bottom.jspf" %>

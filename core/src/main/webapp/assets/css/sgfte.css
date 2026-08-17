@@ -3843,3 +3843,42 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
 @media (max-width: 860px) {
     .cat-section__head { flex-direction: column; align-items: stretch; }
 }
+
+/* ---- Ciclo de vida de la tarjeta (RF-04) -------------------------------- */
+
+/*
+  Bloqueada: apagada y con el motivo encima, para que no parezca un fallo de
+  carga. El sello va en ::after y por eso .tarjeta necesita position (ya la
+  tiene: es absolute dentro de su hueco en la rejilla).
+*/
+.tarjeta--blocked { opacity: .55; }
+.tarjeta--blocked::after {
+    content: "BLOQUEADA";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 3px 9px;
+    border-radius: var(--sgfte-radius-badge);
+    background: var(--sgfte-danger);
+    font-family: var(--sgfte-font-mono);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--sgfte-primary-text);
+}
+
+/* Acciones por tarjeta en el detalle de cuenta: texto, no botones grandes —
+   la lista es estrecha y son operaciones puntuales. */
+.linked__actions { display: flex; gap: var(--sp-2); margin-left: auto; }
+
+/* Botón que se lee como enlace: acciones puntuales dentro de una lista */
+.btn-link {
+    padding: 0;
+    background: none;
+    border: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--sgfte-accent);
+    cursor: pointer;
+}
+.btn-link:hover { text-decoration: underline; }
+.btn-link--danger { color: var(--sgfte-danger); }

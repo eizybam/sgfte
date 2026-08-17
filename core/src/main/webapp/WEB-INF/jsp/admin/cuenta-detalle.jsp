@@ -122,8 +122,38 @@
                             <span class="linked__type">${k.cardType == 'PHYSICAL' ? 'Física' : 'Digital'}</span>
                             <span class="linked__pan">••••&nbsp;&nbsp;${fn:substring(k.maskedPan, fn:length(k.maskedPan) - 4, fn:length(k.maskedPan))}</span>
                         </span>
+                        <%-- Tres estados desde RF-04: activa, bloqueada
+                             (temporal) e invalidada (definitiva). --%>
                         <span class="linked__state ${k.status == 'ACTIVE' ? '' : 'linked__state--off'}"
-                              title="${k.status == 'ACTIVE' ? 'Activa' : 'Inactiva'}"></span>
+                              title="${k.status == 'ACTIVE' ? 'Activa'
+                                     : (k.status == 'BLOCKED' ? 'Bloqueada' : 'Invalidada')}"></span>
+
+                        <span class="linked__actions">
+                            <c:if test="${k.status == 'ACTIVE' or k.status == 'BLOCKED'}">
+                                <form method="post" action="${ctx}/admin/cards">
+                                    <input type="hidden" name="accountId" value="${account.id}">
+                                    <input type="hidden" name="cardId" value="${k.id}">
+                                    <input type="hidden" name="action"
+                                           value="${k.status == 'BLOCKED' ? 'unblock' : 'block'}">
+                                    <button type="submit" class="btn-link">
+                                        ${k.status == 'BLOCKED' ? 'Reactivar' : 'Bloquear'}
+                                    </button>
+                                </form>
+                                <form method="post" action="${ctx}/admin/cards">
+                                    <input type="hidden" name="accountId" value="${account.id}">
+                                    <input type="hidden" name="cardId" value="${k.id}">
+                                    <input type="hidden" name="action" value="invalidate">
+                                    <button type="submit" class="btn-link btn-link--danger"
+                                            data-confirm data-confirm-danger
+                                            data-confirm-title="¿Invalidar esta tarjeta?"
+                                            data-confirm-text="Al confirmar:"
+                                            data-confirm-list="Es definitivo: la tarjeta no vuelve.|Para dar servicio otra vez habrá que expedir una nueva.|El saldo de la cuenta no se toca.|Si sólo quieres suspenderla, usa Bloquear."
+                                            data-confirm-ok="Sí, invalidar">
+                                        Invalidar
+                                    </button>
+                                </form>
+                            </c:if>
+                        </span>
                     </div>
                 </c:forEach>
                 <c:if test="${empty cards}">
@@ -250,4 +280,5 @@
     })();
 </script>
 
+<%@ include file="/WEB-INF/jsp/partials/confirm-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>
