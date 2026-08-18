@@ -26,7 +26,7 @@ COMMIT;
 | A4 | `/admin/dispersion` | → `/login` | → `/app/home` | 200 |
 | A5 | `/admin/cards` | → `/login` | → `/app/home` | 200 |
 | A6 | `/admin/transferencia` | → `/login` | → `/app/home` | 200 |
-| A7 | `/admin/historial` | → `/login` | → `/app/home` | 200 |
+| A7 | `/admin/movimientos` | → `/login` | → `/app/home` | 200 |
 | A8 | `/admin/logs` | → `/login` | → `/app/home` | 200 |
 | A9 | `/admin/dashboard` | → `/login` | → `/app/home` | 200 |
 | A10 | `/admin/analytics.json` | → `/login` | → `/app/home` | 200 (JSON) |

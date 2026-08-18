@@ -28,7 +28,7 @@ import java.util.Set;
  * Read-only. Every action on the screen is a link somewhere else: depositing
  * opens the dispersion modal (which posts to /admin/dispersion and comes back
  * here), issuing a card goes to /admin/cards with this account preselected, and
- * the full history goes to /admin/historial.
+ * the full history goes to /admin/movimientos filtered to this account.
  *
  * Protected by AuthFilter (/admin/*).
  */

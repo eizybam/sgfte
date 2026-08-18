@@ -114,7 +114,7 @@ esa cuenta existe.
 | | `/admin/departamentos` | Escrituras del catálogo de áreas (POST) |
 | | `/admin/dashboard` · `/admin/analytics.csv` | Analíticas y exportación |
 | | `/admin/logs` · `/admin/logs.csv` | Bitácora y exportación |
-| | `/admin/historial` | Ledger por cuenta |
+| | `/admin/movimientos` | Ledger global: los dos libros, con filtros |
 | | `/admin/ajustes` | Perfil, contraseña y sesión |
 | Portal | `/app/home` · `/app/cuenta` · `/app/tarjetas` | Empleado |
 | | `/app/movimientos` · `/app/notificaciones` · `/app/gasto` | |

@@ -12,8 +12,8 @@ Requisito previo: 2 cuentas del mismo propósito con saldo (fondéalas con el M�
 | T5 | Monto ≤ 0 | A→B monto 0 o -5 | Error de validación |
 | T6 | Cuenta inactiva | A→(cuenta INACTIVE) | Error "no existe o está inactiva"; rollback |
 | T7 | Atomicidad | revisar que ante cualquier error NINGÚN saldo cambió | Consistencia total |
-| H1 | Historial | `/admin/historial?accountId=A` tras T1 | Aparece TRANSFER_OUT de 200 |
-| H2 | Historial destino | `?accountId=B` | Aparece TRANSFER_IN de 200 |
+| H1 | Historial | `/admin/movimientos?cuenta=A` tras T1 | Aparece TRANSFER_OUT de 200 |
+| H2 | Historial destino | `?cuenta=B` | Aparece TRANSFER_IN de 200 |
 
 ## Verificación en BD (tras T1)
 ```sql
