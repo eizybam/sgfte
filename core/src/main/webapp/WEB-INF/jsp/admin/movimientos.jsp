@@ -48,7 +48,7 @@
     <form class="search" method="get" action="${baseUrl}">
         <svg class="search__icon" width="18" height="18" aria-hidden="true"><use href="#i-search"/></svg>
         <input class="input" type="search" name="q" value="${fn:escapeXml(q)}"
-               placeholder="Buscar por concepto, cuenta, titular o código"
+               placeholder="Buscar por concepto, cuenta, titular, código o clave de rastreo"
                aria-label="Buscar en los movimientos">
         <%-- El buscador es un GET: sin esto, buscar borraría los demás filtros. --%>
         <c:if test="${not empty ambito}"><input type="hidden" name="ambito" value="${ambito}"></c:if>
@@ -166,8 +166,11 @@
                     </c:choose>
                 </td>
                 <td>${m.kind}</td>
+                <%-- En un fondeo el concepto ES la referencia bancaria, y se
+                     marca para que se distinga de una descripción cualquiera:
+                     es el dato que se coteja contra el CEP del banco. --%>
                 <td title="${fn:escapeXml(m.concept)}">
-                    <span class="log-origin">${fn:escapeXml(m.concept)}</span>
+                    <span class="log-origin ${m.backed ? 'moves-ref' : ''}">${fn:escapeXml(m.concept)}</span>
                 </td>
                 <%--
                   La contraparte de una P2P va en su PROPIO renglón, como la

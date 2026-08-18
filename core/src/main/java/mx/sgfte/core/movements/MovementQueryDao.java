@@ -52,7 +52,8 @@ public class MovementQueryDao {
     private static final String GLOBAL_COLUMNS =
               "scope, source_id, movement_type, amount, direction, description, "
             + "account_id, account_number, holder, employee_code, "
-            + "category_id, category_name, color_index, related_number, actor, created_at ";
+            + "category_id, category_name, color_index, related_number, actor, "
+            + "canal, referencia, ordenante, created_at ";
 
     /**
      * El WHERE que comparten la página y el conteo.
@@ -69,11 +70,15 @@ public class MovementQueryDao {
         sql.append("WHERE 1 = 1 ");
 
         if (search != null && !search.isBlank()) {
+            // La clave de rastreo y la razón social entran en la búsqueda: son
+            // el dato por el que se persigue un fondeo cuando alguien pregunta
+            // de dónde salió, y el que se cotejaría contra el CEP del banco.
             sql.append("AND (UPPER(description) LIKE ? OR UPPER(account_number) LIKE ? ")
                .append("  OR UPPER(holder) LIKE ? OR UPPER(employee_code) LIKE ? ")
-               .append("  OR UPPER(actor) LIKE ?) ");
+               .append("  OR UPPER(actor) LIKE ? OR UPPER(referencia) LIKE ? ")
+               .append("  OR UPPER(ordenante) LIKE ?) ");
             String like = "%" + search.trim().toUpperCase() + "%";
-            for (int i = 0; i < 5; i++) params.add(like);
+            for (int i = 0; i < 7; i++) params.add(like);
         }
         if (scope != null && !scope.isBlank()) {
             sql.append("AND scope = ? ");
@@ -193,6 +198,9 @@ public class MovementQueryDao {
                 colorIndex,
                 rs.getString("related_number"),
                 rs.getString("actor"),
+                rs.getString("canal"),
+                rs.getString("referencia"),
+                rs.getString("ordenante"),
                 at == null ? null : at.toLocalDateTime());
     }
 

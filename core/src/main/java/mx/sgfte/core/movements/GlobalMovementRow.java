@@ -39,13 +39,19 @@ public class GlobalMovementRow {
     private final Integer colorIndex;
     private final String relatedNumber;
     private final String actor;
+    // Respaldo bancario del fondeo (V12); null en todo lo demás.
+    private final String canal;
+    private final String referencia;
+    private final String ordenante;
     private final LocalDateTime createdAt;
 
     public GlobalMovementRow(String scope, long sourceId, String movementType,
                              BigDecimal amount, String direction, String description,
                              Long accountId, String accountNumber, String holder,
                              String employeeCode, String categoryName, Integer colorIndex,
-                             String relatedNumber, String actor, LocalDateTime createdAt) {
+                             String relatedNumber, String actor,
+                             String canal, String referencia, String ordenante,
+                             LocalDateTime createdAt) {
         this.scope = scope;
         this.sourceId = sourceId;
         this.movementType = movementType;
@@ -60,6 +66,9 @@ public class GlobalMovementRow {
         this.colorIndex = colorIndex;
         this.relatedNumber = relatedNumber;
         this.actor = actor;
+        this.canal = canal;
+        this.referencia = referencia;
+        this.ordenante = ordenante;
         this.createdAt = createdAt;
     }
 
@@ -77,6 +86,9 @@ public class GlobalMovementRow {
     public Integer getColorIndex()      { return colorIndex; }
     public String getRelatedNumber()    { return relatedNumber; }
     public String getActor()            { return actor; }
+    public String getCanal()            { return canal; }
+    public String getReferencia()       { return referencia; }
+    public String getOrdenante()        { return ordenante; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     /**
@@ -123,7 +135,16 @@ public class GlobalMovementRow {
      * columna legible.
      */
     public String getConcept() {
+        // Un fondeo no trae descripción, pero sí algo mejor: la referencia con
+        // la que el banco lo identificó. Es el dato que se coteja contra el CEP,
+        // así que es el que merece la columna.
+        if (referencia != null && !referencia.isBlank()) return referencia;
         return (description == null || description.isBlank()) ? "—" : description;
+    }
+
+    /** ¿Esta fila tiene respaldo bancario detrás? */
+    public boolean isBacked() {
+        return referencia != null && !referencia.isBlank();
     }
 
     /**
@@ -151,6 +172,9 @@ public class GlobalMovementRow {
      */
     public String getWhoLabel() {
         if (!isConcentrator()) return holder;
+        // En un fondeo con respaldo, quien importa no es el operador sino quien
+        // mandó el dinero: eso es lo que hace auditable la fila.
+        if (ordenante != null && !ordenante.isBlank()) return ordenante;
         return (actor == null || actor.isBlank()) ? "—" : actor;
     }
 

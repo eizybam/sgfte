@@ -2440,6 +2440,11 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
    pegado al texto de ayuda del campo anterior y parece parte de él. */
 .issue__field + .issue__section { margin-top: 30px; }
 
+/* La referencia bancaria en la tabla de movimientos: se distingue del texto
+   libre porque no es una descripción, es el identificador con el que el banco
+   puede confirmar que ese dinero existió. */
+.moves-ref { font-family: var(--sgfte-font-mono); font-size: 13px; color: var(--sgfte-accent); }
+
 /* Ayuda debajo de un campo: explica la regla sin gritar tanto como el label. */
 .issue__hint {
     margin: 8px 0 0;
