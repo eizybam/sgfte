@@ -20,6 +20,8 @@ ALTER SESSION SET CURRENT_SCHEMA = SGFTE;
 --   · V7  → vencimiento de la tarjeta.
 --   · V8  → bitácora de notificaciones del tarjetahabiente.
 --   · V9  → PENDING en app_user y enlaces de activación/restablecimiento.
+--   · V10 → catálogo de departamentos.
+--   · V11 → vista v_movement: los dos ledgers unidos, para /admin/movimientos.
 -- ============================================================
 
 -- ── Limpieza para desarrollo (re-ejecutar). Descomenta si necesitas recrear.
@@ -395,6 +397,71 @@ CREATE TABLE password_token (
 -- índice por app_user_id es para poder auditar/depurar "qué enlaces se le han
 -- mandado a este login".
 CREATE INDEX idx_password_token_user ON password_token (app_user_id);
+
+-- ============================================================
+-- 12) v_movement · los dos ledgers, una sola forma (V11).
+--
+--     account_movement y concentrator_movement son los dos libros del sistema,
+--     y una dispersión escribe en los dos: DISPERSION de un lado, DEPOSIT del
+--     otro. Es partida doble, no duplicación. Un fondeo, en cambio, sólo existe
+--     en concentrator_movement — es la única operación que no toca ninguna
+--     cuenta—, así que "todos los movimientos" no se responde con una tabla.
+--
+--     La unión vive en la base y no en Java porque es una decisión sobre la
+--     FORMA de los datos: el DAO de /admin/movimientos consulta una vista en
+--     vez de rehacer el UNION en cada método.
+--
+--     Las columnas de cuenta van NULL del lado de la Concentradora, con CAST
+--     explícito: Oracle no siempre infiere el tipo de un NULL pelado en un
+--     UNION.
+-- ============================================================
+CREATE OR REPLACE VIEW v_movement AS
+SELECT 'CUENTA'                             AS scope,
+       m.id                                 AS source_id,
+       m.movement_type                      AS movement_type,
+       m.amount                             AS amount,
+       CASE WHEN m.movement_type IN ('DEPOSIT', 'TRANSFER_IN')
+            THEN 'IN' ELSE 'OUT' END        AS direction,
+       m.description                        AS description,
+       a.id                                 AS account_id,
+       a.account_number                     AS account_number,
+       ch.first_name || ' ' || ch.last_name AS holder,
+       ch.employee_code                     AS employee_code,
+       cat.id                               AS category_id,
+       cat.name                             AS category_name,
+       cat.color_index                      AS color_index,
+       r.account_number                     AS related_number,
+       CAST(NULL AS VARCHAR2(120))          AS actor,
+       CAST(NULL AS NUMBER(16, 2))          AS balance_after,
+       m.created_at                         AS created_at
+  FROM account_movement m
+  JOIN account    a   ON a.id   = m.account_id
+  JOIN cardholder ch  ON ch.id  = a.cardholder_id
+  JOIN category   cat ON cat.id = a.category_id
+  LEFT JOIN account r ON r.id   = m.related_account_id
+UNION ALL
+SELECT 'CONCENTRADORA',
+       cm.id,
+       cm.movement_type,
+       cm.amount,
+       CASE WHEN cm.movement_type IN ('FUNDING', 'REINTEGRATION')
+            THEN 'IN' ELSE 'OUT' END,
+       CAST(NULL AS VARCHAR2(200)),
+       CAST(NULL AS NUMBER),
+       CAST(NULL AS VARCHAR2(20)),
+       CAST(NULL AS VARCHAR2(121)),
+       CAST(NULL AS VARCHAR2(12)),
+       CAST(NULL AS NUMBER),
+       CAST(NULL AS VARCHAR2(40)),
+       CAST(NULL AS NUMBER),
+       CAST(NULL AS VARCHAR2(20)),
+       cm.actor,
+       cm.balance_after,
+       cm.created_at
+  FROM concentrator_movement cm;
+
+-- La vista ordena SIEMPRE por created_at y account_movement no tenía índice.
+CREATE INDEX idx_acct_mov_created ON account_movement (created_at);
 
 -- ============================================================
 -- Notas de reglas de negocio que se aplican en la CAPA JAVA (no en SQL):
