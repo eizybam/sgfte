@@ -10,7 +10,11 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Concentrator funding (RF-05) and dispersion input validation (RF-06).
+ * Dispersion input validation (RF-06).
+ *
+ * El fondeo (RF-05) ya no se prueba aquí: con V12 dejó de ser "validar que el
+ * monto sea positivo" y pasó a exigir un depósito bancario con referencia.
+ * Sus reglas viven en FundingServiceValidationTest.
  *
  * ConcentratorService is fully testable: its DAO is injected. DispersionService
  * is only testable up to the point where it calls Db.getConnection() — see the
@@ -20,15 +24,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class ConcentratorServiceTest {
 
     private static class FakeConcentratorDao extends ConcentratorDao {
-        BigDecimal funded;
-        String actor;
         BigDecimal balance = new BigDecimal("1000000.00");
 
-        @Override
-        public void fund(BigDecimal amount, String actor) {
-            this.funded = amount;
-            this.actor = actor;
-        }
+        /*
+          Aquí el stub interceptaba fund(). Ese método ya no existe en el DAO:
+          con V12 fondear dejó de ser "validar que el monto sea positivo" y pasó
+          a exigir un depósito bancario con referencia. Sus reglas se prueban en
+          FundingServiceValidationTest.
+         */
 
         @Override
         public ConcentratorAccount findSingleton() {
@@ -48,20 +51,8 @@ class ConcentratorServiceTest {
         assertEquals(new BigDecimal("1000000.00"), service.getConcentrator().getBalance());
     }
 
-    @Test
-    void fundingPassesTheAmountThrough() {
-        service.fund(new BigDecimal("2500.00"));
-        assertEquals(new BigDecimal("2500.00"), dao.funded);
-    }
 
     /** RN-08 en su forma más simple: no se fondea con montos no positivos. */
-    @Test
-    void fundingAmountMustBePositive() {
-        assertThrows(ValidationException.class, () -> service.fund(BigDecimal.ZERO));
-        assertThrows(ValidationException.class, () -> service.fund(new BigDecimal("-1.00")));
-        assertThrows(ValidationException.class, () -> service.fund(null));
-        assertNull(dao.funded, "ningún intento inválido debe llegar al DAO");
-    }
 
     // ---- Dispersión: solo la validación previa a la transacción -------------
 

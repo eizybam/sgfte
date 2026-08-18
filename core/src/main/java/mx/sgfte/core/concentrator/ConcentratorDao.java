@@ -37,32 +37,16 @@ public class ConcentratorDao {
         }
     }
 
-    /**
-     * Adds money to the Concentrator (company funding).
-     *
-     * Now a transaction rather than a lone UPDATE: the balance change and its
-     * ledger entry have to land together, or funding would once again be able to
-     * happen without leaving a trace.
+    /*
+      Aquí vivía fund(monto, actor), que abría su propia transacción, subía el
+      saldo y escribía el asiento. Era el único camino por el que entraba
+      dinero sin respaldo bancario, así que se eliminó con V12 en vez de
+      dejarlo "por si acaso": un método que crea dinero y no tiene llamadores
+      es una puerta esperando a que alguien la use.
+
+      Su sustituto es creditFromDeposit(), abajo, que exige el id de un
+      funding_deposit ya insertado y se suma a la transacción de quien llama.
      */
-    public void fund(BigDecimal amount, String actor) {
-        String sql = "UPDATE concentrator_account SET balance = balance + ? WHERE singleton = 'Y'";
-        try (Connection c = Db.getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps = c.prepareStatement(sql)) {
-                ps.setBigDecimal(1, amount);
-                if (ps.executeUpdate() != 1) {
-                    throw new IllegalStateException("Could not fund the Concentrator");
-                }
-                record(c, "FUNDING", amount, actor, null);
-                c.commit();
-            } catch (RuntimeException | SQLException e) {
-                c.rollback();
-                throw (e instanceof RuntimeException re) ? re : new RuntimeException(e);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error funding the Concentrator", e);
-        }
-    }
 
     /**
      * Debits the Concentrator inside the Service's transaction.

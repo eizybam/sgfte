@@ -1,11 +1,6 @@
 package mx.sgfte.core.concentrator;
 
-import mx.sgfte.core.users.ValidationException;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-/** Concentrator logic: read the balance and fund it (put company money in). */
+/** Concentrator logic. Fondear ya no vive aquí: ver FundingService (V12). */
 public class ConcentratorService {
 
     private final ConcentratorDao dao;
@@ -22,20 +17,15 @@ public class ConcentratorService {
         return dao.findSingleton();
     }
 
-    /**
-     * Adds money to the Concentrator. Validates the amount is positive.
-     *
-     * @param actor quién fondea; queda en el ledger. Puede ser null.
-     */
-    public void fund(BigDecimal amount, String actor) {
-        if (amount == null || amount.signum() <= 0) {
-            throw new ValidationException(List.of("El monto a fondear debe ser mayor a 0"));
-        }
-        dao.fund(amount, actor);
-    }
+    /*
+      Aquí vivía fund(monto, actor): validaba que el monto fuera positivo y
+      subía el saldo. Se eliminó en V12 y no se sustituyó por nada dentro de
+      esta clase.
 
-    /** Sin actor: se registra igual, sólo que sin saber quién fue. */
-    public void fund(BigDecimal amount) {
-        fund(amount, null);
-    }
+      El motivo es que era la única operación del sistema que creaba dinero sin
+      respaldo: un monto positivo era todo lo que hacía falta. Mientras el
+      método siguiera existiendo, la puerta seguiría abierta para el siguiente
+      que la llamara. Fondear ahora es FundingService.register(deposito), que
+      no se puede invocar sin una referencia bancaria.
+     */
 }

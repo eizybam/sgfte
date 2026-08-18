@@ -80,9 +80,9 @@ public class AdminHomeServlet extends HttpServlet {
                 DispersionServlet.FLASH_ERRORS,
                 DispersionServlet.FLASH_ACCOUNT,
                 DispersionServlet.FLASH_AMOUNT,
-                // Del fondeo: si falló, su modal se reabre con lo tecleado.
-                mx.sgfte.core.concentrator.web.ConcentratorServlet.FLASH_ERRORS,
-                mx.sgfte.core.concentrator.web.ConcentratorServlet.FLASH_AMOUNT,
+                // Aquí también se leían las banderas del modal de fondeo. Ese
+                // modal desapareció con V12: el saldo ya no sube tecleando un
+                // monto, así que no hay intento fallido que reabrir.
         };
         for (String key : keys) {
             Object value = session.getAttribute(key);

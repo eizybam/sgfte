@@ -61,9 +61,25 @@
                 Cuenta central de fondeo · Origen de toda dispersión
             </p>
 
+            <%--
+              Aquí había un botón "Fondear" que abría un modal con un campo de
+              monto. Desde V12 el administrador no puede meter dinero tecleando
+              una cifra: el saldo sólo sube cuando el banco reporta un depósito
+              con referencia verificable. Fondear ya no es una acción de esta
+              pantalla, es un dato — la CLABE a la que hay que transferir.
+            --%>
+            <div class="fund-clabe">
+                <p class="fund-clabe__label">PARA FONDEAR, TRANSFIERE POR SPEI A</p>
+                <p class="fund-clabe__value">${concentrator.clabeFormatted}</p>
+                <p class="fund-clabe__note">
+                    El abono se registra solo cuando el banco lo reporta, con su
+                    clave de rastreo. Un depósito sin referencia no entra.
+                </p>
+            </div>
+
             <div class="balance__actions balance__actions--conc">
-                <button type="button" class="btn btn--primary" data-open-fund>Fondear</button>
-                <button type="button" class="btn btn--secondary" data-open-dispersion>Dispersar</button>
+                <button type="button" class="btn btn--primary" data-open-dispersion>Dispersar</button>
+                <a class="btn btn--secondary" href="${ctx}/admin/simulador-banco">Simular depósito</a>
             </div>
         </section>
 
@@ -155,6 +171,43 @@
                  lista aparte. --%>
             <a class="linked__add" href="${ctx}/admin/movimientos?ambito=CONC&tipo=REINTEGRATION">
                 Ver todas las reintegraciones
+            </a>
+        </section>
+
+        <%--
+          De dónde vino el dinero. Es el panel que da sentido al saldo: cada
+          fondeo del ledger tiene aquí su respaldo, con quién lo mandó y la
+          referencia que el banco emitió.
+        --%>
+        <section class="panel linked" style="margin-top: 28px;">
+            <p class="panel__label">DEPÓSITOS RECIBIDOS</p>
+
+            <div class="linked__list">
+                <c:forEach var="d" items="${deposits}">
+                    <div class="deposit">
+                        <span class="deposit__head">
+                            <span class="deposit__who">${fn:escapeXml(d.ordenanteNombre)}</span>
+                            <span class="deposit__amount">+$<fmt:formatNumber value="${d.monto}"
+                                    type="number" groupingUsed="true"
+                                    minFractionDigits="2" maxFractionDigits="2"/></span>
+                        </span>
+                        <span class="deposit__ref" title="${fn:escapeXml(d.referenciaLabel)}">
+                            ${fn:escapeXml(d.referencia)}
+                        </span>
+                        <span class="deposit__meta">
+                            ${fn:escapeXml(d.canalLabel)} · ${fn:escapeXml(d.origenLabel)} · ${d.dayLabel}
+                        </span>
+                    </div>
+                </c:forEach>
+                <c:if test="${empty deposits}">
+                    <p class="moves__empty" style="padding: var(--sp-3) 0;">
+                        Todavía no se ha recibido ningún depósito con respaldo bancario.
+                    </p>
+                </c:if>
+            </div>
+
+            <a class="linked__add" href="${ctx}/admin/movimientos?ambito=CONC&tipo=FUNDING">
+                Ver todos los fondeos
             </a>
         </section>
 
@@ -261,56 +314,6 @@
     </div>
 </div>
 
-<c:set var="fundFailed" value="${not empty fundErrors}"/>
-
-<div class="modal-scrim" id="fund-modal" ${fundFailed ? '' : 'hidden'}>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fund-title">
-        <h2 class="modal__title" id="fund-title">Fondear Concentradora</h2>
-        <div class="modal__rule"></div>
-
-        <c:if test="${fundFailed}">
-            <div class="alert alert--error modal__alert">
-                <ul><c:forEach var="e" items="${fundErrors}"><li>${e}</li></c:forEach></ul>
-            </div>
-        </c:if>
-
-        <form class="modal__body" method="post" action="${ctx}/admin/concentradora">
-            <input type="hidden" name="returnTo" value="concentradora">
-
-            <div class="modal__field">
-                <label class="modal__label" for="method">MÉTODO DE FONDEO</label>
-                <div class="modal__control modal__control--select">
-                    <svg class="modal__icon-card" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
-                    <select class="modal__input" id="method" name="method">
-                        <option value="SPEI / Depósito bancario" selected>SPEI / Depósito bancario</option>
-                        <option value="Transferencia interbancaria">Transferencia interbancaria</option>
-                        <option value="Efectivo">Efectivo</option>
-                    </select>
-                    <svg class="modal__icon-chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
-                </div>
-            </div>
-
-            <div class="modal__field">
-                <label class="modal__label modal__label--tracked" for="fundAmount">MONTO</label>
-                <div class="modal__control modal__control--amount">
-                    <svg class="modal__icon-cash" width="16.74" height="17" aria-hidden="true"><use href="#i-cash-app"/></svg>
-                    <input class="modal__input" type="number" step="0.01" min="0.01"
-                           id="fundAmount" name="amount" placeholder="0.00"
-                           value="${fn:escapeXml(fundAmount)}" required>
-                </div>
-            </div>
-
-            <div class="modal__actions">
-                <button type="button" class="btn btn--secondary btn--hero" data-close-fund>Cancelar</button>
-                <button type="submit" class="btn btn--primary btn--hero">
-                    <img src="${ctx}/assets/img/icons/disperse.png" alt="">
-                    Confirmar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
     // El navegador no valida un input[type=hidden] aunque lleve required, así
     // que el "elige una cuenta" se hace aquí. Es una cortesía: quien decide de
@@ -358,7 +361,6 @@
         }
 
         wire("dispersion-modal", "data-open-dispersion", "data-close-dispersion", "accountId");
-        wire("fund-modal", "data-open-fund", "data-close-fund", "fundAmount");
     })();
 
     // El selector avisa; la pantalla decide. Se filtra por target porque el

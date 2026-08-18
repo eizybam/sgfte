@@ -2289,6 +2289,105 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 
 /* ==========================================================================
+   19a · Fondeo con respaldo bancario · Concentradora (V12)
+   ========================================================================== */
+
+/*
+  Donde estaba el botón "Fondear" ahora va la CLABE.
+  El cambio no es cosmético: antes fondear era una acción de esta pantalla y
+  ahora es un dato que se copia para transferir desde el banco. Por eso se
+  presenta como un valor destacado y no como un control.
+*/
+.fund-clabe {
+    margin-top: 22px;
+    padding: 16px 18px;
+    border: 1px dashed rgba(169, 138, 128, 0.35);
+    border-radius: 12px;
+    background: rgba(30, 28, 27, 0.45);
+}
+
+.fund-clabe__label {
+    margin: 0;
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    color: var(--sgfte-mono-muted);
+}
+
+.fund-clabe__value {
+    margin: 8px 0 0;
+    font-family: var(--sgfte-font-mono);
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--sgfte-cream);
+    word-spacing: 4px;
+    user-select: all;   /* un clic la selecciona entera para copiarla */
+}
+
+.fund-clabe__note {
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--sgfte-tan);
+}
+
+/*
+  Tarjeta de depósito recibido. Tres renglones porque son tres cosas distintas
+  y la del medio es la que importa: quién mandó el dinero, con qué referencia
+  lo mandó, y por dónde entró.
+*/
+.deposit {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--sgfte-line);
+}
+.deposit:last-child { border-bottom: none; }
+
+.deposit__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.deposit__who {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    color: var(--sgfte-cream);
+}
+
+.deposit__amount {
+    flex: 0 0 auto;
+    font-family: var(--sgfte-font-mono);
+    font-size: 14px;
+    color: var(--sgfte-ok-text);
+}
+
+/* La referencia es el dato que se coteja contra el banco: en mono y completa. */
+.deposit__ref {
+    display: block;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--sgfte-font-mono);
+    font-size: 13px;
+    color: var(--sgfte-accent);
+}
+
+.deposit__meta {
+    display: block;
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--sgfte-tan);
+}
+
+
+/* ==========================================================================
    19b · Simulador de banco (/admin/simulador-banco)
    ========================================================================== */
 

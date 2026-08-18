@@ -129,7 +129,7 @@
     <table class="hist-table">
         <thead>
         <tr>
-            <th class="c-date">FECHA/HORA</th>
+            <th class="c-date">FECHA</th>
             <th class="c-concept">CONCEPTO</th>
             <th class="c-origin">ORIGEN</th>
             <th class="c-method">METODO</th>

@@ -29,19 +29,21 @@
         </p>
 
         <%--
-          El marco sólo dibuja "Depositar a cuenta", pero fondear la
-          Concentradora no tenía ningún punto de entrada en la aplicación: la
-          operación que mete dinero al sistema quedaba inalcanzable.
+          Aquí había un botón "Fondear" que abría un modal con un campo de
+          monto. Ya no: desde V12 el saldo sólo sube cuando el banco reporta un
+          depósito con referencia verificable, así que no hay nada que teclear.
+          Fondear es transferir a la CLABE de la Concentradora y esperar; el
+          detalle vive en su pantalla.
         --%>
         <div class="conc__cta">
             <button type="button" class="btn btn--primary btn--hero" data-open-dispersion>
                 <img src="${ctx}/assets/img/icons/transfer.png" alt="">
                 Depositar a cuenta
             </button>
-            <button type="button" class="btn btn--secondary btn--hero" data-open-fund>
+            <a class="btn btn--secondary btn--hero" href="${ctx}/admin/concentradora">
                 <img src="${ctx}/assets/img/icons/fund.png" alt="">
-                Fondear
-            </button>
+                Cómo fondear
+            </a>
         </div>
     </section>
 
@@ -238,74 +240,7 @@
   El método de fondeo se guarda en la bitácora, no en el ledger: es contexto
   operativo. El ledger guarda importe y saldo resultante, que es lo que cuadra.
 --%>
-<c:set var="fundFailed" value="${not empty fundErrors}"/>
-
-<div class="modal-scrim" id="fund-modal" ${fundFailed ? '' : 'hidden'}>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fund-title">
-        <h2 class="modal__title" id="fund-title">Fondear Concentradora</h2>
-        <div class="modal__rule"></div>
-
-        <c:if test="${fundFailed}">
-            <div class="alert alert--error modal__alert">
-                <ul><c:forEach var="e" items="${fundErrors}"><li>${e}</li></c:forEach></ul>
-            </div>
-        </c:if>
-
-        <form class="modal__body" method="post" action="${ctx}/admin/concentradora">
-
-            <div class="modal__field">
-                <label class="modal__label" for="method">MÉTODO DE FONDEO</label>
-                <div class="modal__control modal__control--select">
-                    <svg class="modal__icon-card" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
-                    <select class="modal__input" id="method" name="method">
-                        <option value="SPEI / Depósito bancario" selected>SPEI / Depósito bancario</option>
-                        <option value="Transferencia interbancaria">Transferencia interbancaria</option>
-                        <option value="Efectivo">Efectivo</option>
-                    </select>
-                    <svg class="modal__icon-chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
-                </div>
-            </div>
-
-            <div class="modal__field">
-                <label class="modal__label modal__label--tracked" for="fundAmount">MONTO</label>
-                <div class="modal__control modal__control--amount">
-                    <svg class="modal__icon-cash" width="16.74" height="17" aria-hidden="true"><use href="#i-cash-app"/></svg>
-                    <input class="modal__input" type="number" step="0.01" min="0.01"
-                           id="fundAmount" name="amount" placeholder="0.00"
-                           value="${fn:escapeXml(fundAmount)}" required>
-                </div>
-            </div>
-
-            <div class="modal__actions">
-                <button type="button" class="btn btn--secondary btn--hero" data-close-fund>Cancelar</button>
-                <button type="submit" class="btn btn--primary btn--hero">
-                    <img src="${ctx}/assets/img/icons/disperse.png" alt="">
-                    Confirmar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
-    (function () {
-        var scrim = document.getElementById("fund-modal");
-        var amount = document.getElementById("fundAmount");
-        var lastFocused = null;
-
-        function open() { lastFocused = document.activeElement; scrim.hidden = false; amount.focus(); }
-        function close() { scrim.hidden = true; if (lastFocused) lastFocused.focus(); }
-
-        document.querySelectorAll("[data-open-fund]").forEach(function (b) { b.addEventListener("click", open); });
-        document.querySelectorAll("[data-close-fund]").forEach(function (b) { b.addEventListener("click", close); });
-
-        scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
-        document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape" && !scrim.hidden) close();
-        });
-
-        if (!scrim.hidden) amount.focus();
-    })();
 
     // El selector avisa; la pantalla decide. Se filtra por target porque el
     // evento es global y podría haber más de un selector en la página.

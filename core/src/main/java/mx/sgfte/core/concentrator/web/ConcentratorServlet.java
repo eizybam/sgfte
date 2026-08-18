@@ -13,16 +13,20 @@ import mx.sgfte.core.concentrator.AccountLookupDao;
 import mx.sgfte.core.concentrator.ConcentratorDao;
 import mx.sgfte.core.concentrator.ConcentratorService;
 import mx.sgfte.core.concentrator.ConcentratorSummary;
+import mx.sgfte.core.funding.FundingDepositDao;
 import mx.sgfte.core.users.ValidationException;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 /**
- * GET  /admin/concentradora — the "Cuenta Concentradora" screen (Figma 2097:313).
- * POST /admin/concentradora — adds funds to the Concentrator.
+ * GET /admin/concentradora — the "Cuenta Concentradora" screen (Figma 2097:313).
+ *
+ * Sólo lectura desde V12. Tenía un POST que fondeaba con el monto que se
+ * tecleara en un modal; ese camino desapareció junto con el modal, porque el
+ * saldo ya no sube por una acción de esta pantalla sino cuando el banco reporta
+ * un depósito en /api/banco/deposito.
  *
  * The screen is the ledger's front page: balance, the last movements that
  * produced it, the last reintegrations that came back in, and the month's
@@ -38,14 +42,11 @@ public class ConcentratorServlet extends HttpServlet {
 
     private final AuditLogService audit = new AuditLogService();
 
-    /** Leídos por esta pantalla y por AdminHomeServlet para reabrir el modal si falló. */
-    public static final String FLASH_ERRORS = "fundErrors";
-    public static final String FLASH_AMOUNT = "fundAmount";
-
     private final ConcentratorService service = new ConcentratorService();
     private final ConcentratorDao ledger = new ConcentratorDao();
     private final AccountLookupDao accountLookupDao = new AccountLookupDao();
     private final AccountDao accountDao = new AccountDao();
+    private final FundingDepositDao deposits = new FundingDepositDao();
 
     /*
       Cuántas filas caben en cada panel del marco: 5 y 2, y ya no hay una
@@ -55,6 +56,8 @@ public class ConcentratorServlet extends HttpServlet {
      */
     private static final int MOVEMENT_ROWS = 5;
     private static final int REINTEGRATION_ROWS = 2;
+    /** Caben tres tarjetas de depósito sin que el panel empuje al resumen. */
+    private static final int DEPOSIT_ROWS = 3;
 
     private static final DateTimeFormatter DAY_YEAR =
             DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.forLanguageTag("es-MX"));
@@ -77,6 +80,9 @@ public class ConcentratorServlet extends HttpServlet {
         // "Cuentas activas" pertenece al módulo de cuentas, no al ledger.
         req.setAttribute("activeAccounts", accountDao.countForAdmin(null, "ACTIVE", null));
 
+        // De dónde vino el dinero: el respaldo bancario de los últimos fondeos (V12).
+        req.setAttribute("deposits", deposits.findRecent(DEPOSIT_ROWS));
+
         consumeFlash(req);
 
             /*
@@ -98,51 +104,8 @@ public class ConcentratorServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/jsp/admin/concentradora.jsp").forward(req, resp);
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        BigDecimal amount = parseAmount(req.getParameter("amount"));
-        String method = req.getParameter("method");
-
-        HttpSession session = req.getSession();
-        try {
-            // El actor del ledger es el correo, igual que en la bitácora.
-            service.fund(amount, AuditLogService.actorOf(req));
-
-            // El método de fondeo va en la bitácora, no en el ledger: es contexto
-            // operativo, no un hecho financiero. El ledger guarda el importe y el
-            // saldo resultante, que es lo que tiene que cuadrar.
-            audit.record(AuditEvent.CONCENTRATOR_FUNDED,
-                    (method == null || method.isBlank() ? "" : method + " · ") + "$" + amount, req);
-
-            mx.sgfte.core.shared.web.OperationResult.success("¡Fondeo aplicado!",
-                            "La Concentradora recibió los fondos",
-                            "FONDEO CONFIRMADO",
-                            "El saldo ya está disponible para dispersar.")
-                    .amount("Monto fondeado", amount)
-                    .detail("Método", method)
-                    .detail("Destino", "Cuenta Concentradora")
-                    .when(java.time.LocalDateTime.now())
-                    .primary("Ver concentradora", "/admin/concentradora")
-                    .flash(session);
-        } catch (ValidationException e) {
-            session.setAttribute(FLASH_ERRORS, e.getErrors());
-            session.setAttribute(FLASH_AMOUNT, req.getParameter("amount"));
-        }
-        // Redirect y no forward: fondear mueve dinero, refrescar no debe repetirlo.
-        resp.sendRedirect(req.getContextPath() + backTo(req));
-    }
-
     /**
-     * Dos pantallas abren el modal de fondeo. Se acepta sólo el literal
-     * "concentradora", nunca una URL, para que no sea una redirección abierta.
-     */
-    private String backTo(HttpServletRequest req) {
-        return "concentradora".equals(req.getParameter("returnTo"))
-                ? "/admin/concentradora" : "/admin/home";
-    }
-
-    /**
-     * Pasa el resultado de fondear o dispersar de la sesión a la petición.
+     * Pasa el resultado de dispersar de la sesión a la petición.
      *
      * Se lee una vez y se borra, así un refresco no repite el mensaje. Si el
      * intento falló, la lista de errores es lo que le dice al JSP que reabra el
@@ -157,8 +120,6 @@ public class ConcentratorServlet extends HttpServlet {
                 DispersionServlet.FLASH_ERRORS,
                 DispersionServlet.FLASH_ACCOUNT,
                 DispersionServlet.FLASH_AMOUNT,
-                FLASH_ERRORS,
-                FLASH_AMOUNT,
         };
         for (String key : keys) {
             Object value = session.getAttribute(key);
@@ -169,13 +130,4 @@ public class ConcentratorServlet extends HttpServlet {
         }
     }
 
-    /** Parses a money string into BigDecimal, or null if empty/invalid. */
-    private BigDecimal parseAmount(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try {
-            return new BigDecimal(raw.trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
 }
