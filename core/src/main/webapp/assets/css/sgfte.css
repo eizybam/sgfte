@@ -185,6 +185,29 @@ a { color: inherit; }
 }
 
 /*
+  El x=504 del marco es un punto de ARRANQUE, y eso sólo funciona mientras el
+  grupo quepa en lo que queda: los tres enlaces del portal caben, los cuatro
+  del admin no. Al añadir "Movimientos" el grupo pasó de 726 a 811px y su
+  borde derecho se metió debajo del engrane de ajustes — no es que quedara
+  "apretado", es que se solapaban.
+
+  Así que el área de administración ancla por la DERECHA: el grupo se apoya en
+  el bloque de usuario con 72px de aire y crece hacia la izquierda, donde no
+  hay nada. Un quinto enlace tampoco chocaría. Se mantienen los 85px del marco
+  entre elementos, que es la medida que sí describe el diseño.
+
+  El margin-left:auto de .app-header__user se anula aquí: con los dos en auto
+  el espacio libre se repartiría a medias y la distancia al engrane cambiaría
+  con cada pantalla. Se quiere fija.
+*/
+.app-header__nav--wide {
+    margin-left: auto;
+    margin-right: 72px;
+}
+
+.app-header__nav--wide ~ .app-header__user { margin-left: 0; }
+
+/*
   El enlace ocupa todo el alto del header para que su borde inferior caiga
   exactamente sobre la línea (y=109..112), que es el subrayado activo.
   Los 7px de padding superior recolocan el texto en su centro de diseño (y≈59).
@@ -2275,18 +2298,34 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
   con puntos suspensivos— porque es la misma clase de tabla, y sólo redefine
   los anchos: aquí son ocho columnas y allí seis.
 
-  Los porcentajes suman exactamente 100. CONCEPTO se lleva el sobrante porque
-  es la única columna con texto libre; MONTO va a la derecha, como toda cifra
+  Los porcentajes suman exactamente 100. MONTO va a la derecha, como toda cifra
   en el sistema.
+
+  Quien manda aquí es el ENCABEZADO, no el dato: `.table th` va en mono de 20px
+  en versalitas y con `white-space: nowrap`, así que "PROPÓSITO" ocupa más que
+  cualquier "Alimentos" que caiga debajo. Un encabezado que no cabe no se
+  recorta con puntos suspensivos como una celda: se desborda encima de la
+  columna vecina, que fue exactamente lo que pasó la primera vez con
+  FECHA/HORA metiéndose dentro de ÁMBITO.
+
+  Son SIETE columnas y no ocho porque con ocho no salía la cuenta. Los mínimos
+  reales sumaban más de 100: CONCEPTO lleva los comercios ("Gasolinera BP
+  Insurgentes", 25 caracteres) y es la columna más informativa de la pantalla,
+  y MONTO tiene que aguantar el asiento de apertura de la Concentradora,
+  "+$1,000,000.00", que con el reparto anterior se recortaba. Ámbito se mudó a
+  la celda de MOVIMIENTO —la insignia encima del tipo— porque las dos
+  responden lo mismo, y esa columna liberada es la que le faltaba a las otras.
+
+  El resto se dimensionó por su título y luego se comprobó contra el dato. Los
+  que atan por el dato son CUENTA ("Concentradora" pide 13%) y MONTO.
 */
-.table--moves .col-when    { width: 12%; }
-.table--moves .col-scope   { width: 8.5%; }
+.table--moves .col-when    { width: 15%; }
 .table--moves .col-kind    { width: 15%; }
-.table--moves .col-concept { width: 18%; }
-.table--moves .col-account { width: 12%; }
-.table--moves .col-holder  { width: 13%; }
-.table--moves .col-purpose { width: 9.5%; }
-.table--moves .col-amount  { width: 12%; }
+.table--moves .col-concept { width: 17%; }
+.table--moves .col-account { width: 13%; }
+.table--moves .col-holder  { width: 12%; }
+.table--moves .col-purpose { width: 14%; }
+.table--moves .col-amount  { width: 14%; }
 
 .table--moves th,
 .table--moves td { text-align: left; }
@@ -2297,6 +2336,29 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 .table--moves th.col-amount,
 .table--moves td.num { text-align: right; }
+
+/*
+  Celda MOVIMIENTO: la insignia de ámbito encima del tipo. Mismo recurso que
+  FECHA/HORA —dos renglones en una celda— aplicado a dos datos que siempre se
+  leen juntos.
+*/
+.moves-kind__what { display: block; margin-top: 4px; }
+
+/*
+  Columna CUENTA. Dos renglones cuando hay contraparte, igual que FECHA/HORA
+  lleva la hora debajo de la fecha: "GAS-37157 → GAS-52353" en una línea no
+  cabe en el 13%, y lo que se recortaba era el destino — el único dato que la
+  flecha existe para dar. Cada renglón se recorta por separado y el valor
+  entero sigue en el title de la celda.
+*/
+.moves-acct { font-family: var(--sgfte-font-mono); font-size: 14px; line-height: 22px; color: var(--sgfte-cream); }
+.moves-acct span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.moves-acct__to { color: var(--sgfte-tan); }
 
 /*
   El aviso de "estás viendo una sola cuenta". Va sobre la tabla y no dentro de
@@ -2931,6 +2993,10 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
     .app-header__nav { gap: var(--sp-3); margin: 0; align-self: auto; }
     .app-header__link { padding-top: 0; font-size: 17px; }
     .app-header__user { gap: var(--sp-2); }
+    /* Aquí el cascarón envuelve y ya no hay nada con lo que chocar, así que el
+       anclaje a la derecha del admin sobra y el bloque de usuario recupera su
+       empujón. */
+    .app-header__nav--wide ~ .app-header__user { margin-left: auto; }
 
     .app-side { border-right: none; border-bottom: 1px solid var(--sgfte-line-side); }
     .app-side__nav { flex-direction: row; flex-wrap: wrap; gap: var(--sp-1); padding: var(--sp-2); }

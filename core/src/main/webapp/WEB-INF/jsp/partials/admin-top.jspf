@@ -37,7 +37,9 @@
 <div class="app">
 
     <header class="app-header">
-        <nav class="app-header__nav">
+        <%-- --wide: cuatro enlaces ya no caben arrancando en el x=504 del marco,
+             así que este grupo se ancla a la derecha. Ver §2 de sgfte.css. --%>
+        <nav class="app-header__nav app-header__nav--wide">
             <a class="app-header__link ${activeNav == 'overview' ? 'is-active' : ''}"
                href="${ctx}/admin/home">Dashboard</a>
             <a class="app-header__link ${activeNav == 'analytics' ? 'is-active' : ''}"
