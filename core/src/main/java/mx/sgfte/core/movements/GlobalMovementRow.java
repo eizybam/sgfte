@@ -131,9 +131,13 @@ public class GlobalMovementRow {
      *
      * La Concentradora no tiene número de cuenta —es una fila única, sin
      * columna de código—, así que se nombra. El resto muestra el suyo.
+     *
+     * "Concentradora" a secas y no "Cuenta Concentradora": la columna ya se
+     * llama CUENTA, así que el prefijo sólo repetía el encabezado, y encima no
+     * cabía — se recortaba a "Cuenta Conc…", que es peor que no ponerlo.
      */
     public String getAccountLabel() {
-        return isConcentrator() ? "Cuenta Concentradora" : accountNumber;
+        return isConcentrator() ? "Concentradora" : accountNumber;
     }
 
     /**

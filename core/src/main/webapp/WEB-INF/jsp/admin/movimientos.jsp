@@ -134,8 +134,10 @@
         <thead>
         <tr>
             <th class="col-when">Fecha/Hora</th>
-            <th class="col-scope">Ámbito</th>
-            <th class="col-kind">Tipo</th>
+            <%-- Ámbito y tipo comparten celda: son la misma pregunta ("qué
+                 movimiento es esto") y separarlos costaba una columna entera
+                 que le hacía falta a CONCEPTO, donde van los comercios. --%>
+            <th class="col-kind">Movimiento</th>
             <th class="col-concept">Concepto</th>
             <th class="col-account">Cuenta</th>
             <th class="col-holder">Titular</th>
@@ -153,25 +155,35 @@
                     </span>
                 </td>
                 <td>
-                    <c:choose>
-                        <c:when test="${m.concentrator}">
-                            <span class="badge badge--neutral">CONC</span>
-                        </c:when>
-                        <c:otherwise>
-                            <span class="badge badge--ok">CUENTA</span>
-                        </c:otherwise>
-                    </c:choose>
+                    <span class="moves-kind">
+                        <c:choose>
+                            <c:when test="${m.concentrator}">
+                                <span class="badge badge--neutral">CONC</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge badge--ok">CUENTA</span>
+                            </c:otherwise>
+                        </c:choose>
+                        <span class="moves-kind__what">${m.kind}</span>
+                    </span>
                 </td>
-                <td>${m.kind}</td>
                 <td title="${fn:escapeXml(m.concept)}">
                     <span class="log-origin">${fn:escapeXml(m.concept)}</span>
                 </td>
-                <td>
-                    <span class="log-origin" title="${fn:escapeXml(m.accountLabel)}">
-                        ${fn:escapeXml(m.accountLabel)}
-                        <%-- La contraparte de una P2P: sin ella la fila dice que
-                             salió dinero pero no hacia dónde. --%>
-                        <c:if test="${not empty m.relatedNumber}"> → ${fn:escapeXml(m.relatedNumber)}</c:if>
+                <%--
+                  La contraparte de una P2P va en su PROPIO renglón, como la
+                  hora debajo de la fecha. En una sola línea "GAS-37157 →
+                  GAS-52353" no cabe en la columna y lo que se recortaba era
+                  justo el destino, que es lo único que el flecha existe para
+                  decir. Sin ella la fila cuenta que salió dinero pero no
+                  hacia dónde.
+                --%>
+                <td title="${fn:escapeXml(m.accountLabel)}${empty m.relatedNumber ? '' : ' → '.concat(m.relatedNumber)}">
+                    <span class="moves-acct">
+                        <span>${fn:escapeXml(m.accountLabel)}</span>
+                        <c:if test="${not empty m.relatedNumber}">
+                            <span class="moves-acct__to">→ ${fn:escapeXml(m.relatedNumber)}</span>
+                        </c:if>
                     </span>
                 </td>
                 <td><span class="log-user" title="${fn:escapeXml(m.whoLabel)}">${fn:escapeXml(m.whoLabel)}</span></td>
@@ -184,7 +196,7 @@
         </c:forEach>
         <c:if test="${empty rows}">
             <tr>
-                <td colspan="8" class="table__empty">
+                <td colspan="7" class="table__empty">
                     <c:choose>
                         <c:when test="${empty q and empty ambito and empty tipo and empty cat
                                         and empty cuenta and period == 'TODOS'}">
