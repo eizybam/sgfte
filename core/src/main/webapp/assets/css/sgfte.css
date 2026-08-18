@@ -2308,23 +2308,33 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
   columna vecina, que fue exactamente lo que pasó la primera vez con
   FECHA/HORA metiéndose dentro de ÁMBITO.
 
-  Son SIETE columnas y no ocho porque con ocho no salía la cuenta. Los mínimos
-  reales sumaban más de 100: CONCEPTO lleva los comercios ("Gasolinera BP
-  Insurgentes", 25 caracteres) y es la columna más informativa de la pantalla,
-  y MONTO tiene que aguantar el asiento de apertura de la Concentradora,
-  "+$1,000,000.00", que con el reparto anterior se recortaba. Ámbito se mudó a
-  la celda de MOVIMIENTO —la insignia encima del tipo— porque las dos
-  responden lo mismo, y esa columna liberada es la que le faltaba a las otras.
+  Los porcentajes NO salen de una estimación: se midieron en el navegador, con
+  el ancho real de cada encabezado y del dato más ancho de cada columna. El
+  hueco útil de la tabla es 892px, y la suma de los mínimos reales ronda el
+  98% — esta tabla va al límite y por eso conviene medir antes de mover un
+  número. Los que atan son PROPÓSITO (encabezado de 120px sobre datos de 81),
+  MONTO (el asiento de apertura, "+$1,000,000.00") y CUENTA ("Concentradora").
 
-  El resto se dimensionó por su título y luego se comprobó contra el dato. Los
-  que atan por el dato son CUENTA ("Concentradora" pide 13%) y MONTO.
+  FECHA se llama FECHA y no FECHA/HORA porque el encabezado era lo que fijaba
+  el ancho —mono de 20px, sin partir— mientras que la hora se lee igual debajo
+  del día. Ahora el que manda en esa columna es el dato, que es lo sano.
 */
-.table--moves .col-when    { width: 15%; }
-.table--moves .col-kind    { width: 15%; }
-.table--moves .col-concept { width: 17%; }
+/*
+  Encabezados a 18px y no a los 20 de la tabla canónica. Esta tabla lleva OCHO
+  columnas donde aquélla lleva seis, y a 20px la suma de los mínimos daba 101%:
+  literalmente no cabía. Bajar dos puntos el encabezado —no el dato, que sigue
+  a 14px— devuelve unos 60px al reparto y deja a CONCEPTO sitio para enseñar
+  el comercio, que es de lo que va la columna.
+*/
+.table--moves th { font-size: 18px; }
+
+.table--moves .col-when    { width: 13%; }
+.table--moves .col-scope   { width: 10%; }
+.table--moves .col-kind    { width: 12%; }
+.table--moves .col-concept { width: 13%; }
 .table--moves .col-account { width: 13%; }
 .table--moves .col-holder  { width: 12%; }
-.table--moves .col-purpose { width: 14%; }
+.table--moves .col-purpose { width: 13%; }
 .table--moves .col-amount  { width: 14%; }
 
 .table--moves th,
@@ -2338,11 +2348,13 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 .table--moves td.num { text-align: right; }
 
 /*
-  Celda MOVIMIENTO: la insignia de ámbito encima del tipo. Mismo recurso que
-  FECHA/HORA —dos renglones en una celda— aplicado a dos datos que siempre se
-  leen juntos.
+  PROPÓSITO al centro. Es la única columna donde el encabezado es mucho más
+  ancho que su dato —120px de "PROPÓSITO" contra 81 de "Alimentos"—, así que
+  alineado a la izquierda el valor quedaba descolgado en el borde de una
+  celda mucho más grande, sin parecer que perteneciera a su columna.
 */
-.moves-kind__what { display: block; margin-top: 4px; }
+.table--moves th.col-purpose,
+.table--moves td.moves-purpose { text-align: center; }
 
 /*
   Columna CUENTA. Dos renglones cuando hay contraparte, igual que FECHA/HORA

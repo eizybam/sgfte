@@ -133,11 +133,12 @@
     <table class="table table--moves">
         <thead>
         <tr>
-            <th class="col-when">Fecha/Hora</th>
-            <%-- Ámbito y tipo comparten celda: son la misma pregunta ("qué
-                 movimiento es esto") y separarlos costaba una columna entera
-                 que le hacía falta a CONCEPTO, donde van los comercios. --%>
-            <th class="col-kind">Movimiento</th>
+            <%-- "Fecha" y no "Fecha/Hora": el encabezado es lo que fijaba el
+                 ancho de esta columna —va en mono de 20px y no se parte—, y la
+                 hora se lee igual debajo del día sin necesidad de anunciarla. --%>
+            <th class="col-when">Fecha</th>
+            <th class="col-scope">Ámbito</th>
+            <th class="col-kind">Tipo</th>
             <th class="col-concept">Concepto</th>
             <th class="col-account">Cuenta</th>
             <th class="col-holder">Titular</th>
@@ -155,18 +156,16 @@
                     </span>
                 </td>
                 <td>
-                    <span class="moves-kind">
-                        <c:choose>
-                            <c:when test="${m.concentrator}">
-                                <span class="badge badge--neutral">CONC</span>
-                            </c:when>
-                            <c:otherwise>
-                                <span class="badge badge--ok">CUENTA</span>
-                            </c:otherwise>
-                        </c:choose>
-                        <span class="moves-kind__what">${m.kind}</span>
-                    </span>
+                    <c:choose>
+                        <c:when test="${m.concentrator}">
+                            <span class="badge badge--neutral">CONC</span>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="badge badge--ok">CUENTA</span>
+                        </c:otherwise>
+                    </c:choose>
                 </td>
+                <td>${m.kind}</td>
                 <td title="${fn:escapeXml(m.concept)}">
                     <span class="log-origin">${fn:escapeXml(m.concept)}</span>
                 </td>
@@ -187,7 +186,7 @@
                     </span>
                 </td>
                 <td><span class="log-user" title="${fn:escapeXml(m.whoLabel)}">${fn:escapeXml(m.whoLabel)}</span></td>
-                <td>${empty m.categoryName ? '—' : fn:escapeXml(m.categoryName)}</td>
+                <td class="moves-purpose">${empty m.categoryName ? "—" : fn:escapeXml(m.categoryName)}</td>
                 <td class="num ${m.inflow ? 'amount-in' : 'amount-out'}">
                     ${m.inflow ? '+' : '−'}$<fmt:formatNumber value="${m.amount}" type="number"
                         groupingUsed="true" minFractionDigits="2" maxFractionDigits="2"/>
@@ -196,7 +195,7 @@
         </c:forEach>
         <c:if test="${empty rows}">
             <tr>
-                <td colspan="7" class="table__empty">
+                <td colspan="8" class="table__empty">
                     <c:choose>
                         <c:when test="${empty q and empty ambito and empty tipo and empty cat
                                         and empty cuenta and period == 'TODOS'}">
