@@ -114,12 +114,16 @@ public class GlobalMovementRow {
     /**
      * Línea del concepto: lo que se escribió al mover el dinero.
      *
-     * concentrator_movement no tiene descripción y account_movement la tiene
-     * opcional, así que cuando falta se cae al tipo. Una celda vacía en la
-     * columna más ancha de la tabla parece un dato perdido.
+     * Cuando no hay nada escrito va un guion, y NO el tipo, aunque el portal sí
+     * caiga al tipo en su historial. Allí no existe columna TIPO y el hueco se
+     * quedaría vacío; aquí sí existe, y concentrator_movement no guarda
+     * descripción en ninguna de sus filas — así que caer al tipo escribía
+     * "Dispersión a cuenta" dos veces en la misma fila, en las 200. Repetir un
+     * dato no es informar: el guion dice "no se escribió nada" y deja la
+     * columna legible.
      */
     public String getConcept() {
-        return (description == null || description.isBlank()) ? getKind() : description;
+        return (description == null || description.isBlank()) ? "—" : description;
     }
 
     /**

@@ -9,6 +9,8 @@ import mx.sgfte.core.categories.CategoryDao;
 import mx.sgfte.core.movements.MovementQueryDao;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * GET /admin/movimientos — la vista global del ledger.
@@ -59,7 +61,7 @@ public class MovementsServlet extends HttpServlet {
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
 
-        req.setAttribute("types", movements.distinctTypes());
+        req.setAttribute("types", typeOptions(type));
         req.setAttribute("categories", categoryDao.findAllActive());
 
         // Se devuelven para que el buscador y las píldoras se repinten con lo elegido.
@@ -71,6 +73,27 @@ public class MovementsServlet extends HttpServlet {
         req.setAttribute("period", period);
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/movimientos.jsp").forward(req, resp);
+    }
+
+    /**
+     * Los tipos del desplegable: los que existen en el ledger, más el que se
+     * esté filtrando aunque no exista.
+     *
+     * El caso real es "Ver todas las reintegraciones" de la Concentradora, que
+     * llega con tipo=REINTEGRATION. Si todavía no se ha cerrado ninguna cuenta
+     * no hay ni una fila de ese tipo, distinctTypes() no lo devuelve, el
+     * <select> no encuentra su opción y se pinta en "TODOS" — con el filtro
+     * puesto. La píldora estaría mintiendo sobre lo que se está viendo, que es
+     * peor que la tabla vacía: la tabla vacía es la respuesta correcta.
+     */
+    private List<String> typeOptions(String active) {
+        List<String> types = movements.distinctTypes();
+        if (active != null && !types.contains(active)) {
+            types = new ArrayList<>(types);
+            types.add(active);
+            types.sort(String::compareTo);
+        }
+        return types;
     }
 
     /**

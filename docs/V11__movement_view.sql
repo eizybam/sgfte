@@ -78,6 +78,13 @@ SELECT 'CONCENTRADORA',
        cm.created_at
   FROM concentrator_movement cm;
 
--- concentrator_movement ya tenía idx_conc_mov_created; account_movement no
--- tenía ninguno sobre la fecha y la vista ordena SIEMPRE por created_at.
+-- El filtro de periodo de la pantalla (HOY / 7D / 30D) es un rango sobre
+-- created_at, y concentrator_movement ya tenía su índice mientras que
+-- account_movement no tenía ninguno: media consulta iba por índice y la otra
+-- media a barrido completo. Con éste, el plan del periodo son dos INDEX RANGE
+-- SCAN, uno por libro.
+--
+-- Lo que NO acelera es el orden: el ORDER BY cae sobre el resultado del UNION,
+-- que Oracle materializa y ordena de todas formas. Se pone por el filtro, no
+-- por el orden.
 CREATE INDEX idx_acct_mov_created ON account_movement (created_at);

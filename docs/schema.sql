@@ -458,7 +458,10 @@ SELECT 'CONCENTRADORA',
        cm.created_at
   FROM concentrator_movement cm;
 
--- La vista ordena SIEMPRE por created_at y account_movement no tenía índice.
+-- Por el filtro de periodo de /admin/movimientos, que es un rango sobre
+-- created_at: concentrator_movement ya tenía el suyo y account_movement no,
+-- así que media consulta iba por índice y la otra media a barrido completo.
+-- El ORDER BY no se beneficia: cae sobre el resultado del UNION.
 CREATE INDEX idx_acct_mov_created ON account_movement (created_at);
 
 -- ============================================================
