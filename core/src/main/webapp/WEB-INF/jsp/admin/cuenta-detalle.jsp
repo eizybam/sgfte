@@ -68,7 +68,7 @@
         <section class="panel moves" style="margin-top: 28px;">
             <div class="moves__head">
                 <p class="panel__label">MOVIMIENTOS RECIENTES</p>
-                <a class="moves__more" href="${ctx}/admin/historial?accountId=${account.id}">Ver historial completo</a>
+                <a class="moves__more" href="${ctx}/admin/movimientos?cuenta=${account.id}">Ver historial completo</a>
             </div>
 
             <c:choose>

@@ -71,11 +71,14 @@
             <div class="moves__head">
                 <p class="panel__label">MOVIMIENTOS RECIENTES</p>
                 <%--
-                  El mismo panel con otro tope (?ledger=all). No se enlaza a la
+                  Ya no es este mismo panel con otro tope: es la vista global
+                  filtrada al ledger de la Concentradora. El panel se queda en
+                  cinco filas para siempre y quien quiera más va a una pantalla
+                  que además sabe buscar, filtrar y paginar. No se enlaza a la
                   bitácora porque es otra cosa: quién hizo qué, no el saldo.
                 --%>
-                <a class="moves__more" href="${ctx}/admin/concentradora?ledger=${fullLedger ? '' : 'all'}">
-                    ${fullLedger ? 'Ver sólo los recientes' : 'Ver historial completo'}
+                <a class="moves__more" href="${ctx}/admin/movimientos?ambito=CONC">
+                    Ver historial completo
                 </a>
             </div>
 
@@ -147,8 +150,11 @@
                 </c:if>
             </div>
 
-            <a class="linked__add" href="${ctx}/admin/concentradora?reint=${fullReint ? '' : 'all'}">
-                ${fullReint ? 'Ver sólo las últimas' : 'Ver todas las reintegraciones'}
+            <%-- Mismo destino que el panel de al lado, con el tipo ya puesto:
+                 las reintegraciones son un filtro de la vista global, no una
+                 lista aparte. --%>
+            <a class="linked__add" href="${ctx}/admin/movimientos?ambito=CONC&tipo=REINTEGRATION">
+                Ver todas las reintegraciones
             </a>
         </section>
 

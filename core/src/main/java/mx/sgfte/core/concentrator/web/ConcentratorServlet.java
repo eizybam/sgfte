@@ -24,10 +24,12 @@ import java.util.Locale;
  * GET  /admin/concentradora — the "Cuenta Concentradora" screen (Figma 2097:313).
  * POST /admin/concentradora — adds funds to the Concentrator.
  *
- * The screen is the ledger's home: balance, the movements that produced it, the
- * reintegrations that came back in, and the month's totals. Until V3 there was
- * no ledger to show, which is why this was the last admin screen still on the
- * old skeleton.
+ * The screen is the ledger's front page: balance, the last movements that
+ * produced it, the last reintegrations that came back in, and the month's
+ * totals. It summarises; the whole ledger — both books, searchable — lives in
+ * /admin/movimientos, which is where the two "ver todo" links go. Until V3
+ * there was no ledger at all to show, which is why this was the last admin
+ * screen still on the old skeleton.
  *
  * Protected by AuthFilter (/admin/*).
  */
@@ -45,14 +47,13 @@ public class ConcentratorServlet extends HttpServlet {
     private final AccountLookupDao accountLookupDao = new AccountLookupDao();
     private final AccountDao accountDao = new AccountDao();
 
-    /** Cuántas filas caben en cada panel del marco: 5 y 2. */
-    private static final int MOVEMENT_ROWS = 5;
     /*
-      "Ver historial completo" no es una pantalla nueva: es este mismo panel con
-      otro tope. Lo único que separaba "los últimos" de "todos" era el número.
+      Cuántas filas caben en cada panel del marco: 5 y 2, y ya no hay una
+      segunda cifra. "Ver historial completo" era este mismo panel con otro
+      tope (?ledger=all) porque no existía dónde mandar a quien quisiera más;
+      ahora existe /admin/movimientos, que además busca, filtra y pagina.
      */
-    private static final int MOVEMENT_ROWS_ALL = 100;
-    private static final int REINTEGRATION_ROWS_ALL = 100;
+    private static final int MOVEMENT_ROWS = 5;
     private static final int REINTEGRATION_ROWS = 2;
 
     private static final DateTimeFormatter DAY_YEAR =
@@ -63,16 +64,10 @@ public class ConcentratorServlet extends HttpServlet {
             throws ServletException, IOException {
 
         req.setAttribute("concentrator", service.getConcentrator());
-        boolean fullLedger = "all".equals(req.getParameter("ledger"));
-        boolean fullReint   = "all".equals(req.getParameter("reint"));
-        req.setAttribute("fullLedger", fullLedger);
-        req.setAttribute("fullReint", fullReint);
 
-        req.setAttribute("movements",
-                ledger.findRecent(fullLedger ? MOVEMENT_ROWS_ALL : MOVEMENT_ROWS));
+        req.setAttribute("movements", ledger.findRecent(MOVEMENT_ROWS));
         req.setAttribute("reintegrations",
-                ledger.findRecentByType("REINTEGRATION",
-                        fullReint ? REINTEGRATION_ROWS_ALL : REINTEGRATION_ROWS));
+                ledger.findRecentByType("REINTEGRATION", REINTEGRATION_ROWS));
 
         ConcentratorSummary summary = ledger.summary();
         req.setAttribute("summary", summary);
