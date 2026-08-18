@@ -28,6 +28,17 @@ public enum AuditEvent {
 
     // --- Fondos ---
     CONCENTRATOR_FUNDED (Severity.INFO,   Module.FONDOS, "Concentradora fondeada"),
+
+    // Depósito bancario (V12). Aceptar es INFO: es la vía normal por la que
+    // entra dinero. Rechazar es ALERTA y no INFO porque un depósito que no
+    // cuadra —CLABE imposible, referencia repetida, beneficiario que no somos
+    // nosotros— es justo lo que alguien buscaría después filtrando la bitácora.
+    // Y FIRMA INVÁLIDA es CRIT: significa que alguien llamó al endpoint del
+    // banco sin conocer el secreto, que no es un error de captura sino un
+    // intento de meter dinero al sistema desde fuera.
+    DEPOSIT_RECEIVED    (Severity.INFO,   Module.FONDOS, "Depósito bancario aplicado"),
+    DEPOSIT_REJECTED    (Severity.ALERTA, Module.FONDOS, "Depósito bancario rechazado"),
+    DEPOSIT_BAD_SIGNATURE (Severity.CRIT, Module.FONDOS, "Notificación bancaria sin firma válida"),
     DISPERSION          (Severity.INFO,   Module.FONDOS, "Dispersión de fondos"),
     DISPERSION_REJECTED (Severity.ALERTA, Module.FONDOS, "Dispersión rechazada"),
     TRANSFER            (Severity.INFO,   Module.FONDOS, "Transferencia entre cuentas"),
