@@ -115,6 +115,8 @@ esa cuenta existe.
 | | `/admin/dashboard` · `/admin/analytics.csv` | Analíticas y exportación |
 | | `/admin/logs` · `/admin/logs.csv` | Bitácora y exportación |
 | | `/admin/movimientos` | Ledger global: los dos libros, con filtros |
+| | `/admin/simulador-banco` | Simulador del banco (no existe en producción) |
+| API | `POST /api/banco/deposito` | Notificación de depósito, firmada con HMAC |
 | | `/admin/ajustes` | Perfil, contraseña y sesión |
 | Portal | `/app/home` · `/app/cuenta` · `/app/tarjetas` | Empleado |
 | | `/app/movimientos` · `/app/notificaciones` · `/app/gasto` | |
