@@ -64,6 +64,15 @@ class ClabeTest {
     }
 
     @Test
+    @DisplayName("rechaza dieciocho ceros aunque el checksum cuadre")
+    void rechazaCerosAunqueCuadre() {
+        // 0*3 + 0*7 + ... = 0, y el dígito de control de 0 es 0: el checksum la
+        // aprueba. Es justo lo que se teclea para rellenar el campo y seguir.
+        assertEquals(0, Clabe.checkDigit("00000000000000000"));
+        assertFalse(Clabe.isValid("000000000000000000"));
+    }
+
+    @Test
     @DisplayName("rechaza lo que ni siquiera tiene forma de CLABE")
     void rechazaBasura() {
         assertFalse(Clabe.isValid(null));

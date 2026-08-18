@@ -17,7 +17,7 @@ public class ConcentratorDao {
 
     /** Reads the Concentrator (read-only, own connection). */
     public ConcentratorAccount findSingleton() {
-        String sql = "SELECT id, name, balance FROM concentrator_account WHERE singleton = 'Y'";
+        String sql = "SELECT id, name, balance, clabe FROM concentrator_account WHERE singleton = 'Y'";
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -26,6 +26,9 @@ public class ConcentratorDao {
                 ca.setId(rs.getLong("id"));
                 ca.setName(rs.getString("name"));
                 ca.setBalance(rs.getBigDecimal("balance"));
+                // CHAR(18): Oracle la devuelve rellenada a lo ancho de la columna.
+                String clabe = rs.getString("clabe");
+                ca.setClabe(clabe == null ? null : clabe.trim());
                 return ca;
             }
             throw new IllegalStateException("Concentrator account not found (check the schema seed)");
@@ -50,7 +53,7 @@ public class ConcentratorDao {
                 if (ps.executeUpdate() != 1) {
                     throw new IllegalStateException("Could not fund the Concentrator");
                 }
-                record(c, "FUNDING", amount, actor);
+                record(c, "FUNDING", amount, actor, null);
                 c.commit();
             } catch (RuntimeException | SQLException e) {
                 c.rollback();
@@ -74,7 +77,7 @@ public class ConcentratorDao {
             ps.setBigDecimal(2, amount);
             if (ps.executeUpdate() != 1) return false;   // no había saldo
         }
-        record(conn, "DISPERSION", amount, null);
+        record(conn, "DISPERSION", amount, null, null);
         return true;
     }
 
@@ -85,7 +88,31 @@ public class ConcentratorDao {
             ps.setBigDecimal(1, amount);
             ps.executeUpdate();
         }
-        record(conn, "REINTEGRATION", amount, null);
+        record(conn, "REINTEGRATION", amount, null, null);
+    }
+
+    /**
+     * Credits the Concentrator from a bank deposit, inside FundingService's
+     * transaction (V12).
+     *
+     * Distinta de fund(): aquélla abría su propia transacción porque el fondeo
+     * era un acto suelto de un administrador. Ahora el abono es una de las tres
+     * escrituras de un mismo hecho —depósito, saldo y asiento—, así que se
+     * suma a la transacción de quien llama en vez de abrir la suya.
+     *
+     * El asiento nace apuntando a su depósito. No hay forma de escribir un
+     * FUNDING con respaldo "más tarde": o entra con él, o no entra.
+     */
+    public void creditFromDeposit(Connection conn, BigDecimal amount, String actor, long depositId)
+            throws SQLException {
+        String sql = "UPDATE concentrator_account SET balance = balance + ? WHERE singleton = 'Y'";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("No se pudo abonar a la Concentradora");
+            }
+        }
+        record(conn, "FUNDING", amount, actor, depositId);
     }
 
     /**
@@ -100,8 +127,8 @@ public class ConcentratorDao {
      * balance_after is read back inside the same transaction rather than
      * computed, so it is the real post-condition and not an assumption.
      */
-    private void record(Connection conn, String type, BigDecimal amount, String actor)
-            throws SQLException {
+    private void record(Connection conn, String type, BigDecimal amount, String actor,
+                        Long depositId) throws SQLException {
 
         BigDecimal balanceAfter;
         try (PreparedStatement ps = conn.prepareStatement(
@@ -112,12 +139,19 @@ public class ConcentratorDao {
         }
 
         String sql = "INSERT INTO concentrator_movement "
-                   + "(movement_type, amount, balance_after, actor) VALUES (?, ?, ?, ?)";
+                   + "(movement_type, amount, balance_after, actor, funding_deposit_id) "
+                   + "VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, type);
             ps.setBigDecimal(2, amount);
             ps.setBigDecimal(3, balanceAfter);
             ps.setString(4, actor);
+            // Sólo un FUNDING lleva respaldo; un CHECK de la base lo confirma.
+            if (depositId == null) {
+                ps.setNull(5, java.sql.Types.NUMERIC);
+            } else {
+                ps.setLong(5, depositId);
+            }
             ps.executeUpdate();
         }
     }

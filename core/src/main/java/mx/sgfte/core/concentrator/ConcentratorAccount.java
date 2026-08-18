@@ -12,6 +12,8 @@ public class ConcentratorAccount {
     private long  id;
     private String name;
     private BigDecimal balance;
+    /** CLABE de la cuenta: el destino al que se transfiere para fondear (V12). */
+    private String clabe;
 
     public ConcentratorAccount() {}
 
@@ -37,5 +39,18 @@ public class ConcentratorAccount {
 
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
+    }
+
+    public String getClabe() {
+        return clabe;
+    }
+
+    public void setClabe(String clabe) {
+        this.clabe = clabe;
+    }
+
+    /** Agrupada de a tres para poder leerla en voz alta sin perder la cuenta. */
+    public String getClabeFormatted() {
+        return mx.sgfte.core.funding.Clabe.format(clabe);
     }
 }

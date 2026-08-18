@@ -40,6 +40,14 @@ public final class Clabe {
     public static boolean isValid(String clabe) {
         String digits = normalize(clabe);
         if (digits == null) return false;
+        /*
+          Dieciocho ceros CUADRAN: la suma ponderada da 0 y el dígito de control
+          de 0 es 0. Es la CLABE que alguien teclea cuando quiere rellenar el
+          campo y seguir, así que el checksum solo la dejaría pasar. La
+          institución 000 no está asignada en el catálogo de Banxico —empieza en
+          002— de modo que rechazarla no descarta ninguna cuenta real.
+         */
+        if (digits.startsWith("000")) return false;
         int expected = checkDigit(digits.substring(0, LENGTH - 1));
         return expected == (digits.charAt(LENGTH - 1) - '0');
     }
