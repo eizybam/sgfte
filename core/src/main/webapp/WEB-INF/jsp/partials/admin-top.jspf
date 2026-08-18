@@ -52,6 +52,14 @@
             --%>
             <a class="app-header__link ${activeNav == 'concentrator' ? 'is-active' : ''}"
                href="${ctx}/admin/concentradora">Concentradora</a>
+            <%--
+              La contraparte de la bitácora: /admin/logs dice quién hizo qué,
+              esto dice cuánto dinero se movió y de dónde a dónde. Va pegada a
+              Concentradora porque es la pantalla a la que ella manda cuando sus
+              paneles de cinco y dos filas se quedan cortos.
+            --%>
+            <a class="app-header__link ${activeNav == 'movements' ? 'is-active' : ''}"
+               href="${ctx}/admin/movimientos">Movimientos</a>
         </nav>
 
         <div class="app-header__user">
@@ -102,8 +110,8 @@
                 <span>Categorías</span>
             </a>
             <%-- El marco de "Vista de Logs" marca este ítem como activo, así que
-                 apunta a la bitácora. El historial de movimientos por cuenta
-                 vive en /admin/historial, todavía sin pantalla propia. --%>
+                 apunta a la bitácora. El historial de dinero ya tiene pantalla
+                 propia y entrada en la cabecera: /admin/movimientos. --%>
             <a class="app-side__link ${activeNav == 'logs' ? 'is-active' : ''}"
                href="${ctx}/admin/logs">
                 <img class="app-side__icon" src="${ctx}/assets/img/icons/nav-history.png" alt="">

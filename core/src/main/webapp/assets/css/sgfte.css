@@ -2266,6 +2266,56 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 
 /* ==========================================================================
+   20b · Movimientos · vista global del ledger (/admin/movimientos)
+   ========================================================================== */
+
+/*
+  Sin marco de Figma: el prototipo nunca dibujó esta pantalla. Hereda el
+  tratamiento de la tabla de logs —alineada a la izquierda, celdas recortadas
+  con puntos suspensivos— porque es la misma clase de tabla, y sólo redefine
+  los anchos: aquí son ocho columnas y allí seis.
+
+  Los porcentajes suman exactamente 100. CONCEPTO se lleva el sobrante porque
+  es la única columna con texto libre; MONTO va a la derecha, como toda cifra
+  en el sistema.
+*/
+.table--moves .col-when    { width: 12%; }
+.table--moves .col-scope   { width: 8.5%; }
+.table--moves .col-kind    { width: 15%; }
+.table--moves .col-concept { width: 18%; }
+.table--moves .col-account { width: 12%; }
+.table--moves .col-holder  { width: 13%; }
+.table--moves .col-purpose { width: 9.5%; }
+.table--moves .col-amount  { width: 12%; }
+
+.table--moves th,
+.table--moves td { text-align: left; }
+
+/* Con table-layout: fixed un valor largo se desborda sobre su vecina en vez de
+   ensanchar la columna; el recorte lo hace .log-user / .log-origin. */
+.table--moves td { overflow: hidden; }
+
+.table--moves th.col-amount,
+.table--moves td.num { text-align: right; }
+
+/*
+  El aviso de "estás viendo una sola cuenta". Va sobre la tabla y no dentro de
+  la barra de filtros porque ese filtro no llega de la barra: llega enlazado
+  desde el detalle de cuenta.
+*/
+.moves-scope {
+    margin: 0 0 var(--sp-3);
+    font-size: 14px;
+    color: var(--sgfte-tan);
+}
+.moves-scope a { color: var(--sgfte-accent); }
+
+@media (max-width: 860px) {
+    .table--moves { min-width: 1040px; }
+}
+
+
+/* ==========================================================================
    21 · Categorías · marco 2036:6 y modal 2041:155
    ========================================================================== */
 
