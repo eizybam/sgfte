@@ -83,6 +83,11 @@ public enum AuditEvent {
     // porque saca información agregada de toda la empresa fuera del sistema.
     REPORT_EXPORTED (Severity.INFO, Module.ANALITICAS, "Reporte de analíticas exportado"),
 
+    // Sacar el ledger entero a un archivo es una lectura legítima, así que INFO
+    // — pero se registra, y con el filtro que se usó: quién se llevó una copia
+    // del rastro del dinero es justo el dato que una bitácora conserva.
+    MOVEMENTS_EXPORTED (Severity.INFO, Module.FONDOS, "Movimientos exportados"),
+
     NOTIFICATION (Severity.INFO, Module.NOTIFICACIONES, "Notificación enviada");
 
 

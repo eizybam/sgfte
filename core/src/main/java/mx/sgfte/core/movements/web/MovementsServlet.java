@@ -44,33 +44,35 @@ public class MovementsServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String search   = trimToNull(req.getParameter("q"));
-        String scope    = normalizeScope(req.getParameter("ambito"));
-        String type     = trimToNull(req.getParameter("tipo"));
-        Long categoryId = parseId(req.getParameter("cat"));
-        Long accountId  = parseId(req.getParameter("cuenta"));
-        String period   = normalizePeriod(req.getParameter("period"));
+        /*
+          Los filtros se leen en MovementFilters y no aquí, para que esta
+          pantalla y /admin/movimientos.csv no puedan discrepar sobre cómo se
+          llaman. Es el fallo que tiene la exportación de la bitácora: el CSV
+          lee otros nombres de parámetro que la pantalla y sale sin filtrar.
+         */
+        MovementFilters f = MovementFilters.from(req);
 
-        int total = movements.countGlobal(search, scope, type, categoryId, accountId, period);
+        int total = movements.countGlobal(f.search(), f.scope(), f.type(),
+                f.categoryId(), f.accountId(), f.period());
         int pageCount = Math.max(1, (int) Math.ceil(total / (double) PAGE_SIZE));
         int page = clamp(parsePage(req.getParameter("page")), pageCount);
 
-        req.setAttribute("rows", movements.findGlobal(search, scope, type, categoryId,
-                accountId, period, (page - 1) * PAGE_SIZE, PAGE_SIZE));
+        req.setAttribute("rows", movements.findGlobal(f.search(), f.scope(), f.type(),
+                f.categoryId(), f.accountId(), f.period(), (page - 1) * PAGE_SIZE, PAGE_SIZE));
         req.setAttribute("total", total);
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
 
-        req.setAttribute("types", typeOptions(type));
+        req.setAttribute("types", typeOptions(f.type()));
         req.setAttribute("categories", categoryDao.findAllActive());
 
         // Se devuelven para que el buscador y las píldoras se repinten con lo elegido.
-        req.setAttribute("q", search);
-        req.setAttribute("ambito", scope == null ? "" : scope);
-        req.setAttribute("tipo", type == null ? "" : type);
-        req.setAttribute("cat", categoryId);
-        req.setAttribute("cuenta", accountId);
-        req.setAttribute("period", period);
+        req.setAttribute("q", f.search());
+        req.setAttribute("ambito", f.scope() == null ? "" : f.scope());
+        req.setAttribute("tipo", f.type() == null ? "" : f.type());
+        req.setAttribute("cat", f.categoryId());
+        req.setAttribute("cuenta", f.accountId());
+        req.setAttribute("period", f.period());
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/movimientos.jsp").forward(req, resp);
     }
@@ -96,41 +98,6 @@ public class MovementsServlet extends HttpServlet {
         return types;
     }
 
-    /**
-     * Sólo los dos ámbitos reales filtran; cualquier otra cosa es "todos".
-     *
-     * Se acepta el alias corto CONC porque es lo que escriben los enlaces de la
-     * Concentradora: una URL que puede acabar tecleada en una defensa se
-     * agradece corta.
-     */
-    private String normalizeScope(String raw) {
-        if (raw == null) return null;
-        String value = raw.trim().toUpperCase();
-        if ("CONC".equals(value) || "CONCENTRADORA".equals(value)) return "CONCENTRADORA";
-        if ("CUENTA".equals(value) || "CUENTAS".equals(value))     return "CUENTA";
-        return null;
-    }
-
-    /**
-     * TODOS es el filtro de fecha apagado, igual que en el portal: una base
-     * recién sembrada no tiene movimientos de hoy, y abrir el historial en una
-     * tabla vacía parece que está roto.
-     */
-    private String normalizePeriod(String raw) {
-        if ("HOY".equals(raw) || "7D".equals(raw) || "30D".equals(raw)) return raw;
-        return "TODOS";
-    }
-
-    /*
-      `tipo` no se valida contra una lista blanca y no hace falta: viaja como
-      parámetro enlazado, así que un tipo inventado devuelve cero filas, no un
-      error ni una inyección. El desplegable se llena con distinctTypes().
-     */
-    private Long parseId(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try { return Long.valueOf(raw.trim()); } catch (NumberFormatException e) { return null; }
-    }
-
     private int parsePage(String raw) {
         if (raw == null || raw.isBlank()) return 1;
         try { return Integer.parseInt(raw.trim()); } catch (NumberFormatException e) { return 1; }
@@ -140,7 +107,4 @@ public class MovementsServlet extends HttpServlet {
         return Math.min(Math.max(page, 1), pageCount);
     }
 
-    private String trimToNull(String raw) {
-        return (raw == null || raw.isBlank()) ? null : raw.trim();
-    }
 }

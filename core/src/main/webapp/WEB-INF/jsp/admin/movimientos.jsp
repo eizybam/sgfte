@@ -20,6 +20,32 @@
 <c:set var="pageTitle" value="Movimientos"/>
 <c:set var="pageSubtitle" value="Cada movimiento de dinero del sistema, de los dos lados del libro"/>
 <c:set var="activeNav" value="movements"/>
+<%--
+  Descargar lo que se está viendo. Los SEIS filtros viajan al CSV, y con los
+  mismos nombres que lee la pantalla — el servlet los lee con MovementFilters,
+  igual que ella, así que no pueden discrepar. (En la exportación de la bitácora
+  sí discrepan: el CSV lee `search` y `severity` mientras el enlace manda `q` y
+  `sev`, y el archivo sale sin filtrar.)
+--%>
+<c:set var="pageAction">
+    <c:url var="exportUrl" value="/admin/movimientos.csv">
+        <c:param name="q" value="${q}"/>
+        <c:param name="ambito" value="${ambito}"/>
+        <c:param name="tipo" value="${tipo}"/>
+        <c:param name="cat" value="${cat}"/>
+        <c:param name="cuenta" value="${cuenta}"/>
+        <c:param name="period" value="${period}"/>
+    </c:url>
+    <a class="btn btn--primary btn--logs" href="${exportUrl}"
+       title="Descarga los movimientos que se están mostrando">
+        <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="3" width="18" height="22" rx="2"/>
+            <path d="M9 9h10M9 14h10M9 19h6"/>
+        </svg>
+        Exportar movimientos
+    </a>
+</c:set>
 <%@ include file="/WEB-INF/jsp/partials/admin-top.jspf" %>
 
 <c:set var="baseUrl" value="${ctx}/admin/movimientos"/>
