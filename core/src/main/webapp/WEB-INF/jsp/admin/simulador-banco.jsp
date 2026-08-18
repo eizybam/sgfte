@@ -27,6 +27,16 @@
 
 <c:set var="f" value="${simForm}"/>
 
+<%--
+  AVISO OCULTO A PETICIÓN, NO BORRADO. Para volver a enseñarlo basta con quitar
+  esta apertura de comentario y su cierre, doce líneas más abajo.
+
+  Conviene devolverlo antes de la defensa: es lo que deja claro que la pantalla
+  suplanta a un banco, y es más fuerte decirlo que esperar a que alguien lo
+  pregunte. Con él fuera, el aviso de "estás usando el secreto de desarrollo"
+  también deja de verse, así que hay que acordarse de SGFTE_BANK_SECRET por otro
+  lado.
+
 <div class="sim-warning">
     <strong>Esto no es parte del sistema.</strong>
     Sustituye al banco: en producción esta pantalla no existe y es el PSP quien
@@ -38,6 +48,7 @@
         Define <code>SGFTE_BANK_SECRET</code> en el <code>.env</code> antes de desplegar.
     </c:if>
 </div>
+--%>
 
 <c:if test="${not empty simOk}">
     <div class="alert alert--ok">Depósito aplicado · ${fn:escapeXml(simOk)}</div>
@@ -48,6 +59,21 @@
 
 <div class="issue-grid">
     <form class="issue-card" method="post" action="${ctx}/admin/simulador-banco" id="sim-form">
+
+        <%--
+          Rellenar con datos de prueba. Son enlaces GET y no botones porque no
+          mandan nada: piden la misma pantalla ya rellena, así que se pueden
+          pulsar las veces que haga falta hasta que salga un caso que interese.
+
+          La CLABE que generan la arma Clabe.checkDigit() en el servidor, el
+          mismo código que después la valida — no una copia en JavaScript que
+          pudiera separarse de él.
+        --%>
+        <div class="sim-fill">
+            <span class="sim-fill__label">¿Sólo quieres probar?</span>
+            <a class="sim-fill__link" href="${ctx}/admin/simulador-banco?generar=SPEI">Generar SPEI</a>
+            <a class="sim-fill__link" href="${ctx}/admin/simulador-banco?generar=VENTANILLA">Generar efectivo</a>
+        </div>
 
         <p class="issue__section">Cómo llegó el dinero</p>
 

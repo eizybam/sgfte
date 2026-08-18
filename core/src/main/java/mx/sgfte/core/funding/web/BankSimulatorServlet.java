@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import mx.sgfte.core.concentrator.ConcentratorDao;
 import mx.sgfte.core.funding.FundingConfig;
+import mx.sgfte.core.funding.FundingDeposit;
 
 import java.io.IOException;
 import java.net.URI;
@@ -66,6 +67,27 @@ public class BankSimulatorServlet extends HttpServlet {
         req.setAttribute("concentrador", concentrator.findSingleton());
         req.setAttribute("secretoPorDefecto", FundingConfig.usingDefaultSecret());
         consumeFlash(req);
+
+        /*
+          ?generar=SPEI|VENTANILLA rellena el formulario con datos de prueba.
+
+          Teclear a mano una CLABE de 18 dígitos con su dígito de control, y una
+          clave de rastreo distinta en cada intento, hacía que probar el módulo
+          costara más que usarlo. Se genera en el servidor y no en JavaScript
+          para que la CLABE la arme Clabe.checkDigit(), el mismo código que
+          después la valida: así lo generado pasa la validación por
+          construcción, en vez de por coincidencia entre dos implementaciones.
+
+          Va después de consumeFlash a propósito: si el intento anterior falló,
+          lo que se estaba capturando manda sobre lo generado — sería muy
+          molesto perder lo tecleado por pulsar "generar" sin querer.
+         */
+        String generar = req.getParameter("generar");
+        if (generar != null && req.getAttribute(FLASH_ERROR) == null) {
+            req.setAttribute(FLASH_FORM, FundingDeposit.VENTANILLA.equalsIgnoreCase(generar)
+                    ? SampleDeposit.ventanilla()
+                    : SampleDeposit.spei());
+        }
         req.getRequestDispatcher("/WEB-INF/jsp/admin/simulador-banco.jsp").forward(req, resp);
     }
 

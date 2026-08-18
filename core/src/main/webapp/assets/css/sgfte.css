@@ -2418,6 +2418,38 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
     font-size: 13px;
 }
 
+/*
+  Atajo para rellenar el formulario con datos de prueba. Va discreto y arriba
+  del todo: es una herramienta para quien desarrolla, no una acción del
+  producto, y no debe competir con el botón que de verdad publica.
+*/
+.sim-fill {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--sgfte-line);
+}
+
+.sim-fill__label {
+    font-size: 13px;
+    color: var(--sgfte-tan);
+}
+
+.sim-fill__link {
+    font-family: var(--sgfte-font-mono);
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    padding: 4px 10px;
+    border: 1px solid rgba(169, 138, 128, 0.35);
+    border-radius: 999px;
+    color: var(--sgfte-accent);
+    text-decoration: none;
+}
+.sim-fill__link:hover { border-color: var(--sgfte-accent); }
+
 /* La CLABE destino: se lee en voz alta y se teclea, así que va en mono y grande. */
 .sim-clabe {
     margin: 10px 0 0;
