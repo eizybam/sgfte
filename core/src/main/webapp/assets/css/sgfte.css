@@ -2289,6 +2289,79 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 
 /* ==========================================================================
+   19b · Simulador de banco (/admin/simulador-banco)
+   ========================================================================== */
+
+/*
+  Reutiliza entero el formulario de "Expedir Tarjeta" —.issue-grid, .issue-card,
+  .issue__field, .issue__box— porque es el mismo tipo de formulario de página
+  completa. Aquí sólo van las cuatro piezas que aquél no tenía.
+*/
+
+/*
+  El aviso de "esto no es el sistema". Va arriba, ancho completo y en el rojo de
+  error, no en un gris discreto: la pantalla suplanta a un banco, y disimularlo
+  sería justo lo contrario de lo que el módulo quiere demostrar.
+*/
+.sim-warning {
+    max-width: 1012px;
+    margin-bottom: var(--sp-3);
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 180, 171, 0.35);
+    border-radius: 12px;
+    background: rgba(209, 72, 54, 0.14);
+    color: var(--sgfte-error);
+    font-size: 14px;
+    line-height: 22px;
+}
+.sim-warning code {
+    font-family: var(--sgfte-font-mono);
+    font-size: 13px;
+}
+
+/* La CLABE destino: se lee en voz alta y se teclea, así que va en mono y grande. */
+.sim-clabe {
+    margin: 10px 0 0;
+    font-family: var(--sgfte-font-mono);
+    font-size: 20px;
+    line-height: 30px;
+    color: var(--sgfte-cream);
+    word-spacing: 4px;
+}
+
+.sim-balance {
+    margin: 10px 0 0;
+    font-family: var(--sgfte-font-mono);
+    font-size: 24px;
+    line-height: 32px;
+    color: var(--sgfte-ok-text);
+}
+
+/* Un encabezado de sección después de un campo necesita aire: si no, queda
+   pegado al texto de ayuda del campo anterior y parece parte de él. */
+.issue__field + .issue__section { margin-top: 30px; }
+
+/* Ayuda debajo de un campo: explica la regla sin gritar tanto como el label. */
+.issue__hint {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--sgfte-tan);
+}
+.issue__hint:empty { display: none; }
+
+.issue__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+/* Un campo oculto por canal no debe dejar su hueco. */
+.issue__field[hidden] { display: none; }
+
+
+/* ==========================================================================
    20b · Movimientos · vista global del ledger (/admin/movimientos)
    ========================================================================== */
 
