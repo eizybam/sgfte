@@ -1,30 +1,10 @@
-services:
-  db:
-    image: gvenzl/oracle-free:23-slim
-    shm_size: 1gb
-    environment:
-      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
-      APP_USER: ${APP_USER}
-      APP_USER_PASSWORD: ${APP_USER_PASSWORD}
-    volumes:
-    - oracle-data:/opt/oracle/oradata
-    - ./docker/init-schema.sql:/container-entrypoint-initdb.d/01_schema.sql
-    - ./docker/demo-data.sql:/container-entrypoint-initdb.d/02_demo_data.sql
-    healthcheck:
-      test: ["CMD", "healthcheck.sh"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 60s
-    ports:
-      - "1521:1521"
-  
+services: 
   app:
     build: .
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
+      SGFTE_DB_URL: ${SGFTE_DB_URL}
+      SGFTE_DB_USER: ${SGFTE_DB_USER}
+      SGFTE_DB_PASSWORD: ${SGFTE_DB_PASSWORD}
       SGFTE_MAIL_HOST: ${SGFTE_MAIL_HOST}
       SGFTE_MAIL_PORT: ${SGFTE_MAIL_PORT}
       SGFTE_MAIL_SSL: ${SGFTE_MAIL_SSL}
@@ -34,5 +14,3 @@ services:
       SGFTE_BANK_SECRET: ${SGFTE_BANK_SECRET}
     ports:
       - "8080:8080"
-volumes:
-  oracle-data:

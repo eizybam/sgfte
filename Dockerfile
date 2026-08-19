@@ -9,7 +9,9 @@ WORKDIR /build/core
 RUN ./mvnw -B dependency:go-offline
 WORKDIR /build
 COPY core/src core/src
-COPY docker/db.properties core/src/main/resources/db.properties
+# db.properties YA NO se sobrescribe: en Docker la conexion viene de
+# SGFTE_DB_URL/USER/PASSWORD (ver docker-compose.yaml + .env).
+# El db.properties del repo queda solo como default para correr local en IntelliJ.
 WORKDIR /build/core
 RUN ./mvnw -B package -DskipTests
 

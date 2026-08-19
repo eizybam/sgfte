@@ -67,10 +67,10 @@ public final class Db {
 
     public static Connection getConnection() throws SQLException {
         Properties props = new Properties();
-        props.setProperty("user", CONFIG.getProperty("db.user"));
-        props.setProperty("password", CONFIG.getProperty("db.password"));
+        props.setProperty("user", cfg("db.user",     "SGFTE_DB_USER"));
+        props.setProperty("password", cfg("db.password", "SGFTE_DB_PASSWORD"));
         props.setProperty("oracle.net.CONNECT_TIMEOUT", CONNECT_TIMEOUT_MS);
         props.setProperty("oracle.jdbc.ReadTimeout", READ_TIMEOUT_MS);
-        return DriverManager.getConnection(CONFIG.getProperty("db.url"), props);
+        return DriverManager.getConnection(cfg("db.url", "SGFTE_DB_URL"), props);
     }
 }
