@@ -138,5 +138,6 @@
         });
     })();
 </script>
+<%@ include file="/WEB-INF/jsp/partials/password-eye.jspf" %>
 </body>
 </html>

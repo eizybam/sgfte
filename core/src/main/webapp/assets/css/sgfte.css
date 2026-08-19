@@ -1164,7 +1164,28 @@ select.modal__input { appearance: none; cursor: pointer; }
 select.modal__input:invalid { color: var(--sgfte-placeholder); }
 select.modal__input option { background: var(--sgfte-surface); color: var(--sgfte-cream); }
 
-.modal__actions { display: flex; gap: 20px; margin-top: 47px; }
+/*
+  Los botones se alinean con los campos de arriba, y NO con el ancho entero del
+  cuerpo del modal.
+
+  .modal__body sólo tiene padding-left (85px), así que una fila flexible se
+  estiraba hasta el borde derecho del modal: 85px de aire a la izquierda y 0 a
+  la derecha, con los botones sobresaliendo 33px por fuera del campo MONTO. Se
+  veía torcido porque lo estaba.
+
+  El tope de 400px es el ancho de .modal__control--amount, el campo más ancho
+  del formulario, y con flex:1 los dos botones se reparten esa anchura. Es la
+  misma receta que ya usaban .xfer__actions y .result__actions — este bloque era
+  el único de los tres que no la seguía.
+*/
+.modal__actions {
+    display: flex;
+    gap: 20px;
+    margin-top: 47px;
+    width: 100%;
+    max-width: 400px;
+}
+.modal__actions .btn { flex: 1 1 0; padding-left: 0; padding-right: 0; }
 
 .modal__alert { margin: var(--sp-3) 85px 0 85px; }
 
@@ -4232,3 +4253,41 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
 }
 .btn-link:hover { text-decoration: underline; }
 .btn-link--danger { color: var(--sgfte-danger); }
+
+
+/* ==========================================================================
+   Ojo para ver la contraseña
+   ========================================================================== */
+
+/*
+  El botón lo inyecta partials/password-eye.jspf en todo input[type=password],
+  así que este bloque tiene que existir en las DOS hojas: auth.css viste el
+  login y crear-contraseña, sgfte.css el resto de la aplicación.
+
+  La clase .has-pw-eye la pone el mismo script en el contenedor del campo, y
+  sirve para hacerle sitio SÓLO cuando el botón está de verdad ahí.
+*/
+.pw-eye {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    color: var(--sgfte-muted);
+    cursor: pointer;
+}
+.pw-eye:hover { color: var(--sgfte-accent); }
+.pw-eye:focus-visible { outline: 2px solid var(--sgfte-accent); outline-offset: 1px; }
+.pw-eye svg { width: 20px; height: 20px; }
+
+/* En ajustes el campo ya es una fila flex (.register__control), así que el ojo
+   entra como un hijo más y no hace falta posicionarlo. */
+.register__control .pw-eye {
+    flex: 0 0 32px;
+    margin-left: 8px;
+    margin-right: -8px;   /* recupera parte del padding lateral del control */
+}
