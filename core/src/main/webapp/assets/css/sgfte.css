@@ -2602,6 +2602,11 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 }
 .moves-acct__to { color: var(--sgfte-tan); }
 
+/* La tarjeta con la que se gastó. Va en el naranja de la marca y no en el tan
+   de la contraparte: comparten renglón, y conviene que se distinga de un vistazo
+   cuál de las dos cosas se está leyendo. */
+.moves-acct__card { color: var(--sgfte-salmon); }
+
 /*
   El aviso de "estás viendo una sola cuenta". Va sobre la tabla y no dentro de
   la barra de filtros porque ese filtro no llega de la barra: llega enlazado

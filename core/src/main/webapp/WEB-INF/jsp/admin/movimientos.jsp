@@ -199,19 +199,35 @@
                     <span class="log-origin ${m.backed ? 'moves-ref' : ''}">${fn:escapeXml(m.concept)}</span>
                 </td>
                 <%--
-                  La contraparte de una P2P va en su PROPIO renglón, como la
-                  hora debajo de la fecha. En una sola línea "GAS-37157 →
-                  GAS-52353" no cabe en la columna y lo que se recortaba era
-                  justo el destino, que es lo único que el flecha existe para
-                  decir. Sin ella la fila cuenta que salió dinero pero no
-                  hacia dónde.
+                  El segundo renglón de esta celda dice de dónde a dónde, y en
+                  un consumo dice CON QUÉ. Las dos cosas nunca coinciden: una
+                  transferencia tiene contraparte y no tarjeta, un consumo tiene
+                  tarjeta y no contraparte. Por eso comparten renglón en vez de
+                  pedir dos columnas que estarían medio vacías cada una.
+
+                  La contraparte va abajo y no en la misma línea porque
+                  "GAS-37157 → GAS-52353" no cabe de una y lo que se recortaba
+                  era el destino, que es lo único que la flecha existe para
+                  decir.
                 --%>
-                <td title="${fn:escapeXml(m.accountLabel)}${empty m.relatedNumber ? '' : ' → '.concat(m.relatedNumber)}">
+                <c:set var="ctaTitle" value="${m.accountLabel}"/>
+                <c:if test="${not empty m.relatedNumber}">
+                    <c:set var="ctaTitle" value="${ctaTitle} → ${m.relatedNumber}"/>
+                </c:if>
+                <c:if test="${m.carded}">
+                    <c:set var="ctaTitle" value="${ctaTitle} · ${m.cardLabel}"/>
+                </c:if>
+                <td title="${fn:escapeXml(ctaTitle)}">
                     <span class="moves-acct">
                         <span>${fn:escapeXml(m.accountLabel)}</span>
-                        <c:if test="${not empty m.relatedNumber}">
-                            <span class="moves-acct__to">→ ${fn:escapeXml(m.relatedNumber)}</span>
-                        </c:if>
+                        <c:choose>
+                            <c:when test="${not empty m.relatedNumber}">
+                                <span class="moves-acct__to">→ ${fn:escapeXml(m.relatedNumber)}</span>
+                            </c:when>
+                            <c:when test="${m.carded}">
+                                <span class="moves-acct__card">${fn:escapeXml(m.cardLabel)}</span>
+                            </c:when>
+                        </c:choose>
                     </span>
                 </td>
                 <td><span class="log-user" title="${fn:escapeXml(m.whoLabel)}">${fn:escapeXml(m.whoLabel)}</span></td>

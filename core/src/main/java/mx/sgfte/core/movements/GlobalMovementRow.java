@@ -43,6 +43,9 @@ public class GlobalMovementRow {
     private final String canal;
     private final String referencia;
     private final String ordenante;
+    // Con qué tarjeta se gastó (V13); null salvo en los consumos.
+    private final String cardPan;
+    private final String cardType;
     private final LocalDateTime createdAt;
 
     public GlobalMovementRow(String scope, long sourceId, String movementType,
@@ -51,6 +54,7 @@ public class GlobalMovementRow {
                              String employeeCode, String categoryName, Integer colorIndex,
                              String relatedNumber, String actor,
                              String canal, String referencia, String ordenante,
+                             String cardPan, String cardType,
                              LocalDateTime createdAt) {
         this.scope = scope;
         this.sourceId = sourceId;
@@ -69,6 +73,8 @@ public class GlobalMovementRow {
         this.canal = canal;
         this.referencia = referencia;
         this.ordenante = ordenante;
+        this.cardPan = cardPan;
+        this.cardType = cardType;
         this.createdAt = createdAt;
     }
 
@@ -89,6 +95,8 @@ public class GlobalMovementRow {
     public String getCanal()            { return canal; }
     public String getReferencia()       { return referencia; }
     public String getOrdenante()        { return ordenante; }
+    public String getCardPan()          { return cardPan; }
+    public String getCardType()         { return cardType; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     /**
@@ -145,6 +153,27 @@ public class GlobalMovementRow {
     /** ¿Esta fila tiene respaldo bancario detrás? */
     public boolean isBacked() {
         return referencia != null && !referencia.isBlank();
+    }
+
+    /** ¿Se sabe con qué tarjeta se hizo? */
+    public boolean isCarded() {
+        return cardPan != null && !cardPan.isBlank();
+    }
+
+    /**
+     * La tarjeta en corto: "Física ·1234".
+     *
+     * Del PAN enmascarado sólo se enseñan los cuatro últimos, que es lo que
+     * identifica la tarjeta sin repetir la retahíla de asteriscos, y el tipo
+     * delante porque una cuenta puede tener una física y una digital a la vez —
+     * sin él, dos consumos de la misma cuenta se verían igual.
+     */
+    public String getCardLabel() {
+        if (!isCarded()) return "";
+        String digits = cardPan.replaceAll("[^0-9]", "");
+        String ultimos = digits.length() >= 4 ? digits.substring(digits.length() - 4) : digits;
+        String tipo = "DIGITAL".equals(cardType) ? "Digital" : "Física";
+        return tipo + " ·" + ultimos;
     }
 
     /**

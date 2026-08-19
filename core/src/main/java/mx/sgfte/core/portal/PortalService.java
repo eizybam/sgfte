@@ -136,7 +136,8 @@ public class PortalService {
             throw new ValidationException(List.of(
                     "La tarjeta no está activa o no pertenece a esa cuenta."));
         }
-        purchaseService.spend(accountId, amount, merchant);
+        // La tarjeta ya venía comprobada; ahora además se guarda.
+        purchaseService.spend(accountId, cardId, amount, merchant);
     }
 
     /** Bloqueo desde el portal: el empleado se protege sin esperar a nadie. */

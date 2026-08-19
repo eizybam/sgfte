@@ -39,7 +39,20 @@ public class PurchaseService {
         this.movementDao = movementDao;
     }
 
-    public void spend(long accountId, BigDecimal amount, String merchant) {
+    /**
+     * Registra el consumo, dejando dicho CON QUÉ TARJETA se hizo.
+     *
+     * Antes esto recibía cuenta, monto y comercio: la tarjeta se comprobaba en
+     * PortalService.spend —que sigue haciéndolo— y ahí se quedaba. El ledger
+     * podía decir que la compra estaba autorizada, pero no con cuál de las dos
+     * tarjetas de la cuenta se hizo, y esa pregunta tiene respuesta.
+     *
+     * Quien llama sigue siendo responsable de haber validado que la tarjeta se
+     * pueda usar; lo que ya no depende de nadie es que la tarjeta sea de ESTA
+     * cuenta, porque la llave foránea del par (card_id, account_id) lo impone
+     * desde la base.
+     */
+    public void spend(long accountId, long cardId, BigDecimal amount, String merchant) {
         List<String> errors = new ArrayList<>();
         if (amount == null || amount.signum() <= 0) errors.add("El monto debe ser mayor a 0");
         if (merchant == null || merchant.isBlank()) errors.add("Escribe dónde se hizo la compra");
@@ -55,7 +68,8 @@ public class PurchaseService {
                 if (!accountDao.debit(conn, accountId, amount)) {
                     throw new ValidationException(List.of("Saldo insuficiente en la cuenta"));
                 }
-                movementDao.insert(conn, new Movement(accountId, "WITHDRAWAL", amount, null, merchant.trim()));
+                movementDao.insert(conn,
+                        new Movement(accountId, "WITHDRAWAL", amount, null, merchant.trim(), cardId));
 
                 conn.commit();
             } catch (RuntimeException | SQLException e) {

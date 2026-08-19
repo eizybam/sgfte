@@ -23,6 +23,7 @@ ALTER SESSION SET CURRENT_SCHEMA = SGFTE;
 --   · V10 → catálogo de departamentos.
 --   · V11 → vista v_movement: los dos ledgers unidos, para /admin/movimientos.
 --   · V12 → fondeo con respaldo bancario: CLABE, funding_deposit y su enlace.
+--   · V13 → con qué tarjeta se hizo cada consumo (account_movement.card_id).
 -- ============================================================
 
 -- ── Limpieza para desarrollo (re-ejecutar). Descomenta si necesitas recrear.
@@ -187,6 +188,9 @@ CREATE TABLE card (
                       -- CardService.VALIDITY_YEARS; aquí sólo se guarda el resultado.
                       expires_at  DATE NOT NULL,
                       CONSTRAINT fk_card_account FOREIGN KEY (account_id) REFERENCES account(id),
+                      -- Redundante como clave —id ya es única— pero es lo que permite que
+                      -- account_movement exija el PAR (tarjeta, cuenta) y no sólo la tarjeta.
+                      CONSTRAINT uq_card_id_account UNIQUE (id, account_id),
                       CONSTRAINT chk_card_type   CHECK (card_type IN ('PHYSICAL', 'DIGITAL')),
                       CONSTRAINT chk_card_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'BLOCKED')),
                       CONSTRAINT chk_card_expiry CHECK (expires_at > created_at)
@@ -216,8 +220,18 @@ CREATE TABLE account_movement (
                                   related_account_id NUMBER,          -- contraparte en transferencias P2P
                                   description        VARCHAR2(200),
                                   created_at         TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+                                  -- Con qué tarjeta se gastó (V13). NULL en todo lo que no es
+                                  -- consumo, y en las compras anteriores a esa migración.
+                                  card_id            NUMBER,
                                   CONSTRAINT fk_mov_account FOREIGN KEY (account_id)         REFERENCES account(id),
                                   CONSTRAINT fk_mov_related FOREIGN KEY (related_account_id) REFERENCES account(id),
+                                  -- La llave va sobre el PAR: obliga a que la tarjeta sea de la
+                                  -- cuenta del movimiento. Registrar un consumo con la tarjeta de
+                                  -- otra cuenta es imposible, no "algo que el servicio revisa".
+                                  CONSTRAINT fk_mov_card    FOREIGN KEY (card_id, account_id)
+                                      REFERENCES card (id, account_id),
+                                  CONSTRAINT chk_mov_card_only_withdrawal CHECK (
+                                      card_id IS NULL OR movement_type = 'WITHDRAWAL'),
                                   CONSTRAINT chk_mov_type   CHECK (movement_type IN
                                                                    ('DEPOSIT', 'WITHDRAWAL', 'TRANSFER_IN', 'TRANSFER_OUT', 'REINTEGRATION')),
                                   CONSTRAINT chk_mov_amount CHECK (amount > 0)
@@ -515,12 +529,15 @@ SELECT 'CUENTA'                             AS scope,
        CAST(NULL AS VARCHAR2(12))           AS canal,
        CAST(NULL AS VARCHAR2(40))           AS referencia,
        CAST(NULL AS VARCHAR2(160))          AS ordenante,
+       k.masked_pan                         AS card_pan,
+       k.card_type                          AS card_type,
        m.created_at                         AS created_at
   FROM account_movement m
   JOIN account    a   ON a.id   = m.account_id
   JOIN cardholder ch  ON ch.id  = a.cardholder_id
   JOIN category   cat ON cat.id = a.category_id
   LEFT JOIN account r ON r.id   = m.related_account_id
+  LEFT JOIN card    k ON k.id   = m.card_id
 UNION ALL
 SELECT 'CONCENTRADORA',
        cm.id,
@@ -542,6 +559,8 @@ SELECT 'CONCENTRADORA',
        fd.canal,
        fd.referencia,
        fd.ordenante_nombre,
+       CAST(NULL AS VARCHAR2(19)),
+       CAST(NULL AS VARCHAR2(10)),
        cm.created_at
   FROM concentrator_movement cm
   LEFT JOIN funding_deposit fd ON fd.id = cm.funding_deposit_id;

@@ -53,7 +53,7 @@ public class MovementQueryDao {
               "scope, source_id, movement_type, amount, direction, description, "
             + "account_id, account_number, holder, employee_code, "
             + "category_id, category_name, color_index, related_number, actor, "
-            + "canal, referencia, ordenante, created_at ";
+            + "canal, referencia, ordenante, card_pan, card_type, created_at ";
 
     /**
      * El WHERE que comparten la página y el conteo.
@@ -201,6 +201,8 @@ public class MovementQueryDao {
                 rs.getString("canal"),
                 rs.getString("referencia"),
                 rs.getString("ordenante"),
+                rs.getString("card_pan"),
+                rs.getString("card_type"),
                 at == null ? null : at.toLocalDateTime());
     }
 

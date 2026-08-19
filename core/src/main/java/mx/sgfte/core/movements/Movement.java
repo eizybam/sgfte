@@ -16,17 +16,29 @@ public class Movement {
     private BigDecimal amount;
     private Long relatedAccountId;   // nullable
     private String description;
+    /**
+     * Con qué tarjeta se hizo el consumo (V13). Sólo lo lleva un WITHDRAWAL:
+     * un depósito o una transferencia no pasan por ningún plástico, y un CHECK
+     * de la base lo confirma.
+     */
+    private Long cardId;             // nullable
     private LocalDateTime createdAt;
 
     public Movement() {}
 
     public Movement(Long accountId, String movementType, BigDecimal amount,
                     Long relatedAccountId, String description) {
+        this(accountId, movementType, amount, relatedAccountId, description, null);
+    }
+
+    public Movement(Long accountId, String movementType, BigDecimal amount,
+                    Long relatedAccountId, String description, Long cardId) {
         this.accountId = accountId;
         this.movementType = movementType;
         this.amount = amount;
         this.relatedAccountId = relatedAccountId;
         this.description = description;
+        this.cardId = cardId;
     }
 
     public Long getId() { return id; }
@@ -41,6 +53,8 @@ public class Movement {
     public void setRelatedAccountId(Long relatedAccountId) { this.relatedAccountId = relatedAccountId; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public Long getCardId() { return cardId; }
+    public void setCardId(Long cardId) { this.cardId = cardId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

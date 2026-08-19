@@ -127,7 +127,7 @@ public class MovementsExportServlet extends HttpServlet {
 
     private void table(Csv csv, List<GlobalMovementRow> rows) {
         csv.row("FECHA", "HORA", "ÁMBITO", "TIPO", "CONCEPTO",
-                "CUENTA", "CONTRAPARTE", "TITULAR", "CÓDIGO EMPLEADO", "PROPÓSITO",
+                "CUENTA", "CONTRAPARTE", "TARJETA", "TITULAR", "CÓDIGO EMPLEADO", "PROPÓSITO",
                 "CANAL", "REFERENCIA BANCARIA", "ORDENANTE",
                 "DIRECCIÓN", "MONTO (MXN)");
 
@@ -145,6 +145,10 @@ public class MovementsExportServlet extends HttpServlet {
                     m.getDescription(),
                     m.getAccountLabel(),
                     m.getRelatedNumber(),
+                    // Columna propia y no pegada a CUENTA como en la pantalla:
+                    // allí comparten renglón por falta de sitio, aquí el sitio
+                    // sobra y un dato por columna se puede filtrar y ordenar.
+                    m.getCardLabel(),
                     m.getWhoLabel(),
                     m.getEmployeeCode(),
                     m.getCategoryName(),
