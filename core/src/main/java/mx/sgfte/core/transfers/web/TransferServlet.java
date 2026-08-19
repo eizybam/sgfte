@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mx.sgfte.core.concentrator.AccountLookupDao;
 import mx.sgfte.core.transfers.TransferService;
+import mx.sgfte.core.audit.AuditEvent;
+import mx.sgfte.core.audit.AuditLogService;
 import mx.sgfte.core.users.ValidationException;
 
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class TransferServlet extends HttpServlet {
 
     private final TransferService transferService = new TransferService();
     private final AccountLookupDao accountLookupDao = new AccountLookupDao();
+    private final AuditLogService audit = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -40,6 +43,12 @@ public class TransferServlet extends HttpServlet {
         try {
             transferService.transfer(sourceId, destId, amount, req.getParameter("description"));
 
+            // Después del commit, igual que en dispersión: primero el hecho,
+            // luego el rastro. Si la bitácora fallara, la transferencia ya
+            // ocurrió y sigue respaldada por el ledger.
+            audit.record(AuditEvent.TRANSFER,
+                    "De " + sourceId + " a " + destId + " · $" + amount, req);
+
             mx.sgfte.core.shared.web.OperationResult.success("¡Transferencia realizada!",
                             "El saldo se movió entre cuentas",
                             "TRANSFERENCIA CONFIRMADA",
@@ -51,6 +60,9 @@ public class TransferServlet extends HttpServlet {
                     .primary("Ver cuenta destino", "/admin/cuenta?id=" + destId)
                     .flash(req.getSession());
         } catch (ValidationException e) {
+            audit.record(AuditEvent.TRANSFER_REJECTED,
+                    "De " + sourceId + " a " + destId + " · " + String.join(" ", e.getErrors()), req);
+
             mx.sgfte.core.shared.web.OperationResult.rejected("Transferencia rechazada",
                             "La operación no pudo completarse",
                             String.join(" ", e.getErrors()))

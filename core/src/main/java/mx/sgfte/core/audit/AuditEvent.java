@@ -42,6 +42,14 @@ public enum AuditEvent {
     DISPERSION          (Severity.INFO,   Module.FONDOS, "Dispersión de fondos"),
     DISPERSION_REJECTED (Severity.ALERTA, Module.FONDOS, "Dispersión rechazada"),
     TRANSFER            (Severity.INFO,   Module.FONDOS, "Transferencia entre cuentas"),
+    TRANSFER_REJECTED   (Severity.ALERTA, Module.FONDOS, "Transferencia rechazada"),
+
+    // El consumo con tarjeta va en FONDOS y no en TARJETAS aunque pase por una:
+    // el módulo es el filtro con el que alguien busca "todo lo que movió dinero",
+    // y una compra lo movió. En TARJETAS quedan los hechos del plástico —
+    // expedir, bloquear, invalidar—, que son otra cosa.
+    CARD_PURCHASE          (Severity.INFO,   Module.FONDOS, "Consumo con tarjeta"),
+    CARD_PURCHASE_REJECTED (Severity.ALERTA, Module.FONDOS, "Consumo rechazado"),
 
     // --- Cuentas ---
     ACCOUNT_CREATED (Severity.INFO, Module.CUENTAS, "Cuenta creada"),

@@ -4,6 +4,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import mx.sgfte.core.audit.AuditEvent;
+import mx.sgfte.core.audit.AuditLogService;
 import mx.sgfte.core.portal.AccountNotOwnedException;
 import mx.sgfte.core.portal.PortalService;
 import mx.sgfte.core.users.ValidationException;
@@ -22,6 +24,7 @@ import java.math.BigDecimal;
 public class PortalPurchaseServlet extends HttpServlet {
 
     private final PortalService portalService = new PortalService();
+    private final AuditLogService audit = new AuditLogService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -45,6 +48,12 @@ public class PortalPurchaseServlet extends HttpServlet {
                                 cardId == null ? -1 : cardId,
                                 amount, merchant);
 
+            // La tarjeta va en el detalle: es el dato que distingue dos
+            // consumos de la misma cuenta, y el que el ledger también guarda.
+            audit.record(AuditEvent.CARD_PURCHASE,
+                    "Cuenta " + accountId + " · tarjeta " + cardId
+                            + " · $" + amount + " · " + merchant, req);
+
             mx.sgfte.core.shared.web.OperationResult.success("¡Gasto registrado!",
                             "Tu compra se aplicó correctamente",
                             "COMPRA CONFIRMADA",
@@ -60,6 +69,10 @@ public class PortalPurchaseServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + backTo);
             return;
         } catch (ValidationException e) {
+            audit.record(AuditEvent.CARD_PURCHASE_REJECTED,
+                    "Cuenta " + accountId + " · tarjeta " + cardId
+                            + " · " + String.join(" ", e.getErrors()), req);
+
             mx.sgfte.core.shared.web.OperationResult.rejected("Gasto rechazado",
                             "La operación no pudo completarse",
                             String.join(" ", e.getErrors()))

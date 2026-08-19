@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mx.sgfte.core.portal.AccountNotOwnedException;
+import mx.sgfte.core.audit.AuditEvent;
+import mx.sgfte.core.audit.AuditLogService;
 import mx.sgfte.core.portal.PortalService;
 import mx.sgfte.core.users.ValidationException;
 
@@ -28,6 +30,7 @@ import java.util.List;
 public class PortalTransferServlet extends HttpServlet {
 
     private final PortalService portalService = new PortalService();
+    private final AuditLogService audit = new AuditLogService();
 
     /** El formulario es un modal del panel; aquí no hay pantalla que pintar. */
     @Override
@@ -51,6 +54,11 @@ public class PortalTransferServlet extends HttpServlet {
             portalService.transfer(cardholderId, sourceId, destId, amount,
                     req.getParameter("description"));
 
+            // El actor aquí es el tarjetahabiente, no un administrador: la
+            // bitácora guarda su correo, que es con lo que inició sesión.
+            audit.record(AuditEvent.TRANSFER,
+                    "P2P de " + sourceId + " a " + destId + " · $" + amount, req);
+
             // Copia del marco "Transferencia Exitosa - Screen" (2169:410).
             mx.sgfte.core.shared.web.OperationResult.success("¡Transferencia exitosa!",
                             "Tu transferencia se realizó correctamente",
@@ -72,6 +80,9 @@ public class PortalTransferServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/app/home");
             return;
         } catch (ValidationException e) {
+            audit.record(AuditEvent.TRANSFER_REJECTED,
+                    "P2P de " + sourceId + " a " + destId + " · " + String.join(" ", e.getErrors()), req);
+
             // Copia del marco "Transferencia Rechazada" (2074:266).
             mx.sgfte.core.shared.web.OperationResult.rejected("Transferencia rechazada",
                             "La operación no pudo completarse",

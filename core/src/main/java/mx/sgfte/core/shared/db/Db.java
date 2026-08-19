@@ -58,6 +58,13 @@ public final class Db {
         }
     }
 
+    private static String cfg(String key, String env) {
+               String v = System.getenv(env);
+               if (v != null && !v.isBlank()) return v;
+               return CONFIG.getProperty(key);
+    }
+
+
     public static Connection getConnection() throws SQLException {
         Properties props = new Properties();
         props.setProperty("user", CONFIG.getProperty("db.user"));
