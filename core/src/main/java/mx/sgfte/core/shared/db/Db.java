@@ -45,23 +45,45 @@ public final class Db {
 
     private Db() {}
 
+    /*
+      db.properties is OPTIONAL and deliberately so: it is gitignored (see
+      core/.gitignore), so a fresh clone or a `git pull` on the server has no
+      such file on the classpath. Requiring it made the app die at startup on
+      every machine that was not the developer's own, with a message that
+      pointed at a missing file instead of at the missing configuration.
+
+      The contract is: the environment variables are the real source of truth
+      (that is what docker-compose injects from .env), and this file is only a
+      convenience for running the app straight from the IDE. If it is absent,
+      the config is simply empty and every value has to come from the
+      environment.
+     */
     private static Properties load() {
         Properties p = new Properties();
         try (InputStream in = Db.class.getClassLoader().getResourceAsStream("db.properties")) {
-            if (in == null) {
-                throw new IllegalStateException("db.properties not found on the classpath");
+            if (in != null) {
+                p.load(in);
             }
-            p.load(in);
             return p;
         } catch (Exception e) {
-            throw new IllegalStateException("Could not load db.properties", e);
+            throw new IllegalStateException("Could not read db.properties from the classpath", e);
         }
     }
 
+    /*
+      Environment first, file second. Failing here with the NAME of what is
+      missing is the whole point: a null slipping through used to surface much
+      later as "No suitable driver found" or as a null password, neither of
+      which says "you forgot to set SGFTE_DB_URL".
+     */
     private static String cfg(String key, String env) {
-               String v = System.getenv(env);
-               if (v != null && !v.isBlank()) return v;
-               return CONFIG.getProperty(key);
+        String v = System.getenv(env);
+        if (v != null && !v.isBlank()) return v;
+        v = CONFIG.getProperty(key);
+        if (v != null && !v.isBlank()) return v;
+        throw new IllegalStateException(
+                "Missing database configuration: set the environment variable " + env
+                        + " or the key '" + key + "' in db.properties on the classpath");
     }
 
 
