@@ -4294,5 +4294,11 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
 .register__control .pw-eye {
     flex: 0 0 32px;
     margin-left: 8px;
-    margin-right: -8px;   /* recupera parte del padding lateral del control */
+    /* -6 porque el icono va centrado en un botón de 32 y sin corregir se
+       quedaría 6px más adentro de la cuenta. Medido en el navegador, el icono
+       acaba a 13px del borde y el relleno del control es de 14: queda alineado
+       con donde empieza el texto del propio campo, que es la referencia buena.
+       (Ojo: ese relleno NO son los 20px que declara .register__control en la
+       hoja; en esta pantalla no es lo que termina calculándose.) */
+    margin-right: -6px;
 }

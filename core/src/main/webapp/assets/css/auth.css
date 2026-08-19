@@ -335,8 +335,27 @@ body.auth {
    candado absoluto a la izquierda: el ojo va igual, pero a la derecha. */
 .auth-input-wrap .pw-eye {
     position: absolute;
-    right: 6px;
+    /* 10 y no 16: el icono va centrado en un botón de 32, así que se queda a
+       10 + 6 = 16px del borde — los mismos que el candado del otro lado. El
+       offset es del BOTÓN, la simetría se mide sobre el ICONO. */
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
 }
+
+/*
+  `.auth-input-wrap svg` es un selector de descendencia, así que también alcanza
+  al icono del ojo y le imponía `position:absolute; left:16px`. Como el botón sí
+  está posicionado, el icono se colocaba a 16px DEL BOTÓN —no del campo— y se
+  salía 4px por su derecha: acababa a 2px del borde del input, contra los 16 del
+  candado. Se veía pegado al contenedor porque lo estaba.
+
+  Aquí se le devuelve el flujo normal para que el centrado del botón lo coloque.
+*/
+.auth-input-wrap .pw-eye svg {
+    position: static;
+    left: auto;
+    transform: none;
+}
+
 .auth-input-wrap.has-pw-eye .auth-input { padding-right: 44px; }
