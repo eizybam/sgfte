@@ -4184,6 +4184,46 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
 .settings__photo-form { flex: 1 1 240px; min-width: 240px; }
 
 /*
+  El campo de archivo, vestido como el resto de la tarjeta.
+
+  Un <input type="file"> lo dibuja el navegador —"Choose File / No file
+  chosen", en inglés y con el gris del sistema—, así que dentro de Ajustes se
+  veía como un recorte de otra página. ::file-selector-button es ese botón del
+  navegador, y se puede vestir con CSS: no hay que esconder el input detrás de
+  un <label>, que es el truco de siempre y el que rompe el `required` y el
+  recorrido con teclado.
+
+  El nombre del archivo elegido lo sigue escribiendo el navegador a la derecha
+  del botón; por eso el input conserva su color de texto en vez de heredar el
+  tamaño gigante de .register__input.
+*/
+.settings__photo-form input[type="file"] {
+    height: auto;
+    font-family: var(--sgfte-font-body);
+    font-size: 13px;
+    color: var(--sgfte-muted);
+    cursor: pointer;
+}
+
+.settings__photo-form input[type="file"]::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--sgfte-accent);
+    border-radius: var(--sgfte-radius);
+    font-family: var(--sgfte-font-body);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--sgfte-accent);
+    cursor: pointer;
+    transition: background 160ms ease;
+}
+
+.settings__photo-form input[type="file"]::file-selector-button:hover {
+    background: rgba(254, 185, 107, 0.12);
+}
+
+/*
   Los campos vienen del modal de alta (.register__*), que está dimensionado para
   un modal de 40px de padding: 17-18px de tipografía y etiquetas en rosa. Dentro
   de una tarjeta de ajustes eso se ve enorme, así que aquí se ajusta la escala

@@ -52,10 +52,10 @@
                 </c:if>
 
                 <label class="register__label" for="photo">Cambiar foto</label>
-                <div class="register__control">
-                    <input class="register__input" type="file" id="photo" name="photo"
-                           accept="image/png, image/jpeg, image/webp" required>
-                </div>
+                <%-- Sin .register__control: esa caja dibuja el marco de un campo
+                     de texto, y aquí dentro lo único que hay es un botón. --%>
+                <input class="register__input" type="file" id="photo" name="photo"
+                       accept="image/png, image/jpeg, image/webp" required>
                 <p class="settings__note">PNG, JPG o WEBP, máximo 2 MB. Sólo se ve en esta pantalla.</p>
 
                 <div class="settings__actions">
