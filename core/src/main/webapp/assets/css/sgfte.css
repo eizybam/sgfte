@@ -3525,6 +3525,17 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 .xfer__note { margin: 10px 0 0; font-size: 13px; color: var(--sgfte-warn); }
 
+/*
+  Veredicto del identificador de destino, dentro de .xfer__note.
+
+  Va como <span> heredando el hueco del párrafo, no como un bloque propio: el
+  aviso aparece y desaparece mientras se teclea, y si empujara al campo de MONTO
+  hacia abajo el modal daría un salto en cada letra.
+*/
+.xfer__check { display: block; line-height: 1.45; }
+.xfer__check--ok  { color: var(--sgfte-ok-text); }
+.xfer__check--bad { color: var(--sgfte-danger); }
+
 .xfer__label {
     display: block;
     font-family: var(--sgfte-font-mono);

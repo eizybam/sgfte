@@ -8,12 +8,13 @@
   desde el botón "Transferir a compañero". Sólo entra la tarjeta; el título y el
   subtítulo del marco quedan fuera, como en los demás modales.
 
-  Los destinos NO se recargan del servidor al cambiar de origen: un modal que
-  recarga la página se cierra solo. Vienen todos de una vez —agrupados por la
-  cuenta de origen a la que pertenecen— y el guion de abajo enseña los del
-  origen elegido. Por eso peersByAccount es una sola consulta.
+  El origen sí es un desplegable: son TUS cuentas, dos o tres, y ya están en la
+  petición. El destino no: se teclea el identificador que tu compañero te pasó y
+  se comprueba contra el servidor mientras escribes. Antes era un <select> con
+  todas las cuentas elegibles de la empresa — una lista con scroll que, además,
+  enseñaba a cada empleado qué cuentas tienen todos sus compañeros.
 
-  Quien lo incluya debe haber dejado en la petición `myAccounts` y `peersByAccount`.
+  Quien lo incluya debe haber dejado en la petición `myAccounts`.
 --%>
 <div class="modal-scrim" id="transfer-modal" hidden>
     <div class="modal xfer__card" role="dialog" aria-modal="true" aria-labelledby="xfer-title">
@@ -38,33 +39,27 @@
                 <svg class="xfer__chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
             </div>
 
-            <label class="xfer__label" for="destId">CUENTA DESTINO</label>
+            <label class="xfer__label" for="destNumber">CUENTA DESTINO</label>
             <div class="xfer__control">
                 <%--
-                  El marco pone aquí "Número de cuenta o CLABE", un campo libre.
-                  En este sistema no hay CLABEs y el destino no es un número
-                  cualquiera: tiene que ser una cuenta existente y del MISMO
-                  propósito, que es la regla que enuncia el propio subtítulo.
-                  Teclearla sólo permitiría equivocarse.
+                  El identificador de la cuenta de tu compañero, tal cual él lo
+                  ve en su pantalla ("GAS-48HSY"). Se teclea, no se elige: para
+                  llenar un desplegable habría que enseñarle a cada empleado qué
+                  cuentas tienen todos los demás, y eso es exactamente lo que
+                  RNF-05 no quiere. Si no te lo pasaron, no puedes transferirle.
 
-                  Cada opción lleva su cuenta de origen; el guion muestra las que
-                  correspondan y esconde el resto.
+                  Lo que viaja al servidor es el texto, no un id resuelto en el
+                  navegador: quien traduce identificador → cuenta es el servlet,
+                  con la misma consulta que responde aquí abajo mientras escribes.
                 --%>
-                <select class="xfer__input" id="destId" name="destId" required>
-                    <option value="" disabled selected>Selecciona la cuenta destino</option>
-                    <c:forEach var="entry" items="${peersByAccount}">
-                        <c:forEach var="p" items="${entry.value}">
-                            <option value="${p.accountId}" data-source="${entry.key}">
-                                ${fn:escapeXml(p.label)}
-                            </option>
-                        </c:forEach>
-                    </c:forEach>
-                </select>
-                <svg class="xfer__chev" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
+                <svg class="xfer__icon" width="16" height="12" aria-hidden="true"><use href="#i-card-slot"/></svg>
+                <input class="xfer__input" type="text" id="destNumber" name="destNumber"
+                       placeholder="Ej. GAS-48HSY" autocomplete="off" spellcheck="false"
+                       maxlength="20" required aria-describedby="dest-check">
             </div>
-            <p class="xfer__note" id="xfer-empty" hidden>
-                Ningún compañero tiene una cuenta de este propósito todavía.
-            </p>
+            <%-- role=status + aria-live: un lector de pantalla anuncia el
+                 veredicto sin que haya habido navegación. --%>
+            <p class="xfer__note" id="dest-check" role="status" aria-live="polite"></p>
 
             <label class="xfer__label" for="amount">MONTO</label>
             <div class="xfer__control">
@@ -96,38 +91,62 @@
         if (!scrim) return;
 
         var source = document.getElementById("sourceId");
-        var dest = document.getElementById("destId");
-        var empty = document.getElementById("xfer-empty");
+        var dest = document.getElementById("destNumber");
+        var verdict = document.getElementById("dest-check");
+        var confirm = scrim.querySelector('button[type="submit"]');
+        var ctx = "${ctx}";
         var lastFocused = null;
+        var timer = null;     // antirrebote del identificador
+        var seq = 0;          // nº de petición, contra respuestas fuera de orden
 
         /*
-          Enseña sólo los destinos de la cuenta de origen elegida.
+          ¿Sirve lo que lleva escrito?
 
-          Se ocultan Y se deshabilitan: una <option> oculta sigue siendo
-          seleccionable con el teclado, y podría enviarse un destino de otro
-          propósito. El servidor lo rechazaría igual, pero es mejor no ofrecerlo.
+          El propósito no se comprueba aquí: se le pregunta al servidor, porque
+          la cuenta destino es de otra persona y el navegador no sabe —ni debe
+          saber— de qué propósito es. Por eso hace falta el origen: la regla es
+          "mismo propósito que la cuenta de la que sale el dinero".
         */
-        function syncDestinations() {
-            var picked = source.value;
-            var available = 0;
+        function check() {
+            var typed = dest.value.trim();
 
-            Array.prototype.forEach.call(dest.options, function (option) {
-                if (!option.dataset.source) return;   // el placeholder
-                var matches = option.dataset.source === picked;
-                option.hidden = !matches;
-                option.disabled = !matches;
-                if (matches) available++;
-            });
+            if (!source.value || !typed) {
+                verdict.innerHTML = "";
+                confirm.disabled = false;   // que lo diga el servidor, no un botón muerto
+                return;
+            }
 
-            dest.selectedIndex = 0;
-            dest.disabled = available === 0;
-            empty.hidden = !picked || available > 0;
+            var mine = ++seq;
+            fetch(ctx + "/app/transferencia/validar"
+                    + "?sourceId=" + encodeURIComponent(source.value)
+                    + "&dest=" + encodeURIComponent(typed),
+                { credentials: "same-origin" })
+                .then(function (res) {
+                    // Sesión caducada: AppAuthFilter contesta con un 302 al login
+                    // y fetch lo sigue sin avisar. Sin esto acabarías metiendo la
+                    // página de login dentro del modal.
+                    if (res.redirected) { window.location.reload(); return null; }
+                    if (!res.ok) throw new Error("HTTP " + res.status);
+                    return res.text();
+                })
+                .then(function (html) {
+                    if (html === null || mine !== seq) return;   // respuesta vieja
+                    verdict.innerHTML = html;
+                    confirm.disabled = !verdict.querySelector("[data-ok]");
+                })
+                .catch(function () {
+                    // Si la comprobación no llega, NO se bloquea el envío: esto
+                    // es una cortesía, y el servidor valida igual al confirmar.
+                    verdict.innerHTML = "";
+                    confirm.disabled = false;
+                });
         }
 
         function open() {
             lastFocused = document.activeElement;
             scrim.hidden = false;
-            syncDestinations();
+            verdict.innerHTML = "";
+            confirm.disabled = false;
             source.focus();
         }
 
@@ -143,12 +162,20 @@
             b.addEventListener("click", close);
         });
 
-        source.addEventListener("change", syncDestinations);
+        // Cambiar de origen puede cambiar el propósito, así que el veredicto
+        // anterior deja de valer aunque el identificador siga siendo el mismo.
+        source.addEventListener("change", check);
+
+        // Antirrebote: 300 ms sin teclear antes de preguntar. Sin esto,
+        // "GAS-48HSY" son nueve consultas a Oracle.
+        dest.addEventListener("input", function () {
+            clearTimeout(timer);
+            timer = setTimeout(check, 300);
+        });
+
         scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
         document.addEventListener("keydown", function (e) {
             if (e.key === "Escape" && !scrim.hidden) close();
         });
-
-        syncDestinations();
     })();
 </script>

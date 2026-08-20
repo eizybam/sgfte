@@ -14,9 +14,9 @@
   tarjeta: quien lo abre puede llevar data-account (y data-card, si además ya
   sabe la tarjeta) y el script los preselecciona al abrir.
 
-  TARJETA depende de CUENTA: todas las tarjetas viajan de una vez (igual que
-  peersByAccount en la transferencia — un modal que recarga del servidor al
-  cambiar de cuenta se cierra solo) y el script enseña sólo las de la cuenta
+  TARJETA depende de CUENTA: todas las tarjetas viajan de una vez —son las
+  TUYAS, un puñado, y un modal que recarga la página al cambiar de cuenta se
+  cierra solo— y el script enseña sólo las de la cuenta
   elegida, vía data-source. Es sólo para elegir CON qué tarjeta se simula la
   compra —una cuenta no guarda a qué tarjeta corresponde cada consumo, así
   que no viaja al servidor—.

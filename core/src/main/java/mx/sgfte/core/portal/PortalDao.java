@@ -130,6 +130,55 @@ public class PortalDao {
         }
     }
 
+    /**
+     * El destino de una transferencia, buscado por el identificador que el
+     * compañero le pasó ("GAS-48HSY").
+     *
+     * Es findPeersForTransfer con un filtro más, y a propósito: la lista de
+     * destinos elegibles y la comprobación de UNO son la misma regla, así que
+     * son la misma consulta. Si mañana cambia lo que hace válido a un destino,
+     * cambia en un sitio.
+     *
+     * Las cuatro condiciones son las que hacen legal a un destino:
+     *   · la cuenta existe y está ACTIVE;
+     *   · el identificador coincide exacto (UPPER en los dos lados: el admin la
+     *     genera en mayúsculas, pero nadie teclea pensando en eso);
+     *   · NO es tuya — transferirte a ti mismo no es una transferencia;
+     *   · comparte propósito con la cuenta de origen (RN-07).
+     *
+     * Y como en findPeersForTransfer, el propósito se resuelve con una subconsulta
+     * acotada por cardholder_id: si la cuenta de origen no es de quien pregunta,
+     * la subconsulta da NULL, la comparación no casa con nada y esto devuelve
+     * vacío. No hace falta un guardia aparte — un sourceId manipulado no revela
+     * si el destino existe o no.
+     */
+    public Optional<PeerOption> findPeerByNumber(long cardholderId, long sourceAccountId,
+                                                 String accountNumber) {
+        String sql = "SELECT a.id, a.account_number, c.first_name, c.last_name "
+                + "FROM account a "
+                + "JOIN cardholder c ON c.id = a.cardholder_id "
+                + "WHERE a.status = 'ACTIVE' "
+                + "  AND UPPER(a.account_number) = UPPER(?) "
+                + "  AND a.cardholder_id <> ? "
+                + "  AND a.category_id = (SELECT s.category_id FROM account s "
+                + "                       WHERE s.id = ? AND s.cardholder_id = ? AND s.status = 'ACTIVE')";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, accountNumber);
+            ps.setLong(2, cardholderId);
+            ps.setLong(3, sourceAccountId);
+            ps.setLong(4, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                String label = rs.getString("first_name") + " " + rs.getString("last_name")
+                        + " — " + rs.getString("account_number");
+                return Optional.of(new PeerOption(rs.getLong("id"), label));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error resolving the transfer destination", e);
+        }
+    }
+
     private PortalAccount mapAccount(ResultSet rs) throws SQLException {
         return new PortalAccount(
                 rs.getLong("id"),
@@ -243,46 +292,6 @@ public class PortalDao {
             return rows;
         } catch (SQLException e) {
             throw new RuntimeException("Error loading the account activity", e);
-        }
-    }
-
-    /**
-     * Every account this cardholder could transfer to, grouped by purpose.
-     *
-     * One query for the whole modal instead of one per account. The transfer
-     * form is a pop-up now, so it cannot reload the page when the source
-     * changes: it needs all the eligible destinations up front and filters them
-     * on the spot. With no connection pool, N queries would be N round trips on
-     * every dashboard load.
-     *
-     * Same two guards as findPeersForTransfer: never your own accounts, and only
-     * purposes you actually hold — the P2P rule is same-category.
-     */
-    public java.util.Map<Long, List<PeerOption>> findPeersByCategory(long cardholderId) {
-        String sql = "SELECT a.category_id, a.id, a.account_number, c.first_name, c.last_name "
-                   + "  FROM account a "
-                   + "  JOIN cardholder c ON c.id = a.cardholder_id "
-                   + " WHERE a.status = 'ACTIVE' "
-                   + "   AND a.cardholder_id <> ? "
-                   + "   AND a.category_id IN (SELECT s.category_id FROM account s "
-                   + "                          WHERE s.cardholder_id = ? AND s.status = 'ACTIVE') "
-                   + " ORDER BY c.last_name, c.first_name";
-        java.util.Map<Long, List<PeerOption>> byCategory = new java.util.LinkedHashMap<>();
-        try (Connection c = Db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setLong(1, cardholderId);
-            ps.setLong(2, cardholderId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    String label = rs.getString("last_name") + ", " + rs.getString("first_name")
-                                 + " · " + rs.getString("account_number");
-                    byCategory.computeIfAbsent(rs.getLong("category_id"), k -> new ArrayList<>())
-                              .add(new PeerOption(rs.getLong("id"), label));
-                }
-            }
-            return byCategory;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error loading the transfer destinations", e);
         }
     }
 

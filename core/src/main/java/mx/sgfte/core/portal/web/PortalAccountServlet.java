@@ -65,7 +65,6 @@ public class PortalAccountServlet extends HttpServlet {
 
             // Lo que necesita el modal de transferencia.
             req.setAttribute("myAccounts", portalService.myAccounts(cardholderId));
-            req.setAttribute("peersByAccount", portalService.peersByAccount(cardholderId));
         } catch (AccountNotOwnedException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;

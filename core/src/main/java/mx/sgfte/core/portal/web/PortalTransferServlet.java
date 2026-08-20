@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import mx.sgfte.core.portal.AccountNotOwnedException;
 import mx.sgfte.core.audit.AuditEvent;
 import mx.sgfte.core.audit.AuditLogService;
+import mx.sgfte.core.portal.PeerOption;
 import mx.sgfte.core.portal.PortalService;
 import mx.sgfte.core.users.ValidationException;
 
@@ -17,10 +18,10 @@ import java.util.List;
 /**
  * P2P transfer for the employee (HU-07, Figma: "Transferencia").
  *
- * The source dropdown lists only the employee's OWN accounts; the destination
- * dropdown fills in once a source is chosen, with colleagues' accounts of the
- * same purpose (RN-07). Picking a source re-submits the form with GET, the same
- * pattern the admin historial screen uses, so no JavaScript is needed.
+ * The source dropdown lists only the employee's OWN accounts. The destination
+ * is typed, not picked: the colleague passes on the identifier of their account
+ * ("GAS-48HSY") and this servlet resolves it — active, someone else's, and of
+ * the same purpose (RN-07). Nobody gets a list of everyone else's accounts.
  *
  * Note this is the same TransferService the admin screen calls. The rule about
  * matching purposes is not re-implemented here — this servlet only adds "the
@@ -42,8 +43,24 @@ public class PortalTransferServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         long cardholderId = PortalSupport.cardholderId(req);
         Long sourceId = PortalSupport.parseId(req.getParameter("sourceId"));
-        Long destId = PortalSupport.parseId(req.getParameter("destId"));
+        String destNumber = shortened(req.getParameter("destNumber"));
         BigDecimal amount = PortalSupport.parseAmount(req.getParameter("amount"));
+
+        /*
+          El destino llega escrito a mano ("GAS-48HSY"), no elegido de una lista,
+          así que hay que traducirlo a una cuenta antes de mover nada. Se traduce
+          AQUÍ y no en el navegador: la comprobación en vivo mientras teclea es
+          una cortesía de la pantalla, y una cortesía no puede ser lo que decide
+          a dónde va el dinero. Es la misma consulta, así que un identificador
+          que allí salió bien sale bien aquí — salvo que la cuenta haya cambiado
+          entre medias, que es justo el caso que esto atrapa.
+         */
+        PeerOption dest = portalService.peerByNumber(cardholderId, sourceId, destNumber).orElse(null);
+        Long destId = dest == null ? null : dest.getAccountId();
+
+        // Para la tarjeta de resultado: el nombre del compañero si se resolvió,
+        // y si no, lo que se tecleó — que es lo que hay que corregir.
+        String destLabel = dest != null ? dest.getLabel() : destNumber;
 
         /*
           Post/redirect/get. Antes reenviaba, así que recargar reintentaba la
@@ -51,6 +68,19 @@ public class PortalTransferServlet extends HttpServlet {
           en la sesión y lo pinta la tarjeta de resultado.
          */
         try {
+            /*
+              Un origen nulo NO se atrapa aquí: se deja pasar para que
+              PortalService lance AccountNotOwnedException y la respuesta sea un
+              404, como cualquier id manipulado. Decir "identificador inválido"
+              cuando lo manipulado es el origen confirmaría de qué se trata.
+             */
+            if (sourceId != null && dest == null) {
+                throw new ValidationException(List.of(
+                        "No hay ninguna cuenta con el identificador \"" + destNumber + "\" "
+                                + "para el propósito de tu cuenta origen. Pídele a tu compañero "
+                                + "el que aparece en su pantalla de cuenta."));
+            }
+
             portalService.transfer(cardholderId, sourceId, destId, amount,
                     req.getParameter("description"));
 
@@ -65,7 +95,7 @@ public class PortalTransferServlet extends HttpServlet {
                             "TRANSACCIÓN CONFIRMADA",
                             "Los fondos se enviaron a una cuenta del mismo propósito.")
                     .amount("Monto enviado", amount)
-                    .detail("Cuenta destino", peerLabel(cardholderId, destId))
+                    .detail("Cuenta destino", destLabel)
                     .when(java.time.LocalDateTime.now())
                     /*
                       El marco añade "ID Transacción · 023477". No existe: una
@@ -89,7 +119,7 @@ public class PortalTransferServlet extends HttpServlet {
                             String.join(" ", e.getErrors()))
                     .amount("Monto enviado", amount)
                     .detail("Cuenta origen", myLabel(cardholderId, sourceId))
-                    .detail("Cuenta destino", peerLabel(cardholderId, destId))
+                    .detail("Cuenta destino", destLabel)
                     .when(java.time.LocalDateTime.now())
                     .secondary("Volver al inicio", "/app/home")
                     .primary("Reintentar", "/app/home")
@@ -109,7 +139,19 @@ public class PortalTransferServlet extends HttpServlet {
         }
     }
 
-    /** Loads both dropdowns and shows the form. */
+    /**
+     * Lo tecleado, recortado a lo que puede ser un identificador.
+     *
+     * Se repite en el mensaje de rechazo ("no hay ninguna cuenta con ..."), y el
+     * maxlength del campo sólo obliga al navegador. Un identificador son 20
+     * caracteres largos; más que eso no es un identificador mal escrito, es
+     * alguien probando qué hace la pantalla con un texto de 10 KB.
+     */
+    private String shortened(String raw) {
+        if (raw == null) return null;
+        String trimmed = raw.trim();
+        return trimmed.length() <= 20 ? trimmed : trimmed.substring(0, 20) + "…";
+    }
 
     /** Cómo se lee una cuenta propia en la tarjeta de resultado. */
     private String myLabel(long cardholderId, Long accountId) {
@@ -121,14 +163,4 @@ public class PortalTransferServlet extends HttpServlet {
                 .orElse(null);
     }
 
-    /** Y cómo se lee la del compañero, buscándola entre los destinos elegibles. */
-    private String peerLabel(long cardholderId, Long accountId) {
-        if (accountId == null) return null;
-        return portalService.peersByAccount(cardholderId).values().stream()
-                .flatMap(java.util.List::stream)
-                .filter(p -> p.getAccountId() == accountId)
-                .map(mx.sgfte.core.portal.PeerOption::getLabel)
-                .findFirst()
-                .orElse(null);
-    }
 }

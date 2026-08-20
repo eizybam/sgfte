@@ -185,21 +185,25 @@ public class PortalService {
     }
 
     /**
-     * Eligible destinations keyed by MY account id, ready for the pop-up.
+     * El destino de una transferencia, resuelto desde el identificador que el
+     * empleado escribió.
      *
-     * The DAO groups by category because that is what the rule keys on; this
-     * re-keys by account so the form can look up destinations directly from the
-     * source the employee picked.
+     * Sustituye a peersByAccount, que traía TODAS las cuentas elegibles de la
+     * empresa en cada carga del panel para llenar un desplegable. Ahora el
+     * destino se teclea —el compañero te pasa su identificador— y sólo se
+     * consulta ése. De paso deja de ser posible leer la lista de cuentas de
+     * todos tus compañeros con ver el HTML de la página (RNF-05).
+     *
+     * Vacío significa "no es un destino válido" y no distingue entre no existe,
+     * está inactiva, es tuya o es de otro propósito. Eso es deliberado: una
+     * respuesta distinta por caso convierte el campo en un buscador de cuentas
+     * ajenas.
      */
-    public java.util.Map<Long, List<PeerOption>> peersByAccount(long cardholderId) {
-        java.util.Map<Long, List<PeerOption>> byCategory =
-                portalDao.findPeersByCategory(cardholderId);
-
-        java.util.Map<Long, List<PeerOption>> byAccount = new java.util.LinkedHashMap<>();
-        for (PortalAccount account : myAccounts(cardholderId)) {
-            byAccount.put(account.getId(),
-                    byCategory.getOrDefault(account.getCategoryId(), List.of()));
+    public java.util.Optional<PeerOption> peerByNumber(long cardholderId, Long sourceAccountId,
+                                                       String accountNumber) {
+        if (sourceAccountId == null || accountNumber == null || accountNumber.isBlank()) {
+            return java.util.Optional.empty();
         }
-        return byAccount;
+        return portalDao.findPeerByNumber(cardholderId, sourceAccountId, accountNumber.trim());
     }
 }

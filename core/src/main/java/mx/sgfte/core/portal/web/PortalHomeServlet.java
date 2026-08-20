@@ -38,7 +38,6 @@ public class PortalHomeServlet extends HttpServlet {
 
         // Lo que necesita el modal de transferencia, que vive en esta pantalla.
         req.setAttribute("myAccounts", accounts);
-        req.setAttribute("peersByAccount", portalService.peersByAccount(cardholderId));
 
         // Lo que necesita el modal de "Hacer un gasto" para el <select> de tarjeta.
         req.setAttribute("cards", portalService.myCards(cardholderId));
