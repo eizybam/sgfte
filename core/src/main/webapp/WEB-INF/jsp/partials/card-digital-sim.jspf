@@ -77,7 +77,12 @@
         function paint(block) {
             var id = block.dataset.cardId;
             var pan = digits("pan:" + id, 12) + last4(block.dataset.last4);
-            block.querySelector("[data-cardsim-pan]").textContent = groupsOfFour(pan);
+
+            // El número va en la CARA de la tarjeta, donde una física enseña
+            // sus asteriscos: es donde se busca, y la pantalla hace de plástico.
+            var face = block.querySelector("[data-cardsim-pan]");
+            if (face) face.textContent = groupsOfFour(pan);
+
             tick(block);
         }
 

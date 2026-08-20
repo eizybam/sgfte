@@ -191,7 +191,11 @@
 --%>
 <c:forEach var="k" items="${cards}">
     <div class="modal-scrim" id="card-detail-${k.id}" hidden>
-        <div class="modal cardx" role="dialog" aria-modal="true" aria-labelledby="cardx-title-${k.id}">
+        <%-- Los data-* van en el modal, no en el bloque del CVV: tienen que
+             envolver la cara de la tarjeta y el CVV a la vez. --%>
+        <div class="modal cardx" role="dialog" aria-modal="true" aria-labelledby="cardx-title-${k.id}"
+             ${k.physical ? '' : 'data-cardsim'}
+             data-card-id="${k.id}" data-last4="${fn:escapeXml(k.maskedPan)}">
             <div class="cardx__head">
                 <h2 class="cardx__title" id="cardx-title-${k.id}">Detalles de tarjeta</h2>
                 <button type="button" class="cardx__close" data-close-card aria-label="Cerrar">
@@ -212,7 +216,19 @@
                     <span class="tarjeta__data">
                         <span class="tarjeta__pan">
                             <span class="tarjeta__key">NÚMERO DE TARJETA</span>
-                            <span class="tarjeta__value">${fn:escapeXml(k.maskedPan)}</span>
+                            <%--
+                              Una física deja aquí sus asteriscos: sus dígitos
+                              están impresos en el plástico. Una digital no tiene
+                              plástico, así que ESTA cara es la tarjeta y el guion
+                              escribe encima el número entero.
+
+                              El valor enmascarado se queda como contenido
+                              inicial, no como hueco: si el guion no corriera, la
+                              tarjeta enseña lo mismo que enseñaba antes en vez de
+                              un renglón vacío.
+                            --%>
+                            <span class="tarjeta__value"
+                                  ${k.physical ? '' : 'data-cardsim-pan'}>${fn:escapeXml(k.maskedPan)}</span>
                         </span>
                         <span class="tarjeta__exp">
                             <span class="tarjeta__key">VÁLIDA HASTA</span>

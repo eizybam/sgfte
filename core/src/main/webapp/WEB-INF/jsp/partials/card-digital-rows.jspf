@@ -22,17 +22,20 @@
     Lo que se enseña lo inventa el navegador, y por eso se incluye SÓLO aquí, en
     el portal: el administrador nunca ve más que los últimos cuatro.
 
-  Va dentro del <c:forEach> de las tarjetas: cada bloque describe la suya y se
-  identifica con su id. El guion que los rellena vive aparte, en
-  card-digital-sim.jspf, y se incluye una sola vez por pantalla.
+  El número completo NO va aquí: va en la cara de la tarjeta de arriba, en el
+  sitio donde una física enseña sus asteriscos. Es donde se busca —la pantalla
+  hace de plástico— y repetirlo en una fila era enseñarlo dos veces.
+
+  Por eso los data-* que identifican la tarjeta viven en el <div> del modal y no
+  en este bloque: tienen que envolver la cara de la tarjeta Y este CVV, que son
+  hermanos, no uno dentro del otro.
+
+  Va dentro del <c:forEach> de las tarjetas. El guion que lo rellena vive
+  aparte, en card-digital-sim.jspf, y se incluye una sola vez por pantalla.
 --%>
 <c:if test="${not k.physical}">
-    <div class="cardsim" data-cardsim data-card-id="${k.id}" data-last4="${fn:escapeXml(k.maskedPan)}">
+    <div class="cardsim">
         <dl class="cardx__rows cardsim__rows">
-            <div class="cardx__row">
-                <dt>Número completo</dt>
-                <dd><span class="cardx__mono" data-cardsim-pan>····</span></dd>
-            </div>
             <div class="cardx__row">
                 <dt>CVV dinámico</dt>
                 <dd>
@@ -41,12 +44,5 @@
                 </dd>
             </div>
         </dl>
-
-        <p class="cardsim__note">
-            <strong>Simulación.</strong> El CVV dinámico no está implementado: cambia
-            cada 5 minutos aquí en el navegador para enseñar cómo se vería. El número
-            completo tampoco existe — la base guarda sólo los últimos cuatro dígitos,
-            que son los únicos reales de esta pantalla.
-        </p>
     </div>
 </c:if>
