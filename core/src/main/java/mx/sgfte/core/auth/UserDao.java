@@ -9,10 +9,16 @@ import java.util.Optional;
 
 public class UserDao {
 
-    // Lookup User by Email
+    /**
+     * Lookup User by Email, ignoring case.
+     *
+     * "MAIL@empresa.com" y "mail@empresa.com" son el mismo buzón y el mismo
+     * usuario. Comparando carácter a carácter no lo eran, y eso permitía dos
+     * altas para la misma persona.
+     */
     public Optional<AppUser> findByEmail(String email) {
         String sql = "SELECT id, email, password_hash, full_name, role, cardholder_id, status "
-                + "FROM app_user WHERE email = ?";
+                + "FROM app_user WHERE UPPER(email) = UPPER(?)";
 
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -36,12 +42,18 @@ public class UserDao {
      * duplicarlo. Los admins no tienen cardholder_id, por eso el LEFT JOIN
      * y el "IS NULL".
      */
+    /*
+      El UPPER de los dos lados arregla además un fallo que se vivía como "no me
+      deja entrar": quien escribía su correo con la primera letra en mayúscula
+      —el teclado del móvil lo hace solo— no encontraba su propio usuario, y la
+      pantalla contestaba "Credenciales inválidas" con la contraseña correcta.
+     */
     public Optional<AppUser> findLoginByEmail(String email) {
         String sql = "SELECT u.id, u.email, u.password_hash, u.full_name, "
                 + "       u.role, u.cardholder_id, u.status "
                 + "  FROM app_user u "
                 + "  LEFT JOIN cardholder ch ON ch.id = u.cardholder_id "
-                + " WHERE u.email = ? "
+                + " WHERE UPPER(u.email) = UPPER(?) "
                 + "   AND (u.cardholder_id IS NULL OR ch.status = 'ACTIVE')";
 
         try (Connection c = Db.getConnection();

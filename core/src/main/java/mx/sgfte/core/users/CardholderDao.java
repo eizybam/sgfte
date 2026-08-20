@@ -268,9 +268,19 @@ public class CardholderDao {
         }
     }
 
-    /** True if a cardholder with this email already exists. */
+    /**
+     * True if a cardholder with this email already exists, ignoring case.
+     *
+     * El UPPER de los dos lados es el que faltaba: con "email = ?" se colaba
+     * "mAIL@empresa.com" junto a "mail@empresa.com". emailExistsForAnother —el
+     * gemelo que usa la edición— ya lo hacía; el del alta se quedó atrás.
+     *
+     * Sigue haciendo falta aunque el servicio ya guarde en minúsculas: en la
+     * base hay filas anteriores a esa normalización, y esta consulta también
+     * tiene que verlas.
+     */
     public boolean emailExists(String email) {
-        String sql = "SELECT 1 FROM cardholder WHERE email = ?";
+        String sql = "SELECT 1 FROM cardholder WHERE UPPER(email) = UPPER(?)";
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, email);

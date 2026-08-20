@@ -41,6 +41,12 @@ public class CardholderService {
 
     /** Validates and registers a cardholder. Returns the new id, or throws ValidationException. */
     public long register(Cardholder ch) {
+        // Antes de nada: el correo es la identidad de esta persona en el sistema
+        // —con él inicia sesión y con él se le avisa—, así que entra en una sola
+        // forma. Aquí y no en cada llamador: éste es el embudo por el que pasan
+        // todas las altas.
+        ch.setEmail(normalizeEmail(ch.getEmail()));
+
         List<String> errors = validate(ch);
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
@@ -110,6 +116,29 @@ public class CardholderService {
 
     private String trim(String s) { return s == null ? null : s.trim(); }
 
+    /**
+     * La forma canónica de un correo: sin espacios y en minúsculas.
+     *
+     * Se podían dar de alta dos empleados con "mail@empresa.com" y
+     * "mAIL@empresa.com" — la base los veía distintos porque su UNIQUE compara
+     * carácter a carácter, y el chequeo previo del servicio también. Son la
+     * misma persona y el mismo buzón: ningún proveedor de correo distingue
+     * mayúsculas en la práctica, y aquí además el correo ES el usuario con el
+     * que se entra.
+     *
+     * Se normaliza al ESCRIBIR, no sólo al comparar. Comparar sin distinguir
+     * bastaría para impedir el duplicado, pero dejaría en la base dos formas de
+     * escribir a la misma persona, y entonces la bitácora, el correo de
+     * activación y la pantalla de ajustes enseñarían cada uno la suya.
+     *
+     * El RFC permite que la parte local distinga mayúsculas; en la práctica
+     * ningún proveedor la usa así, y tratarla como si lo hiciera es lo que
+     * produce este error.
+     */
+    private String normalizeEmail(String s) {
+        return s == null ? null : s.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
     /** Field-level validation, independent of the database. */
     public List<String> validate(Cardholder ch) {
         List<String> errors = new ArrayList<>();
@@ -167,7 +196,7 @@ public class CardholderService {
             throw new ValidationException(List.of("Escribe el nombre y al menos un apellido"));
         }
 
-        Cardholder ch = new Cardholder(parts[0], parts[1], trim(email), trim(phone));
+        Cardholder ch = new Cardholder(parts[0], parts[1], normalizeEmail(email), trim(phone));
         ch.setId(id);
         ch.setDepartmentId(departmentId);
 

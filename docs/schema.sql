@@ -120,6 +120,11 @@ CREATE TABLE cardholder (
                                 REFERENCES department (id)
 );
 
+-- Correo insensible a mayúsculas (V16). Lo que tiene que ser único no es la
+-- columna sino su versión en minúsculas: "mail@x.com" y "mAIL@x.com" son la
+-- misma persona, y aquí el correo es además el usuario con el que se entra.
+CREATE UNIQUE INDEX uq_cardholder_email_lower ON cardholder (LOWER(email));
+
 CREATE INDEX idx_cardholder_department ON cardholder (department_id);
 
 -- Parte numérica del código de empleado. Cuatro dígitos aguantan 9,999 altas
@@ -398,6 +403,11 @@ CREATE TABLE app_user (
     CONSTRAINT chk_app_user_photo_type CHECK (photo_type IS NULL OR photo_type IN ('image/png', 'image/jpeg', 'image/webp')),
     CONSTRAINT fk_app_user_cardholder FOREIGN KEY (cardholder_id) REFERENCES cardholder (id)
 );
+
+-- Correo insensible a mayúsculas (V16). Lo que tiene que ser único no es la
+-- columna sino su versión en minúsculas: "mail@x.com" y "mAIL@x.com" son la
+-- misma persona, y aquí el correo es además el usuario con el que se entra.
+CREATE UNIQUE INDEX uq_app_user_email_lower ON app_user (LOWER(email));
 
 -- 9) Microservicio de Auditoría: bitácora inmutable de eventos del sistema.
 --
