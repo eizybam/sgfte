@@ -4144,6 +4144,40 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
 .settings__actions { display: flex; justify-content: flex-end; margin-top: var(--sp-3); }
 
 /*
+  Foto de perfil. Vive sólo aquí: no hay avatar en el header, ni en la lista de
+  empleados, ni en el portal. Es un dato de la pantalla de Ajustes y nada más.
+*/
+.settings__photo {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-3);
+    flex-wrap: wrap;              /* en móvil el formulario baja debajo del avatar */
+}
+
+.settings__avatar {
+    width: 88px;
+    height: 88px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    border: 1px solid var(--sgfte-line);
+    /* Recorta en vez de deformar: una foto vertical no sale estirada. */
+    object-fit: cover;
+}
+
+.settings__avatar--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--sgfte-mono-muted);
+    background: var(--sgfte-surface);
+}
+
+.settings__photo-form { flex: 1 1 240px; min-width: 240px; }
+
+/*
   Los campos vienen del modal de alta (.register__*), que está dimensionado para
   un modal de 40px de padding: 17-18px de tipografía y etiquetas en rosa. Dentro
   de una tarjeta de ajustes eso se ve enorme, así que aquí se ajusta la escala

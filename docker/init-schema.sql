@@ -24,6 +24,7 @@ ALTER SESSION SET CURRENT_SCHEMA = SGFTE;
 --   · V11 → vista v_movement: los dos ledgers unidos, para /admin/movimientos.
 --   · V12 → fondeo con respaldo bancario: CLABE, funding_deposit y su enlace.
 --   · V13 → con qué tarjeta se hizo cada consumo (account_movement.card_id).
+--   · V14 → foto de perfil en app_user (sólo pantalla de Ajustes).
 -- ============================================================
 
 -- ── Limpieza para desarrollo (re-ejecutar). Descomenta si necesitas recrear.
@@ -381,9 +382,14 @@ CREATE TABLE app_user (
     cardholder_id NUMBER,
     status        VARCHAR2(10)  DEFAULT 'ACTIVE' NOT NULL,
     created_at    TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
+    -- Foto de perfil (V14). Sólo la pinta la pantalla de Ajustes; ninguna otra
+    -- vista la consulta. photo_type es el Content-Type con el que se sirve.
+    photo         BLOB,
+    photo_type    VARCHAR2(40),
     CONSTRAINT uq_app_user_email      UNIQUE (email),
     CONSTRAINT chk_app_user_role      CHECK (role IN ('ADMIN', 'TARJETAHABIENTE')),
     CONSTRAINT chk_app_user_status    CHECK (status IN ('ACTIVE', 'INACTIVE', 'PENDING')),
+    CONSTRAINT chk_app_user_photo_type CHECK (photo_type IS NULL OR photo_type IN ('image/png', 'image/jpeg', 'image/webp')),
     CONSTRAINT fk_app_user_cardholder FOREIGN KEY (cardholder_id) REFERENCES cardholder (id)
 );
 

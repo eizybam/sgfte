@@ -14,6 +14,56 @@
     <section class="settings__card">
         <h2 class="settings__title">Tu perfil</h2>
 
+        <%--
+          La foto.
+
+          La ruta se arma con el servlet_path del forward —el mismo truco que el
+          action del formulario de contraseña— porque este fragmento se pinta
+          desde /admin/ajustes y desde /app/ajustes, y cada uno tiene que
+          pegarle a su propia URL para que lo filtre su propio filtro.
+
+          Fíjate en lo que NO lleva: ningún id. El endpoint sirve siempre la
+          foto de quien tiene la sesión, así que no hay nada que cambiar en la
+          URL para pedir la de otra persona.
+        --%>
+        <c:set var="ajustes" value="${requestScope['jakarta.servlet.forward.servlet_path']}"/>
+
+        <div class="settings__photo">
+            <c:choose>
+                <c:when test="${hasPhoto}">
+                    <img class="settings__avatar" src="${ctx}${ajustes}/foto" alt="Tu foto de perfil">
+                </c:when>
+                <c:otherwise>
+                    <%-- Sin foto, la inicial: un hueco gris se lee como un error de carga. --%>
+                    <div class="settings__avatar settings__avatar--empty">
+                        ${fn:escapeXml(fn:substring(sessionScope.user.fullName, 0, 1))}
+                    </div>
+                </c:otherwise>
+            </c:choose>
+
+            <%-- enctype multipart o el navegador manda el NOMBRE del archivo, no el archivo. --%>
+            <form method="post" action="${ctx}${ajustes}/foto"
+                  enctype="multipart/form-data" class="settings__photo-form">
+
+                <c:if test="${not empty photoErrors}">
+                    <div class="alert alert--error">
+                        <ul><c:forEach var="e" items="${photoErrors}"><li>${e}</li></c:forEach></ul>
+                    </div>
+                </c:if>
+
+                <label class="register__label" for="photo">Cambiar foto</label>
+                <div class="register__control">
+                    <input class="register__input" type="file" id="photo" name="photo"
+                           accept="image/png, image/jpeg, image/webp" required>
+                </div>
+                <p class="settings__note">PNG, JPG o WEBP, máximo 2 MB. Sólo se ve en esta pantalla.</p>
+
+                <div class="settings__actions">
+                    <button type="submit" class="btn btn--primary">Guardar foto</button>
+                </div>
+            </form>
+        </div>
+
         <dl class="settings__list">
             <div class="settings__row">
                 <dt>Nombre</dt>

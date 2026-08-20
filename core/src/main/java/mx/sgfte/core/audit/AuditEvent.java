@@ -26,6 +26,10 @@ public enum AuditEvent {
     PASSWORD_RESET_REQUESTED(Severity.INFO, Module.SEGURIDAD, "Restablecimiento de contraseña solicitado"),
     PASSWORD_CHANGED        (Severity.INFO, Module.SEGURIDAD, "Contraseña actualizada"),
 
+    // Cambiar tu propia foto no es un hecho de riesgo, de ahí INFO. Se registra
+    // igual porque es una mutación del usuario, y la bitácora las lleva todas.
+    PROFILE_PHOTO_UPDATED   (Severity.INFO, Module.SEGURIDAD, "Foto de perfil actualizada"),
+
     // --- Fondos ---
     CONCENTRATOR_FUNDED (Severity.INFO,   Module.FONDOS, "Concentradora fondeada"),
 

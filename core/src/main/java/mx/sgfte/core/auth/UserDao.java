@@ -2,6 +2,7 @@ package mx.sgfte.core.auth;
 import mx.sgfte.core.shared.db.Db;
 import oracle.jdbc.proxy.annotation.Pre;
 
+import java.io.ByteArrayInputStream;
 import java.sql.*;
 import java.util.Optional;
 
@@ -136,6 +137,77 @@ public class UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error updating password", e);
+        }
+    }
+
+
+    /* ---------------------------------------------------------------
+       Foto de perfil (V14). Sólo la usa la pantalla de Ajustes.
+       --------------------------------------------------------------- */
+
+    /**
+     * La foto y su tipo, tal como salen de la base.
+     *
+     * Record pelado a propósito: esto NO llega a ningún JSP —el servlet
+     * escribe los bytes directamente en la respuesta—, así que no necesita los
+     * getters JavaBean que EL 5.0 exigiría para leerlo con ${...}.
+     */
+    public record ProfilePhoto(byte[] bytes, String contentType) {}
+
+    /** Guarda o reemplaza la foto de perfil. Una por usuario: no hay historial. */
+    public void updatePhoto(long userId, byte[] bytes, String contentType) {
+        String sql = "UPDATE app_user SET photo = ?, photo_type = ? WHERE id = ?";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            /*
+              setBinaryStream y no setBytes: es el camino explícito para un LOB,
+              donde setBytes deja que el driver decida cómo bindear el valor.
+              Vale la pena aunque hoy la imagen quepa de sobra — el día que se
+              suba el tope de 2 MB, esto no hay que volver a tocarlo.
+             */
+            ps.setBinaryStream(1, new ByteArrayInputStream(bytes), bytes.length);
+            ps.setString(2, contentType);
+            ps.setLong(3, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error saving profile photo", e);
+        }
+    }
+
+    /** La foto de ESE usuario, o vacío si no tiene. */
+    public Optional<ProfilePhoto> findPhoto(long userId) {
+        String sql = "SELECT photo, photo_type FROM app_user WHERE id = ? AND photo IS NOT NULL";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                Blob blob = rs.getBlob(1);
+                return Optional.of(new ProfilePhoto(
+                        blob.getBytes(1, (int) blob.length()), rs.getString(2)));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error reading profile photo", e);
+        }
+    }
+
+    /**
+     * ¿Tiene foto? Sí o no, sin traérsela.
+     *
+     * La vista sólo necesita elegir entre pintar el <img> o las iniciales.
+     * Resolverlo con findPhoto cargaría hasta 2 MB de BLOB en memoria en cada
+     * carga de Ajustes para acabar tirándolos.
+     */
+    public boolean hasPhoto(long userId) {
+        String sql = "SELECT 1 FROM app_user WHERE id = ? AND photo IS NOT NULL";
+        try (Connection c = Db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error checking profile photo", e);
         }
     }
 

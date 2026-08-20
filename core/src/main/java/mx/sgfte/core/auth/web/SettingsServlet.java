@@ -10,6 +10,7 @@ import mx.sgfte.core.audit.AuditEvent;
 import mx.sgfte.core.audit.AuditLogService;
 import mx.sgfte.core.auth.AuthService;
 import mx.sgfte.core.auth.SessionUser;
+import mx.sgfte.core.auth.UserDao;
 import mx.sgfte.core.shared.web.OperationResult;
 import mx.sgfte.core.users.ValidationException;
 
@@ -32,11 +33,21 @@ public class SettingsServlet extends HttpServlet {
 
     private final AuthService authService = new AuthService();
     private final AuditLogService audit = new AuditLogService();
+    private final UserDao users = new UserDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         consumeFlash(req);
+
+        /*
+          Sí o no, sin cargar el BLOB: la vista sólo elige entre pintar el <img>
+          y pintar la inicial. La foto en sí la sirve ProfilePhotoServlet, en su
+          propia petición.
+         */
+        SessionUser user = (SessionUser) req.getSession().getAttribute("user");
+        req.setAttribute("hasPhoto", users.hasPhoto(user.getId()));
+
         req.getRequestDispatcher(viewOf(req)).forward(req, resp);
     }
 
@@ -87,10 +98,17 @@ public class SettingsServlet extends HttpServlet {
     private void consumeFlash(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         if (session == null) return;
-        Object errors = session.getAttribute("settingsErrors");
-        if (errors != null) {
-            req.setAttribute("settingsErrors", errors);
-            session.removeAttribute("settingsErrors");
+        /*
+          Dos llaves y no una: los errores de la foto se pintan en la tarjeta de
+          la foto, y los de la contraseña en la suya. Con una sola, subir un PDF
+          sacaba el aviso rojo debajo de "Cambiar contraseña".
+         */
+        for (String key : new String[]{"settingsErrors", "photoErrors"}) {
+            Object errors = session.getAttribute(key);
+            if (errors != null) {
+                req.setAttribute(key, errors);
+                session.removeAttribute(key);
+            }
         }
     }
 }
