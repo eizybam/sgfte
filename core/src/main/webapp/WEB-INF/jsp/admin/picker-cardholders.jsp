@@ -52,7 +52,11 @@
     </c:forEach>
     <c:if test="${empty rows}">
         <tr><td colspan="5" class="table__empty">
-            Ningún empleado activo con cuentas coincide con la búsqueda.
+            <%-- Dos criterios, dos mensajes: "no coincide" y "no coincide y
+                 además tiene que tener cuenta" mandan a buscar cosas distintas. --%>
+            ${onlyWithAccounts
+                ? 'Ningún empleado activo CON CUENTAS coincide con la búsqueda.'
+                : 'Ningún empleado activo coincide con la búsqueda.'}
         </td></tr>
     </c:if>
     </tbody>

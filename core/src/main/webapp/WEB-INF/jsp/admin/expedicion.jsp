@@ -33,7 +33,7 @@
                 <span class="issue__label">TARJETAHABIENTE</span>
                 <div class="issue__box">
                     <button type="button" class="issue__input picker__trigger" id="holderTrigger"
-                            data-picker="cardholder"
+                            data-picker="cardholder-with-accounts"
                             data-picker-target="cardholder"
                             data-picker-title="Elegir tarjetahabiente"
                             data-picker-placeholder="Buscar por nombre, ID de empleado o correo">

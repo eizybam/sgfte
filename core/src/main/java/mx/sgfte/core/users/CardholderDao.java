@@ -69,10 +69,26 @@ public class CardholderDao {
         }
     }
 
-    public List<CardholderAdminRow> findForPicker(String search, int offset, int limit) throws SQLException {
+    /**
+     * Una página del selector de empleados.
+     *
+     * `onlyWithAccounts` NO es un adorno: distingue las dos pantallas que abren
+     * este selector, y confundirlas se nota.
+     *
+     *   · Expedir Tarjeta pide true. Una tarjeta se expide CONTRA una cuenta;
+     *     ofrecer a alguien que no tiene ninguna es ofrecer un callejón sin
+     *     salida.
+     *
+     *   · Crear cuenta pide false, y es justo al revés: ahí se busca a quien le
+     *     falta una. Con el filtro puesto, un empleado recién dado de alta —que
+     *     por definición tiene cero cuentas— no aparecía nunca, y no había forma
+     *     de darle la primera.
+     */
+    public List<CardholderAdminRow> findForPicker(String search, int offset, int limit,
+                                                  boolean onlyWithAccounts) throws SQLException {
         StringBuilder sql = new StringBuilder(ADMIN_SELECT);
         List<Object> params = new ArrayList<>();
-        appendFilters(sql, params, search, "ACTIVE", null, true);
+        appendFilters(sql, params, search, "ACTIVE", null, onlyWithAccounts);
 
         sql.append("ORDER BY ch.last_name, ch.first_name ")
            .append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -102,10 +118,11 @@ public class CardholderDao {
         }
     }
 
-    public int countForPicker(String search) {
+    /** Cuántos casan con lo mismo que findForPicker — mismo criterio o el pager miente. */
+    public int countForPicker(String search, boolean onlyWithAccounts) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cardholder ch ");
         List<Object> params = new ArrayList<>();
-        appendFilters(sql, params, search, "ACTIVE", null, true);
+        appendFilters(sql, params, search, "ACTIVE", null, onlyWithAccounts);
 
         try (Connection c = Db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql.toString())) {

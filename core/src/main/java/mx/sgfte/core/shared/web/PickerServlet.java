@@ -29,10 +29,24 @@ public class PickerServlet extends HttpServlet {
             throws ServletException, IOException {
         resp.setHeader("Cache-Control", "no-store");
 
+        /*
+          Dos sabores de "elegir empleado", y el nombre lo dice:
+
+            · cardholder                 → cualquiera activo. Es lo que espera
+                                           Crear cuenta, donde se busca
+                                           precisamente a quien le falta una.
+            · cardholder-with-accounts   → sólo quien ya tiene una cuenta activa.
+                                           Lo pide Expedir Tarjeta: una tarjeta
+                                           se expide contra una cuenta.
+
+          El tipo llano es el menos restrictivo a propósito. Cuando el filtro
+          iba escondido dentro del único tipo que había, la pantalla que no lo
+          quería se lo comía sin enterarse.
+         */
         String type = req.getParameter("type");
-        if ("cardholder".equals(type)) {
+        if ("cardholder".equals(type) || "cardholder-with-accounts".equals(type)) {
             try {
-                cardholders(req, resp);
+                cardholders(req, resp, "cardholder-with-accounts".equals(type));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -45,14 +59,18 @@ public class PickerServlet extends HttpServlet {
         }
     }
 
-    private void cardholders(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException, ServletException {
+    private void cardholders(HttpServletRequest req, HttpServletResponse resp, boolean onlyWithAccounts)
+            throws IOException, SQLException, ServletException {
         String search = trimToNull(req.getParameter("q"));
 
-        int total = cardholderDao.countForPicker(search);
+        int total = cardholderDao.countForPicker(search, onlyWithAccounts);
         int pageCount = Math.max(1, (int) Math.ceil(total / (double) PAGE_SIZE));
         int page = clamp(parsePage(req.getParameter("page")), pageCount);
 
-        req.setAttribute("rows", cardholderDao.findForPicker(search, (page -1) * PAGE_SIZE, PAGE_SIZE));
+        req.setAttribute("rows",
+                cardholderDao.findForPicker(search, (page - 1) * PAGE_SIZE, PAGE_SIZE, onlyWithAccounts));
+        // El "no hay nadie" tiene que decir por qué no hay nadie.
+        req.setAttribute("onlyWithAccounts", onlyWithAccounts);
         req.setAttribute("total", total);
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
