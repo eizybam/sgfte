@@ -185,21 +185,34 @@
 
         <form class="modal__body" method="post" action="${ctx}/accounts">
 
-            <label class="register__label" for="cardholderId">Tarjetahabiente</label>
+            <label class="register__label" for="holderTrigger">Tarjetahabiente</label>
             <div class="register__control">
                 <svg class="register__search" width="18" height="18" aria-hidden="true"><use href="#i-search"/></svg>
                 <%--
                   El marco dibuja un buscador libre, pero el valor tiene que
-                  resolverse a UN empleado concreto, así que es un selector.
+                  resolverse a UN empleado concreto.
+
+                  Antes: un <select> con TODOS los empleados activos, que a 40
+                  empleados ya era una lista con scroll donde dos "Juan" salen
+                  idénticos y no hay forma de buscar. Ahora el mismo selector con
+                  tabla que Expedir Tarjeta y Dispersión — nombre, correo, ID,
+                  cuentas y fondo, con buscador y paginado.
                 --%>
-                <select class="register__input" id="cardholderId" name="cardholderId" required>
-                    <option value="" disabled ${empty createHolder ? 'selected' : ''}>Selecciona al empleado</option>
-                    <c:forEach var="h" items="${cardholders}">
-                        <option value="${h.id}" ${createHolder == h.id ? 'selected' : ''}>${fn:escapeXml(h.firstName)} ${fn:escapeXml(h.lastName)}</option>
-                    </c:forEach>
-                </select>
+                <button type="button" class="register__input picker__trigger" id="holderTrigger"
+                        data-picker="cardholder"
+                        data-picker-target="create-holder"
+                        data-picker-title="Elegir tarjetahabiente"
+                        data-picker-placeholder="Buscar por nombre, ID de empleado o correo">
+                    <span id="holderLabel" class="${empty createHolderLabel ? 'picker__placeholder' : ''}">
+                        ${empty createHolderLabel
+                                ? 'Selecciona al empleado'
+                                : fn:escapeXml(createHolderLabel)}
+                    </span>
+                </button>
                 <svg class="register__chevron" width="12.64" height="6.82" aria-hidden="true"><use href="#i-chevron"/></svg>
             </div>
+            <%-- Esto es lo que viaja al servidor, igual que viajaba el value del select. --%>
+            <input type="hidden" id="cardholderId" name="cardholderId" value="${createHolder}" required>
 
             <label class="register__label" for="categoryId">Propósito</label>
             <div class="register__control">
@@ -239,7 +252,9 @@
         var scrim = document.getElementById("create-modal");
         var purpose = document.getElementById("categoryId");
         var number = document.getElementById("accountNumber");
-        var holder = document.getElementById("cardholderId");
+        var holderId = document.getElementById("cardholderId");     // hidden, lo que se envía
+        var holderTrigger = document.getElementById("holderTrigger");
+        var holderLabel = document.getElementById("holderLabel");
         var lastFocused = null;
 
         // Mismo criterio que AccountService.prefixFrom: tres primeras letras del
@@ -261,7 +276,7 @@
         function open() {
             lastFocused = document.activeElement;
             scrim.hidden = false;
-            holder.focus();
+            holderTrigger.focus();
         }
 
         function close() {
@@ -276,6 +291,32 @@
             b.addEventListener("click", close);
         });
 
+        /*
+          El selector no llama a esta pantalla: emite un evento y se aparta. Se
+          comprueba `target` porque el mismo evento lo disparan todos los
+          selectores de la página.
+        */
+        document.addEventListener("picker:choose", function (e) {
+            if (e.detail.target !== "create-holder") return;
+
+            var d = e.detail.data;                       // los data-* del <tr>
+            holderId.value = d.id;
+            holderLabel.textContent = d.name + " · " + d.code;
+            holderLabel.classList.remove("picker__placeholder");
+        });
+
+        /*
+          El navegador no valida un input[type=hidden] aunque lleve required, así
+          que el "elige al empleado" se hace aquí. Es una cortesía: quien decide
+          de verdad sigue siendo AccountService, que rechaza un cardholderId nulo.
+        */
+        scrim.querySelector("form").addEventListener("submit", function (e) {
+            if (!holderId.value) {
+                e.preventDefault();
+                holderTrigger.focus();
+            }
+        });
+
         purpose.addEventListener("change", preview);
         scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) close(); });
         document.addEventListener("keydown", function (e) {
@@ -283,9 +324,12 @@
         });
 
         preview();
-        if (!scrim.hidden) holder.focus();
+        if (!scrim.hidden) holderTrigger.focus();
     })();
 </script>
 
 <%@ include file="/WEB-INF/jsp/partials/confirm-modal.jspf" %>
+<%-- Fuera del <form> del alta: lleva un <input> de búsqueda dentro y un
+     formulario anidado en otro es HTML inválido. --%>
+<%@ include file="/WEB-INF/jsp/partials/picker-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>

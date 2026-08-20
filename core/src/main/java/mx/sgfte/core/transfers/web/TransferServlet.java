@@ -17,7 +17,9 @@ import java.math.BigDecimal;
 /**
  * P2P transfer screen. Placed under /admin/* for now so AuthFilter protects it;
  * in the final flow this moves to the employee area /app/* once Module 6 adds
- * the employee filter. Reuses M1's AccountLookupDao for the dropdowns.
+ * the employee filter. Las dos cuentas se eligen con el selector con tabla
+ * (/admin/picker); AccountLookupDao se queda sólo para leer sus etiquetas en la
+ * tarjeta de resultado.
  */
 @WebServlet("/admin/transferencia")
 public class TransferServlet extends HttpServlet {
@@ -78,7 +80,8 @@ public class TransferServlet extends HttpServlet {
 
     private void render(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        req.setAttribute("accounts", accountLookupDao.findActiveForSelect());
+        // Sin lista de cuentas: la pantalla ya no despliega ninguna. Las dos se
+        // eligen en el selector con tabla, que pide sus páginas a /admin/picker.
         req.getRequestDispatcher("/WEB-INF/jsp/admin/transferencia.jsp").forward(req, resp);
     }
 

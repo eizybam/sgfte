@@ -325,6 +325,33 @@ public class CardholderDao {
         }
     }
 
+    /**
+     * Cómo se lee UN empleado en el campo del selector: "Ana Ramírez · ARM0042".
+     *
+     * Existe por el reintento del alta de cuenta. Antes el empleado elegido se
+     * recuperaba solo, porque estaban TODOS en el <select> y bastaba con marcar
+     * el suyo; con el selector con tabla el desplegable ya no existe, así que
+     * hay que traer su etiqueta — y sólo la suya, no la lista entera. Misma
+     * razón que AccountLookupDao.findLabel.
+     *
+     * Optional porque el empleado puede haberse dado de baja entre que se
+     * eligió y que se consultó; quien llama decide qué enseñar entonces.
+     */
+    public java.util.Optional<String> findLabel(long cardholderId) {
+        String sql = "SELECT first_name, last_name, employee_code FROM cardholder WHERE id = ?";
+        try (Connection connection = Db.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, cardholderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return java.util.Optional.empty();
+                return java.util.Optional.of(rs.getString("first_name") + " "
+                        + rs.getString("last_name") + " · " + rs.getString("employee_code"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading cardholder label", e);
+        }
+    }
+
     public List<Cardholder> findAllActive() {
         String sql = "SELECT id, first_name, last_name FROM cardholder WHERE status = 'ACTIVE' ORDER BY last_name, first_name";
         List<Cardholder> cardholders = new ArrayList<>();

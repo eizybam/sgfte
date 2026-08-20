@@ -67,7 +67,6 @@ public class AccountAdminServlet extends HttpServlet {
         req.setAttribute("page", page);
         req.setAttribute("pageCount", pageCount);
         req.setAttribute("categories", categoryDao.findAllActive());
-        req.setAttribute("cardholders", cardholderDao.findAllActive());
 
         // Se devuelven para que el buscador, el segmentado y la píldora vuelvan
         // a dibujarse con lo que el admin eligió.
@@ -76,6 +75,22 @@ public class AccountAdminServlet extends HttpServlet {
         req.setAttribute("purpose", purposeId);
 
         consumeFlash(req);
+
+        /*
+          Cuando el alta anterior falló, el modal se reabre con lo que el admin
+          había elegido. El empleado ya no se recupera solo —el <select> con
+          todos ya no existe, ahora es el selector con tabla—, así que hay que
+          traer SU etiqueta, no la lista entera.
+         */
+        Object retryHolder = req.getAttribute(mx.sgfte.core.accounts.web.AccountServlet.FLASH_HOLDER);
+        if (retryHolder != null && !retryHolder.toString().isBlank()) {
+            try {
+                cardholderDao.findLabel(Long.parseLong(retryHolder.toString()))
+                        .ifPresent(l -> req.setAttribute("createHolderLabel", l));
+            } catch (NumberFormatException ignored) {
+                // Un id ilegible sólo significa que el campo se reabre vacío.
+            }
+        }
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/cuentas.jsp").forward(req, resp);
     }
