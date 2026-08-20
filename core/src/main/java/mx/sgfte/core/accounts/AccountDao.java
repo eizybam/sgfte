@@ -244,9 +244,23 @@ public class AccountDao {
         }
     }
 
-    /** True if the cardholder already has an account with this purpose. */
+    /**
+     * True if the cardholder already has an ACTIVE account with this purpose.
+     *
+     * El "AND status" no estaba, y sin él una cuenta CERRADA seguía ocupando su
+     * propósito para siempre: cerrar la de Alimentos y volver a crearla —el caso
+     * normal, y lo que promete el aviso de cierre en Gestión de Cuentas: "si
+     * vuelve a hacer falta ese propósito, se crea una cuenta nueva"— fallaba con
+     * "ya tiene una cuenta con ese propósito", señalando una cuenta que ya no
+     * existe para el sistema.
+     *
+     * Es la misma distinción que V6 hace con las tarjetas: la regla es "una
+     * ACTIVA de cada tipo", no "una en toda la historia", porque si no perder
+     * una tarjeta te dejaría sin poder expedir otra.
+     */
     public boolean existForPurpose(Long cardholderId, long categoryId) {
-        String sql = "SELECT 1 FROM account WHERE cardholder_id = ? AND category_id = ?";
+        String sql = "SELECT 1 FROM account "
+                + "WHERE cardholder_id = ? AND category_id = ? AND status = 'ACTIVE'";
         try (Connection connection = Db.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setLong(1, cardholderId);

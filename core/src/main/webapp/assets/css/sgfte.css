@@ -1603,6 +1603,28 @@ select.issue__input option { background: var(--sgfte-surface); color: var(--sgft
 }
 
 /*
+  Cuenta cerrada. El título se apaga y el badge CERRADA va a su lado: el estado
+  se ve antes de leer nada. .balance__closed ocupa el hueco de los dos botones
+  que ya no están, para que el panel no se quede con un vacío raro debajo del
+  saldo.
+*/
+.detail-head__title.is-closed { color: var(--sgfte-muted); }
+.detail-head__title.is-closed .purpose-pill { opacity: .55; }
+
+.balance__closed {
+    /* En el hueco exacto de .balance__actions —absoluto, arriba a la derecha—
+       para que el panel no cambie de forma al cerrarse la cuenta. */
+    position: absolute;
+    top: 38px;
+    right: 27px;
+    width: 230px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--sgfte-muted);
+}
+
+/*
   Píldora de propósito: distinta del badge de la tabla. Aquí el texto va en el
   color BASE de la categoría (no en el tono claro) sobre un relleno al 13%, y
   el radio es de píldora.

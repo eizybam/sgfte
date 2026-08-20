@@ -25,9 +25,23 @@
         Detalle de cuenta
     </p>
 
-    <h1 class="detail-head__title">
+    <%--
+      Una cuenta cerrada se lee de un vistazo, no leyendo los botones.
+
+      El mismo vocabulario que la tabla de Gestión de Cuentas —CERRADA, badge
+      neutral— porque es la misma cosa: cerrar no es un fallo, es una operación
+      normal y terminada. El título en gris hace el resto: si el color no llega
+      (impresión, daltonismo), la palabra sigue ahí.
+    --%>
+    <h1 class="detail-head__title ${account.active ? '' : 'is-closed'}">
         Cuenta ${fn:escapeXml(account.purpose)}
         <span class="purpose-pill purpose-pill--p${account.purposeColor}">${fn:escapeXml(account.purpose)}</span>
+        <c:if test="${not account.active}">
+            <span class="badge badge--neutral"
+                  title="Su saldo se reintegró a la Concentradora. Una cuenta cerrada no se reabre; si vuelve a hacer falta ese propósito, se crea una cuenta nueva.">
+                CERRADA
+            </span>
+        </c:if>
     </h1>
 
     <p class="detail-head__meta">
@@ -59,10 +73,32 @@
                 ${fn:escapeXml(account.purpose)}
             </p>
 
-            <div class="balance__actions">
-                <button type="button" class="btn btn--primary btn--hero" data-open-dispersion>Depositar</button>
-                <a class="btn btn--secondary btn--hero" href="${ctx}/admin/transferencia">Transferir</a>
-            </div>
+            <%--
+              Depositar y Transferir sólo si la cuenta sigue abierta.
+
+              No es una comprobación nueva: AccountDao.credit y
+              TransferDao.categoryIdIfActive llevan el "status = 'ACTIVE'" en su
+              WHERE desde siempre, así que una dispersión a una cuenta cerrada
+              ya se rechazaba. Lo que estaba mal era la pantalla, que ofrecía
+              una operación destinada a fallar — y encima con el modal ya
+              rellenado, así que el admin no se enteraba hasta confirmar.
+            --%>
+            <c:choose>
+                <c:when test="${account.active}">
+                    <div class="balance__actions">
+                        <button type="button" class="btn btn--primary btn--hero" data-open-dispersion>Depositar</button>
+                        <a class="btn btn--secondary btn--hero" href="${ctx}/admin/transferencia">Transferir</a>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <p class="balance__closed">
+                        Esta cuenta está cerrada: no recibe dispersiones ni transferencias.
+                        Su saldo ya volvió a la Concentradora y el historial de abajo se
+                        conserva tal cual. Si el propósito vuelve a hacer falta, se crea
+                        una cuenta nueva.
+                    </p>
+                </c:otherwise>
+            </c:choose>
         </section>
 
         <section class="panel moves" style="margin-top: 28px;">
@@ -165,7 +201,11 @@
                 </c:if>
             </div>
 
-            <a class="linked__add" href="${ctx}/admin/cards?accountId=${account.id}">+&nbsp;&nbsp;Expedir nueva tarjeta</a>
+            <%-- Cerrar la cuenta invalida sus tarjetas; expedir otra sería
+                 devolverle acceso a una cuenta que ya no puede pagar. --%>
+            <c:if test="${account.active}">
+                <a class="linked__add" href="${ctx}/admin/cards?accountId=${account.id}">+&nbsp;&nbsp;Expedir nueva tarjeta</a>
+            </c:if>
         </section>
 
         <section class="panel month" style="margin-top: 28px;">

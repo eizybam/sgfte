@@ -25,6 +25,7 @@ ALTER SESSION SET CURRENT_SCHEMA = SGFTE;
 --   · V12 → fondeo con respaldo bancario: CLABE, funding_deposit y su enlace.
 --   · V13 → con qué tarjeta se hizo cada consumo (account_movement.card_id).
 --   · V14 → foto de perfil en app_user (sólo pantalla de Ajustes).
+--   · V15 → una cuenta ACTIVA de cada propósito por tarjetahabiente.
 -- ============================================================
 
 -- ── Limpieza para desarrollo (re-ejecutar). Descomenta si necesitas recrear.
@@ -173,6 +174,15 @@ CREATE TABLE account (
                          CONSTRAINT chk_account_currency  CHECK (currency = 'MXN'),
                          CONSTRAINT chk_account_status    CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
+-- Una cuenta ACTIVA de cada propósito por tarjetahabiente (V15). Índice y no
+-- CHECK: hay que mirar las OTRAS filas del mismo tarjetahabiente. El CASE lo
+-- limita a las activas — cerrar una cuenta libera su propósito, que es lo que
+-- promete el aviso de cierre.
+CREATE UNIQUE INDEX uq_account_active_purpose ON account (
+    CASE WHEN status = 'ACTIVE' THEN cardholder_id END,
+    CASE WHEN status = 'ACTIVE' THEN category_id  END
+);
+
 
 -- ============================================================
 -- 5) card · Tarjeta (punto de acceso a la cuenta). NO guarda dinero.

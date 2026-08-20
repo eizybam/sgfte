@@ -170,6 +170,15 @@ CREATE TABLE account (
                          CONSTRAINT chk_account_currency  CHECK (currency = 'MXN'),
                          CONSTRAINT chk_account_status    CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
+-- Una cuenta ACTIVA de cada propósito por tarjetahabiente (V15). Índice y no
+-- CHECK: hay que mirar las OTRAS filas del mismo tarjetahabiente. El CASE lo
+-- limita a las activas — cerrar una cuenta libera su propósito, que es lo que
+-- promete el aviso de cierre.
+CREATE UNIQUE INDEX uq_account_active_purpose ON account (
+    CASE WHEN status = 'ACTIVE' THEN cardholder_id END,
+    CASE WHEN status = 'ACTIVE' THEN category_id  END
+);
+
 
 -- ============================================================
 -- 5) card · Tarjeta (punto de acceso a la cuenta). NO guarda dinero.
