@@ -92,10 +92,7 @@
                 </c:when>
                 <c:otherwise>
                     <p class="balance__closed">
-                        Esta cuenta está cerrada: no recibe dispersiones ni transferencias.
-                        Su saldo ya volvió a la Concentradora y el historial de abajo se
-                        conserva tal cual. Si el propósito vuelve a hacer falta, se crea
-                        una cuenta nueva.
+                        Esta cuenta está cerrada.
                     </p>
                 </c:otherwise>
             </c:choose>
