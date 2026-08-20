@@ -41,24 +41,30 @@ public class PortalAccountServlet extends HttpServlet {
             PortalAccount account = portalService.myAccount(cardholderId, accountId);
             req.setAttribute("account", account);
             /*
-              Como mucho dos tarjetas: una física y una digital, que es la regla
-              del negocio y desde V6 también la del índice. Se eligen aquí y no
-              en el JSP para que la vista NO pueda recibir una tercera: aunque
-              quedaran datos viejos de antes del índice, la pantalla no se
-              descuadra.
+              Todas las tarjetas vivas de la cuenta, la física antes que la digital.
+
+              Antes se quedaba con UNA activa de cada tipo. No era la regla del
+              negocio, era el hueco que había en la pantalla: dibujaba dos
+              solapadas y una tercera la descuadraba. El precio lo pagaban las
+              BLOQUEADAS, que desaparecían de la cuenta — perder la tarjeta la
+              borraba de la vista y no quedaba desde dónde reactivarla, aunque
+              Mis tarjetas sí la enseñara. Ahora la rejilla fluye y se desplaza,
+              así que la vista puede enseñar lo que la cuenta tiene.
+
+              Las INVALIDATED siguen fuera: son definitivas y no vuelven, el
+              mismo criterio que usa Mis tarjetas.
+
+              La física primero porque es la que el marco pone delante; después
+              por id, que es el orden en que se expidieron.
              */
-            java.util.List<mx.sgfte.core.cards.Card> cards =
-                    portalService.cardsOf(cardholderId, accountId);
-            /*
-              Como mucho dos, y la física primero: es la que el marco pone
-              delante. Se entrega ya ordenada para que el JSP recorra una lista
-              en vez de repetir el mismo bloque dos veces con nombres distintos.
-             */
-            java.util.List<mx.sgfte.core.cards.Card> shown = new java.util.ArrayList<>();
-            var physical = firstActiveOfType(cards, "PHYSICAL");
-            var digital = firstActiveOfType(cards, "DIGITAL");
-            if (physical != null) shown.add(physical);
-            if (digital != null) shown.add(digital);
+            java.util.List<mx.sgfte.core.cards.Card> shown =
+                    portalService.cardsOf(cardholderId, accountId).stream()
+                            .filter(c -> "ACTIVE".equals(c.getStatus())
+                                    || "BLOCKED".equals(c.getStatus()))
+                            .sorted(java.util.Comparator
+                                    .comparingInt((mx.sgfte.core.cards.Card c) -> c.isPhysical() ? 0 : 1)
+                                    .thenComparing(mx.sgfte.core.cards.Card::getId))
+                            .toList();
             req.setAttribute("cards", shown);
 
             req.setAttribute("activity", portalService.accountActivity(cardholderId, accountId));
@@ -73,12 +79,4 @@ public class PortalAccountServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/jsp/app/cuenta.jsp").forward(req, resp);
     }
 
-    /** The account's active card of that type, or null if it has none. */
-    private mx.sgfte.core.cards.Card firstActiveOfType(
-            java.util.List<mx.sgfte.core.cards.Card> cards, String type) {
-        return cards.stream()
-                .filter(c -> type.equals(c.getCardType()) && "ACTIVE".equals(c.getStatus()))
-                .findFirst()
-                .orElse(null);
-    }
 }

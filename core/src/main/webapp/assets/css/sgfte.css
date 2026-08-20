@@ -3304,24 +3304,41 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 .pcards-hint { margin: 0; font-size: 18px; color: var(--sgfte-cream); }
 
 /*
-  Zona de las tarjetas. Con dos se solapan (posición absoluta); con una sola
-  ocupa el ancho entero, que es lo que pidió el diseño corregido.
+  Zona de las tarjetas: rejilla que fluye, la misma de "Mis tarjetas".
+
+  Antes eran dos en posición absoluta, solapadas como en el marco, con dos
+  radios para traer al frente la de atrás. Aquello ataba la pantalla a que
+  hubiera exactamente dos: con una sola se estiraba a todo el ancho —una caja
+  de 850x228 ya no parece una tarjeta— y con tres no cabían, así que el servlet
+  recortaba y escondía las bloqueadas. La baraja del marco se pierde; que la
+  cuenta pueda enseñar sus tarjetas, no.
+
+  El alto ya no se fija: lo pone el contenido, y .pcards-scroll lo corta cuando
+  se pasa. El tope va en la zona de desplazamiento y no en el panel, para que la
+  regla del pie quede siempre pegada abajo y no flotando.
 */
+.pcards-scroll { flex: 0 1 auto; max-height: 560px; padding: 28px 45px 16px; }
+
+.pcards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+}
+
 /*
-  Los márgenes salen del marco: la tarjeta de delante ocupa de 138 a 366 desde
-  el borde del panel y la regla del pie está en 489. Sin el margen inferior la
-  caja medía justo lo que la tarjeta y la regla quedaba pegada a su borde.
+  La cara de la tarjeta. La comparten la vista de cuenta, Mis tarjetas y los dos
+  modales de detalle, y todas la usan junto con .tarjeta--still, que es quien
+  pone el tamaño real (425x228).
+
+  Ya no lleva position:absolute: eso existía para solapar dos en la vista de
+  cuenta, y ahí ahora fluyen en rejilla. La transición se queda sólo en lo que
+  todavía cambia — el borde y la sombra al pasar por encima.
 */
-.pcards { position: relative; height: 228px; margin: 68px 45px 123px; }
-.pcards--one { height: 228px; }
-
-/* El radio real desaparece pero sigue en el DOM: es lo que recuerda cuál está
-   delante, sin JavaScript y con recorrido de teclado. */
-.pcards__pick { position: absolute; opacity: 0; width: 0; height: 0; }
-
 .tarjeta {
-    position: absolute;
-    top: 0;
+    /* Ancla del badge BLOQUEADA, que es position:absolute. Sin esto se cuelga
+       del ancestro posicionado más cercano —o del <body>— y la píldora acaba en
+       una esquina de la página, lejos de la tarjeta que describe. */
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -3330,54 +3347,7 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
     border: 1px solid #594139;
     border-radius: 12px;
     cursor: pointer;
-    transition: left 160ms ease, width 160ms ease, height 160ms ease, opacity 160ms ease;
-}
-
-/*
-  Delante y detrás, tal cual el marco (339 y 585 sobre el panel).
-
-  El estado por defecto lo llevan .tarjeta--a y .tarjeta--b directamente, no una
-  regla con :checked: si dependiera del radio, con una sola tarjeta —cuando no
-  hay radios— ninguna quedaría colocada y saldría sin ancho ni posición.
-  El radio sólo hace falta para INVERTIRLAS.
-*/
-.tarjeta--a,
-#front-b:checked ~ .tarjeta--b {
-    left: 0;
-    top: 0;
-    width: 425px;
-    height: 228px;
-    opacity: 1;
-    z-index: 2;
-    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
-}
-
-.tarjeta--b,
-#front-b:checked ~ .tarjeta--a {
-    left: 246px;
-    top: 5px;
-    width: 393px;
-    height: 220px;
-    opacity: 0.56;
-    z-index: 1;
-    box-shadow: none;
-}
-
-/* La de detrás no enseña su número: en el marco sólo asoma por la derecha. */
-.tarjeta--b .tarjeta__pan { visibility: hidden; }
-#front-b:checked ~ .tarjeta--b .tarjeta__pan { visibility: visible; }
-#front-b:checked ~ .tarjeta--a .tarjeta__pan { visibility: hidden; }
-
-/* Una sola tarjeta: sin nada detrás que insinuar, ocupa todo el ancho. */
-.pcards--one .tarjeta {
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 228px;
-    opacity: 1;
-    z-index: 2;
-    box-shadow: -6px 8px 40px -7px rgba(195, 65, 0, 0.18);
-    cursor: default;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .tarjeta__top { display: flex; align-items: center; justify-content: space-between; }
@@ -3970,7 +3940,10 @@ select.register__input option { background: var(--sgfte-surface); color: var(--s
 
 /* La cara de la tarjeta aquí no se mueve ni se pulsa: es una ilustración. */
 .tarjeta--still {
-    position: static;
+    /* Sin `position`: la base ya es relative, y ponerla en static aquí —esta
+       regla va después, así que ganaba— desanclaba el badge BLOQUEADA, que se
+       iba a la esquina de la página. El `static` existía para deshacer el
+       absolute de la baraja de la vista de cuenta, que ya no existe. */
     width: 425px;
     height: 228px;
     opacity: 1;

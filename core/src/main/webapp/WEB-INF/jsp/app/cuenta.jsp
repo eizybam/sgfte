@@ -72,55 +72,61 @@
                 <h2>Tarjetas</h2>
                 <c:if test="${cardCount gt 0}">
                     <p class="pcards-hint">
-                        ${cardCount eq 2
-                            ? 'Da click en cualquier tarjeta para ver sus detalles completos.'
-                            : 'Esta cuenta tiene una sola tarjeta.'}
+                        ${cardCount} ${cardCount eq 1 ? 'tarjeta' : 'tarjetas'} ·
+                        da click en cualquiera para ver su detalle.
                     </p>
                 </c:if>
             </div>
 
-            <div class="pcards ${cardCount eq 1 ? 'pcards--one' : ''}">
-                <c:choose>
-                    <c:when test="${cardCount eq 0}">
-                        <p class="paccounts__empty">
-                            Esta cuenta todavía no tiene tarjetas. Administración las expide.
-                        </p>
-                    </c:when>
-                    <c:otherwise>
-                        <%--
-                          Los dos radios van ANTES que las tarjetas para poder
-                          seleccionarlas con ~. Son radios de verdad y no un
-                          onclick: el intercambio funciona sin JavaScript y se
-                          recorre con el teclado.
-                        --%>
-                        <c:if test="${cardCount eq 2}">
-                            <input class="pcards__pick" type="radio" name="frontCard" id="front-a" checked>
-                            <input class="pcards__pick" type="radio" name="frontCard" id="front-b">
-                        </c:if>
+            <%--
+              Las tarjetas de la cuenta, en rejilla y con desplazamiento.
 
-                        <c:forEach var="k" items="${cards}" varStatus="s">
-                            <label class="tarjeta ${s.first ? 'tarjeta--a' : 'tarjeta--b'}"
-                                   for="${s.first ? 'front-a' : 'front-b'}"
-                                   data-card="card-detail-${k.id}">
-                                <span class="tarjeta__top">
-                                    <span class="tarjeta__key">TIPO DE LA TARJETA</span>
-                                    <span class="tarjeta__pill">${fn:toUpperCase(k.typeLabel)}</span>
-                                </span>
-                                <span class="tarjeta__data">
-                                    <span class="tarjeta__pan">
-                                        <span class="tarjeta__key">NÚMERO DE TARJETA</span>
-                                        <span class="tarjeta__value">${fn:escapeXml(k.maskedPan)}</span>
+              Antes eran DOS solapadas en posición absoluta, con un par de radios
+              para traer al frente la de atrás. Eso venía del marco, y funcionaba
+              mientras la pantalla enseñara exactamente dos: con una sola la
+              tarjeta se estiraba a todo el ancho —dejaba de parecer una tarjeta—
+              y debajo quedaba el hueco de la segunda; con tres no había dónde
+              ponerlas, así que el servlet recortaba a dos y de paso escondía las
+              bloqueadas.
+
+              Ahora es la misma rejilla que "Mis tarjetas": fluye, se desplaza
+              cuando no cabe y cada tarjeta conserva su tamaño real. Lo que se
+              pierde es el efecto de baraja del marco; lo que se gana es que la
+              pantalla enseña lo que la cuenta TIENE en vez de lo que cabía.
+            --%>
+            <c:choose>
+                <c:when test="${cardCount eq 0}">
+                    <p class="paccounts__empty">
+                        Esta cuenta todavía no tiene tarjetas. Administración las expide.
+                    </p>
+                </c:when>
+                <c:otherwise>
+                    <div class="paccounts__scroll pcards-scroll">
+                        <div class="pcards">
+                            <c:forEach var="k" items="${cards}">
+                                <div class="tarjeta tarjeta--still tarjeta--pick ${k.status == 'BLOCKED' ? 'tarjeta--blocked' : ''}"
+                                     tabindex="0" role="button" aria-haspopup="dialog"
+                                     data-card="card-detail-${k.id}">
+                                    <span class="tarjeta__top">
+                                        <span class="tarjeta__key">TIPO DE LA TARJETA</span>
+                                        <span class="tarjeta__pill">${fn:toUpperCase(k.typeLabel)}</span>
                                     </span>
-                                    <span class="tarjeta__exp">
-                                        <span class="tarjeta__key">VÁLIDA HASTA</span>
-                                        <span class="tarjeta__value">${k.expiresLabel}</span>
+                                    <span class="tarjeta__data">
+                                        <span class="tarjeta__pan">
+                                            <span class="tarjeta__key">NÚMERO DE TARJETA</span>
+                                            <span class="tarjeta__value">${fn:escapeXml(k.maskedPan)}</span>
+                                        </span>
+                                        <span class="tarjeta__exp">
+                                            <span class="tarjeta__key">VÁLIDA HASTA</span>
+                                            <span class="tarjeta__value">${k.expiresLabel}</span>
+                                        </span>
                                     </span>
-                                </span>
-                            </label>
-                        </c:forEach>
-                    </c:otherwise>
-                </c:choose>
-            </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </c:otherwise>
+            </c:choose>
 
             <div class="paccounts__foot pcards-foot">
                 <a class="pback" href="${ctx}/app/home">
@@ -244,20 +250,19 @@
 <script>
     (function () {
         /*
-          La de detrás se trae al frente (eso lo hace el radio del <label>); la
-          de delante abre su detalle. Se mira el estado ANTES del clic, porque
-          pulsar el label ya habría marcado el radio.
+          Cada tarjeta abre su detalle, sin más. Ya no hay delante y detrás que
+          intercambiar primero: la rejilla las enseña todas a la vez, igual que
+          en Mis tarjetas.
         */
-        var front = "front-a";
+        function openCard(el) {
+            var modal = document.getElementById(el.dataset.card);
+            if (modal) modal.hidden = false;
+        }
 
-        document.querySelectorAll(".pcards .tarjeta").forEach(function (card) {
-            card.addEventListener("click", function (e) {
-                var target = card.getAttribute("for");
-                if (target !== front) { front = target; return; }   // pasa al frente
-
-                e.preventDefault();
-                var modal = document.getElementById(card.dataset.card);
-                if (modal) modal.hidden = false;
+        document.querySelectorAll(".pcards .tarjeta--pick").forEach(function (card) {
+            card.addEventListener("click", function () { openCard(card); });
+            card.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCard(card); }
             });
         });
 
