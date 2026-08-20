@@ -242,6 +242,8 @@
                         <dd><span class="cardx__mono">${k.expiresLabel}</span></dd>
                     </div>
                 </dl>
+
+                <%@ include file="/WEB-INF/jsp/partials/card-digital-rows.jspf" %>
             </div>
         </div>
     </div>
@@ -287,4 +289,6 @@
 <%@ include file="/WEB-INF/jsp/partials/transfer-modal.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/info-modals.jspf" %>
 
+<%-- Una vez por pantalla, fuera del bucle: recorre todas las tarjetas. --%>
+<%@ include file="/WEB-INF/jsp/partials/card-digital-sim.jspf" %>
 <%@ include file="/WEB-INF/jsp/partials/app-bottom.jspf" %>

@@ -1,0 +1,114 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%--
+  El guion de la simulación de tarjeta digital. Una vez por pantalla, no una por
+  tarjeta: recorre todos los bloques [data-cardsim] que haya en la página.
+
+  Sólo dibuja. No pide nada al servidor y no hay nada que pedir — ver el aviso
+  en card-digital-rows.jspf.
+--%>
+<script>
+    (function () {
+        var blocks = document.querySelectorAll("[data-cardsim]");
+        if (!blocks.length) return;
+
+        var WINDOW_MS = 5 * 60 * 1000;          // el CVV vive cinco minutos
+
+        /*
+          Un revoltijo determinista: la misma entrada da siempre la misma salida.
+
+          Es lo que hace que el "número completo" no cambie cada vez que se abre
+          el detalle —un número que baila a cada recarga se ve roto, no
+          simulado— y que el CVV sea estable dentro de su ventana de cinco
+          minutos y distinto en la siguiente.
+
+          No es criptografía y no pretende serlo: es el hash de cadenas de toda
+          la vida (djb2), suficiente para repartir dígitos de forma creíble.
+        */
+        function hash(text) {
+            var h = 5381;
+            for (var i = 0; i < text.length; i++) {
+                h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+            }
+            /*
+              La mezcla final importa, y costó verla.
+
+              djb2 a secas suma el último carácter justo al final, así que dos
+              semillas que sólo se diferencian en su última cifra —"...5811350"
+              y "...5811351", o sea dos ventanas seguidas— dan hashes que
+              distan unas mil unidades. El CVV salía en cuesta: 966, 965, 964…
+              Y el número de tarjeta repetía su propio bloque, porque "#0" y
+              "#1" tampoco se separaban.
+
+              Estas tres vueltas son el finalizador de murmur3: desparraman los
+              bits altos sobre los bajos, y con eso una entrada casi idéntica da
+              una salida sin ningún parecido.
+            */
+            h ^= h >>> 15; h = Math.imul(h, 2246822507);
+            h ^= h >>> 13; h = Math.imul(h, 3266489909);
+            h ^= h >>> 16;
+            return h >>> 0;                      // sin signo, 32 bits
+        }
+
+        /**
+         * `count` dígitos sacados de la semilla, siempre los mismos.
+         *
+         * Se toman los dígitos BAJOS del hash (el resto entre un millón) y no
+         * los altos: los altos son justamente los que apenas se mueven cuando
+         * la entrada cambia poco.
+         */
+        function digits(seed, count) {
+            var out = "";
+            for (var i = 0; out.length < count; i++) {
+                out += String(hash(seed + "#" + i) % 1000000).padStart(6, "0");
+            }
+            return out.slice(0, count);
+        }
+
+        /** Los últimos cuatro son los ÚNICOS reales: salen del masked_pan. */
+        function last4(masked) {
+            var onlyDigits = (masked || "").replace(/\D/g, "");
+            return onlyDigits.slice(-4) || "0000";
+        }
+
+        function groupsOfFour(number) {
+            return number.replace(/(.{4})/g, "$1 ").trim();
+        }
+
+        function paint(block) {
+            var id = block.dataset.cardId;
+            var pan = digits("pan:" + id, 12) + last4(block.dataset.last4);
+            block.querySelector("[data-cardsim-pan]").textContent = groupsOfFour(pan);
+            tick(block);
+        }
+
+        function tick(block) {
+            var id = block.dataset.cardId;
+            var now = Date.now();
+            var window_ = Math.floor(now / WINDOW_MS);
+
+            // Tres dígitos de la semilla "tarjeta + ventana": al cambiar de
+            // ventana cambia el CVV, y vuelve a ser el mismo si se recarga
+            // dentro de esos cinco minutos.
+            var cvv = digits("cvv:" + id + ":" + window_, 3);
+
+            var el = block.querySelector("[data-cardsim-cvv]");
+            if (el.textContent !== cvv) {
+                el.textContent = cvv;
+                // Un parpadeo al rotar: si no, el número cambia sin que nadie
+                // se entere y la demostración pierde justo lo que enseña.
+                el.classList.remove("is-new");
+                void el.offsetWidth;               // reinicia la animación
+                el.classList.add("is-new");
+            }
+
+            var left = WINDOW_MS - (now % WINDOW_MS);
+            var mins = Math.floor(left / 60000);
+            var secs = Math.floor((left % 60000) / 1000);
+            block.querySelector("[data-cardsim-timer]").textContent =
+                "cambia en " + mins + ":" + (secs < 10 ? "0" : "") + secs;
+        }
+
+        blocks.forEach(paint);
+        setInterval(function () { blocks.forEach(tick); }, 1000);
+    })();
+</script>

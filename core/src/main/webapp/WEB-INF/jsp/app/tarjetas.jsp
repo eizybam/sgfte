@@ -145,6 +145,8 @@
                     </div>
                 </dl>
 
+                <%@ include file="/WEB-INF/jsp/partials/card-digital-rows.jspf" %>
+
                 <%-- Simula una compra real con esta tarjeta. Un solo modal
                      compartido (gasto-modal.jspf) lee la cuenta de aquí. --%>
                 <%-- Una tarjeta bloqueada no puede pagar: el botón de gasto
@@ -177,6 +179,8 @@
 </c:forEach>
 
 <%@ include file="/WEB-INF/jsp/partials/gasto-modal.jspf" %>
+<%-- Una vez por pantalla, fuera del bucle: recorre todas las tarjetas. --%>
+<%@ include file="/WEB-INF/jsp/partials/card-digital-sim.jspf" %>
 
 <script>
     (function () {

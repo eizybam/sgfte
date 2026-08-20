@@ -4294,6 +4294,49 @@ button.pager__item { padding: 0; cursor: pointer; font-family: var(--sgfte-font-
   carga. El sello va en ::after y por eso .tarjeta necesita position (ya la
   tiene: es absolute dentro de su hueco en la rejilla).
 */
+/*
+  Simulación de tarjeta digital (sólo portal). Se despega de las filas de
+  arriba con una línea: lo de abajo NO son datos del sistema, y conviene que se
+  lea como un bloque aparte y no como dos filas más de la ficha.
+*/
+.cardsim {
+    margin-top: var(--sp-3);
+    padding-top: var(--sp-2);
+    border-top: 1px dashed var(--sgfte-line);
+}
+
+.cardsim__rows { margin-top: 0; }
+
+.cardsim__cvv {
+    padding: 2px 8px;
+    border-radius: var(--sgfte-radius-badge);
+    background: rgba(254, 185, 107, 0.12);
+    letter-spacing: 2px;
+}
+
+/* Parpadeo al rotar: sin él el número cambia y nadie lo ve. */
+.cardsim__cvv.is-new { animation: cardsim-flash 900ms ease-out; }
+
+@keyframes cardsim-flash {
+    0%   { background: rgba(254, 185, 107, 0.55); }
+    100% { background: rgba(254, 185, 107, 0.12); }
+}
+
+.cardsim__timer {
+    margin-left: 10px;
+    font-size: 12px;
+    color: var(--sgfte-muted);
+}
+
+.cardsim__note {
+    margin: var(--sp-2) 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--sgfte-muted);
+}
+
+.cardsim__note strong { color: var(--sgfte-tan); }
+
 .tarjeta--blocked { opacity: .55; }
 .tarjeta--blocked::after {
     content: "BLOQUEADA";

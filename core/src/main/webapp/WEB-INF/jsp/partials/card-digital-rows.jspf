@@ -1,0 +1,52 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%--
+  Los datos que sólo tiene sentido enseñar de una tarjeta DIGITAL.
+
+  Una física no los lleva a propósito: sus dígitos están impresos en el plástico
+  que el empleado tiene en la mano, y repetirlos en pantalla sólo añade un sitio
+  más del que copiarlos. Una digital no tiene plástico, así que la pantalla ES
+  la tarjeta.
+
+  SIMULACIÓN, y el aviso de abajo lo dice sin rodeos. Dos cosas no existen en
+  este sistema y hay que ser claros en la defensa:
+
+    · El número completo. La tabla `card` guarda `masked_pan` y nada más — los
+      doce primeros dígitos no están en ninguna parte, ni siquiera cifrados.
+      Guardarlos de verdad es lo que obliga a cumplir PCI-DSS, y eso queda muy
+      fuera del alcance del proyecto.
+    · El CVV dinámico. No hay emisor, ni HSM, ni nada que lo genere ni que lo
+      valide contra una compra.
+
+    Lo que se enseña lo inventa el navegador, y por eso se incluye SÓLO aquí, en
+    el portal: el administrador nunca ve más que los últimos cuatro.
+
+  Va dentro del <c:forEach> de las tarjetas: cada bloque describe la suya y se
+  identifica con su id. El guion que los rellena vive aparte, en
+  card-digital-sim.jspf, y se incluye una sola vez por pantalla.
+--%>
+<c:if test="${not k.physical}">
+    <div class="cardsim" data-cardsim data-card-id="${k.id}" data-last4="${fn:escapeXml(k.maskedPan)}">
+        <dl class="cardx__rows cardsim__rows">
+            <div class="cardx__row">
+                <dt>Número completo</dt>
+                <dd><span class="cardx__mono" data-cardsim-pan>····</span></dd>
+            </div>
+            <div class="cardx__row">
+                <dt>CVV dinámico</dt>
+                <dd>
+                    <span class="cardx__mono cardsim__cvv" data-cardsim-cvv>···</span>
+                    <span class="cardsim__timer" data-cardsim-timer aria-live="off"></span>
+                </dd>
+            </div>
+        </dl>
+
+        <p class="cardsim__note">
+            <strong>Simulación.</strong> El CVV dinámico no está implementado: cambia
+            cada 5 minutos aquí en el navegador para enseñar cómo se vería. El número
+            completo tampoco existe — la base guarda sólo los últimos cuatro dígitos,
+            que son los únicos reales de esta pantalla.
+        </p>
+    </div>
+</c:if>
