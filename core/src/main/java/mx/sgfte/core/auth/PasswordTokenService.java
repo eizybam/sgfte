@@ -65,7 +65,13 @@ public class PasswordTokenService {
                 + "Si tú no esperabas este correo, ignóralo.\n\n"
                 + "— Sistema de Gestión de Fondos y Tarjetas Empresariales";
 
-        deliver(cardholderId, AuditEvent.ACCOUNT_ACTIVATION_SENT, email, subject, body);
+        String html = linkEmail(fullName,
+                "Se cre\u00f3 tu acceso al portal de SGFTE. Para entrar, primero crea tu contrase\u00f1a.",
+                "Crear mi contrase\u00f1a", link,
+                "Este enlace vale por 24 horas y s\u00f3lo se puede usar una vez. "
+                        + "Si t\u00fa no esperabas este correo, ign\u00f3ralo.");
+
+        deliver(cardholderId, AuditEvent.ACCOUNT_ACTIVATION_SENT, email, subject, body, html);
     }
 
     /**
@@ -97,7 +103,13 @@ public class PasswordTokenService {
                 + "Si tú no lo pediste, ignora este correo — tu contraseña actual sigue funcionando.\n\n"
                 + "— Sistema de Gestión de Fondos y Tarjetas Empresariales";
 
-        deliver(user.getCardholderId(), AuditEvent.PASSWORD_RESET_REQUESTED, email, subject, body);
+        String html = linkEmail(user.getFullName(),
+                "Pediste restablecer tu contrase\u00f1a.",
+                "Restablecer contrase\u00f1a", link,
+                "Este enlace vale por 1 hora y s\u00f3lo se puede usar una vez. "
+                        + "Si t\u00fa no lo pediste, ignora este correo \u2014 tu contrase\u00f1a actual sigue funcionando.");
+
+        deliver(user.getCardholderId(), AuditEvent.PASSWORD_RESET_REQUESTED, email, subject, body, html);
     }
 
     /** Loads the token behind the set-password form, if it's still good. */
@@ -128,7 +140,7 @@ public class PasswordTokenService {
         userDao.setPasswordAndActivate(user.getId(), PasswordHasher.hash(newPassword));
         tokenDao.markUsed(pt.id());
 
-        deliver(user.getCardholderId(), AuditEvent.PASSWORD_CHANGED, user.getEmail(),
+        deliverPlain(user.getCardholderId(), AuditEvent.PASSWORD_CHANGED, user.getEmail(),
                 "Tu contraseña cambió",
                 "Hola " + user.getFullName() + ",\n\n"
                         + "Tu contraseña de SGFTE se actualizó correctamente.\n\n"
@@ -143,12 +155,81 @@ public class PasswordTokenService {
      * them), so they fall back to the plain send(): still emailed, still
      * audited, just not logged anywhere they'd see in-app.
      */
-    private void deliver(Long cardholderId, AuditEvent event, String to, String subject, String body) {
+    private void deliverPlain(Long cardholderId, AuditEvent event, String to, String subject, String body) {
+        deliver(cardholderId, event, to, subject, body, null);
+    }
+
+    private void deliver(Long cardholderId, AuditEvent event, String to, String subject,
+                         String body, String html) {
         if (cardholderId != null) {
-            notificationService.notify(cardholderId, event, to, subject, body);
+            notificationService.notify(cardholderId, event, to, subject, body, html);
         } else {
-            notificationService.send(to, subject, body);
+            notificationService.send(to, subject, body, html);
         }
+    }
+
+    /*
+      La versi\u00f3n bonita de los dos correos que llevan enlace. Nada m\u00e1s que
+      eso: el texto plano de arriba sigue viajando en el mismo mensaje y sigue
+      llevando la URL completa, as\u00ed que si el cliente no pinta HTML el correo
+      se lee igual que siempre.
+
+      HTML de correo, no de web: tablas y estilos en l\u00ednea, porque muchos
+      clientes tiran las hojas de estilo. Debajo del bot\u00f3n va la URL en texto
+      por si el bot\u00f3n no se puede pulsar (Outlook antiguo, im\u00e1genes
+      bloqueadas), y para que se vea a d\u00f3nde lleva antes de hacer clic.
+     */
+    private String linkEmail(String fullName, String intro, String buttonLabel,
+                             String link, String note) {
+        String name = escape(fullName);
+        String url = escape(link);
+        return """
+            <div style="margin:0;padding:24px 12px;background:#141312;\
+font-family:Arial,Helvetica,sans-serif;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
+                <tr><td align="center">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="520"
+                         style="max-width:520px;width:100%%;background:#1d1b1a;border:1px solid #594139;
+                                border-radius:12px;">
+                    <tr><td style="padding:28px 32px;">
+                      <p style="margin:0 0 20px;font-size:13px;letter-spacing:1px;
+                                text-transform:uppercase;color:#feb96b;">SGFTE</p>
+                      <p style="margin:0 0 8px;font-size:16px;color:#e6e1df;">Hola %s,</p>
+                      <p style="margin:0 0 24px;font-size:15px;line-height:22px;color:#e6e1df;">%s</p>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr><td align="center" bgcolor="#c34100" style="border-radius:8px;">
+                          <a href="%s"
+                             style="display:inline-block;padding:13px 28px;font-size:15px;
+                                    font-weight:bold;color:#ffede8;text-decoration:none;">%s</a>
+                        </td></tr>
+                      </table>
+                      <p style="margin:24px 0 6px;font-size:12px;color:#9b8e88;">
+                        Si el bot\u00f3n no funciona, copia y pega esta direcci\u00f3n:</p>
+                      <p style="margin:0 0 24px;font-size:12px;word-break:break-all;">
+                        <a href="%s" style="color:#feb96b;">%s</a></p>
+                      <p style="margin:0;font-size:13px;line-height:20px;color:#9b8e88;
+                                border-top:1px solid #2b2a28;padding-top:16px;">%s</p>
+                      <p style="margin:16px 0 0;font-size:12px;color:#9b8e88;">
+                        \u2014 Sistema de Gesti\u00f3n de Fondos y Tarjetas Empresariales</p>
+                    </td></tr>
+                  </table>
+                </td></tr>
+              </table>
+            </div>
+            """.formatted(name, escape(intro), url, escape(buttonLabel), url, url, escape(note));
+    }
+
+    /**
+     * El nombre viene de la base de datos y acaba dentro del HTML del correo:
+     * se escapa. Es la \u00fanica parte del mensaje que no escribimos nosotros.
+     */
+    private static String escape(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&#39;");
     }
 
     private String newToken() {

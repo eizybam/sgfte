@@ -100,7 +100,7 @@ public class NotificationService {
 
         deliver(recipient.cardholderId(), event, recipient.holderEmail(),
                 "Recibiste " + money(amount) + " en tu cuenta " + recipient.purpose(),
-                body(recipient, sender, amount, concept));
+                body(recipient, sender, amount, concept), null);
     }
 
     /** El texto del correo. Plano a propósito: se lee igual en cualquier cliente. */
@@ -131,9 +131,15 @@ public class NotificationService {
      * envío y el registro ocurren detrás.
      */
     public void notify(long cardholderId, AuditEvent event, String to, String subject, String body) {
+        notify(cardholderId, event, to, subject, body, null);
+    }
+
+    /** Igual, con versión HTML opcional del mismo mensaje (ver EmailSender.send). */
+    public void notify(long cardholderId, AuditEvent event, String to, String subject,
+                       String body, String html) {
         DISPATCH.submit(() -> {
             try {
-                deliver(cardholderId, event, to, subject, body);
+                deliver(cardholderId, event, to, subject, body, html);
             } catch (RuntimeException e) {
                 System.err.println("[NOTIFY] aviso fallido: " + e.getMessage());
             }
@@ -144,8 +150,9 @@ public class NotificationService {
      * El envío y el registro, ya en el hilo de despacho — deliverMoneyReceived
      * y notify() confluyen aquí para no envolver un submit dentro de otro.
      */
-    private void deliver(long cardholderId, AuditEvent event, String to, String subject, String body) {
-        sendEmail(to, subject, body);
+    private void deliver(long cardholderId, AuditEvent event, String to, String subject,
+                         String body, String html) {
+        sendEmail(to, subject, body, html);
         // Se registra en la pantalla del tarjetahabiente pase lo que pase con el
         // correo: el evento (se emitió una tarjeta, entró dinero...) ocurrió de
         // verdad aunque Gmail esté teniendo un mal día; el registro en pantalla
@@ -162,12 +169,17 @@ public class NotificationService {
      * es justo lo que hay que poder consultar después.
      */
     public void send(String to, String subject, String body) {
-        sendEmail(to, subject, body);
+        sendEmail(to, subject, body, null);
     }
 
-    private void sendEmail(String to, String subject, String body) {
+    /** Igual, con versión HTML opcional del mismo mensaje (ver EmailSender.send). */
+    public void send(String to, String subject, String body, String html) {
+        sendEmail(to, subject, body, html);
+    }
+
+    private void sendEmail(String to, String subject, String body, String html) {
         try {
-            emailSender.send(to, subject, body);
+            emailSender.send(to, subject, body, html);
             auditLogService.record(AuditEvent.NOTIFICATION, subject + " -> " + to, "system", null);
         } catch (MessagingException | RuntimeException e) {
             // La causa real y no sólo "Could not convert socket to TLS", que no

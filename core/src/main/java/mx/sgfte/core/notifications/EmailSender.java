@@ -6,7 +6,9 @@ import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import java.util.Properties;
 
@@ -73,12 +75,41 @@ final class EmailSender {
     }
 
     void send(String to, String subject, String body) throws MessagingException {
+        send(to, subject, body, null);
+    }
+
+    /**
+     * Igual que el anterior, pero con una versión HTML opcional.
+     *
+     * Se manda multipart/alternative: las DOS versiones viajan en el mismo
+     * correo y el cliente elige. El que no sabe pintar HTML —o el que lo tiene
+     * apagado— sigue viendo el texto plano de siempre, con el enlace completo
+     * a la vista. La versión bonita es un extra, nunca la única forma de leer
+     * el mensaje.
+     */
+    void send(String to, String subject, String body, String html) throws MessagingException {
         MimeMessage message = new MimeMessage(session);
         // Remitente explícito: sin él, algunos servidores rechazan el mensaje.
         message.setFrom(new InternetAddress(MailConfig.FROM));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
         message.setSubject(subject, "UTF-8");
-        message.setText(body, "UTF-8");
+
+        if (html == null || html.isBlank()) {
+            message.setText(body, "UTF-8");
+        } else {
+            MimeBodyPart textPart = new MimeBodyPart();
+            textPart.setText(body, "UTF-8");
+
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setContent(html, "text/html; charset=UTF-8");
+
+            // El orden importa: en alternative el cliente toma la ÚLTIMA parte
+            // que sepa mostrar, así que el HTML va después del texto plano.
+            MimeMultipart parts = new MimeMultipart("alternative");
+            parts.addBodyPart(textPart);
+            parts.addBodyPart(htmlPart);
+            message.setContent(parts);
+        }
         Transport.send(message);
     }
 
