@@ -89,10 +89,18 @@ public class OperationResult implements Serializable {
         return detail(label, "$" + String.format(Locale.US, "%,.2f", value) + " MXN");
     }
 
-    /** The moment it happened, as the frame writes it: "01 Jul 2026, 10:24 AM". */
+    /**
+     * El sello de la tarjeta: "20 Ago 2026, 04:42 PM".
+     *
+     * Lo que llega es un LocalDateTime.now() del servlet, es decir la hora del
+     * contenedor —UTC—, así que se traduce a la zona de la empresa antes de
+     * escribirlo. Se hace aquí, en el único sitio por el que pasan las veinte
+     * tarjetas de resultado, en vez de en cada llamador.
+     */
     public OperationResult when(LocalDateTime moment) {
         if (moment == null) return this;
         // El mes sale en minúscula ("01 jul 2026"); el marco lo capitaliza.
+        moment = mx.sgfte.core.shared.time.AppTime.displaySystem(moment);
         String date = DATE_PART.format(moment);
         int space = date.indexOf(' ');
         date = date.substring(0, space + 1)

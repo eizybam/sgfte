@@ -69,13 +69,20 @@ public class PortalActivity {
      */
     public String getWhen() {
         if (createdAt == null) return "";
-        LocalDate day = createdAt.toLocalDate();
-        LocalDate today = LocalDate.now();
+        /*
+          Lo guardado es UTC; aquí se lee en la zona de la empresa. Y el "hoy"
+          contra el que se compara también: con LocalDate.now() —UTC dentro del
+          contenedor— un movimiento de las 19:00 de CDMX caía ya en el día
+          siguiente y la actividad reciente lo fechaba mañana.
+        */
+        LocalDateTime at = mx.sgfte.core.shared.time.AppTime.display(createdAt);
+        LocalDate day = at.toLocalDate();
+        LocalDate today = mx.sgfte.core.shared.time.AppTime.today();
         String prefix;
         if (day.equals(today)) prefix = "Hoy";
         else if (day.equals(today.minusDays(1))) prefix = "Ayer";
-        else prefix = DAY_MONTH.format(createdAt);
-        return prefix + ", " + TIME.format(createdAt).toLowerCase(Locale.US);
+        else prefix = DAY_MONTH.format(at);
+        return prefix + ", " + TIME.format(at).toLowerCase(Locale.US);
     }
 
     /** Sprite id for the little square icon, chosen from the account's purpose. */

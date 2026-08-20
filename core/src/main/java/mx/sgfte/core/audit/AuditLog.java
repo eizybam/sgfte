@@ -55,6 +55,15 @@ public class AuditLog {
     private static final java.time.format.DateTimeFormatter TIME =
             java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    public String getDateLabel() { return createdAt == null ? "" : createdAt.format(DATE); }
-    public String getTimeLabel() { return createdAt == null ? "" : createdAt.format(TIME); }
+    /*
+      createdAt viene de la base en UTC (DEFAULT SYSTIMESTAMP sobre un servidor
+      en UTC), así que se traduce a la zona de la empresa justo aquí, al
+      convertirse en texto. Ver AppTime: dentro del sistema todo sigue en UTC.
+    */
+    private java.time.LocalDateTime local() {
+        return mx.sgfte.core.shared.time.AppTime.display(createdAt);
+    }
+
+    public String getDateLabel() { return createdAt == null ? "" : local().format(DATE); }
+    public String getTimeLabel() { return createdAt == null ? "" : local().format(TIME); }
 }

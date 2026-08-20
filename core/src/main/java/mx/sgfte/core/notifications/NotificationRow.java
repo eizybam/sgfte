@@ -56,8 +56,10 @@ public class NotificationRow {
     /** Clave de agrupación: HOY, AYER, o la fecha, para partir la lista en secciones. */
     public String getGroupKey() {
         if (createdAt == null) return "";
-        LocalDate day = createdAt.toLocalDate();
-        LocalDate today = LocalDate.now();
+        // El día se decide en la zona de la empresa, no en la del contenedor:
+        // si no, un aviso de las 19:00 de CDMX ya contaba como de mañana.
+        LocalDate day = local().toLocalDate();
+        LocalDate today = mx.sgfte.core.shared.time.AppTime.today();
         if (day.equals(today)) return "HOY";
         if (day.equals(today.minusDays(1))) return "AYER";
         return day.toString();
@@ -69,7 +71,7 @@ public class NotificationRow {
             case "HOY"  -> "Hoy";
             case "AYER" -> "Ayer";
             case ""     -> "";
-            default     -> DAY_MONTH.format(createdAt);
+            default     -> DAY_MONTH.format(local());
         };
     }
 
@@ -81,10 +83,21 @@ public class NotificationRow {
     public String getWhen() {
         if (createdAt == null) return "";
         if ("HOY".equals(getGroupKey())) return relative();
-        if ("AYER".equals(getGroupKey())) return "Ayer, " + TIME.format(createdAt);
-        return getGroupLabel() + ", " + TIME.format(createdAt);
+        if ("AYER".equals(getGroupKey())) return "Ayer, " + TIME.format(local());
+        return getGroupLabel() + ", " + TIME.format(local());
     }
 
+    /** Lo guardado es UTC; en pantalla va en la zona de la empresa. Ver AppTime. */
+    private LocalDateTime local() {
+        return mx.sgfte.core.shared.time.AppTime.display(createdAt);
+    }
+
+    /*
+      Ojo: aquí NO se convierte nada, y es correcto. Esto mide una duración
+      entre dos instantes, y los dos están en el mismo reloj —lo guardado en
+      UTC y el now() del contenedor, también UTC—. Traducir sólo uno de los dos
+      convertiría "hace 3 minutos" en "hace 6 horas".
+    */
     private String relative() {
         long minutes = ChronoUnit.MINUTES.between(createdAt, LocalDateTime.now());
         if (minutes < 1) return "Hace instantes";

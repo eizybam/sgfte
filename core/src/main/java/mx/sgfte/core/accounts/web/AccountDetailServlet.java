@@ -74,8 +74,11 @@ public class AccountDetailServlet extends HttpServlet {
 
         // Se formatea aquí porque JSTL no sabe con java.time.
         if (summary.getLastDeposit() != null) {
-            req.setAttribute("lastDepositLabel",
-                    capitalizeMonth(summary.getLastDeposit().format(DAY_YEAR)));
+            // En la zona de la empresa: lo guardado es UTC, y una recarga de
+            // las 19:00 salía fechada al día siguiente.
+            req.setAttribute("lastDepositLabel", capitalizeMonth(
+                    mx.sgfte.core.shared.time.AppTime.display(summary.getLastDeposit())
+                            .format(DAY_YEAR)));
         }
 
         consumeFlash(req);

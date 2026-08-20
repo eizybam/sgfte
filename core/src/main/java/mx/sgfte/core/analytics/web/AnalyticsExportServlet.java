@@ -47,7 +47,9 @@ public class AnalyticsExportServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         AnalyticsPeriod period = AnalyticsPeriod.of(req.getParameter("period"));
-        LocalDateTime now = LocalDateTime.now();
+        // El sello del archivo y su nombre, en hora de la empresa: quien
+        // descarga el reporte lo archiva por la fecha en que lo sacó.
+        LocalDateTime now = mx.sgfte.core.shared.time.AppTime.now();
         AnalyticsReport r = reports.build(period, now);
 
         // 1) Armar el archivo entero ANTES de tocar la respuesta.

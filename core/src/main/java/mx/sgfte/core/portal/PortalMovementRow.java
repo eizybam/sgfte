@@ -43,14 +43,19 @@ public class PortalMovementRow {
     /** "13/Oct/2026" — el marco capitaliza el mes. */
     public String getDayLabel() {
         if (createdAt == null) return "";
-        String day = DAY.format(createdAt);
+        String day = DAY.format(local());
         int slash = day.indexOf('/');
         return day.substring(0, slash + 1)
              + Character.toUpperCase(day.charAt(slash + 1))
              + day.substring(slash + 2);
     }
 
-    public String getTimeLabel() { return createdAt == null ? "" : TIME.format(createdAt); }
+    public String getTimeLabel() { return createdAt == null ? "" : TIME.format(local()); }
+
+    /** Lo guardado es UTC; en pantalla va en la zona de la empresa. Ver AppTime. */
+    private LocalDateTime local() {
+        return mx.sgfte.core.shared.time.AppTime.display(createdAt);
+    }
 
     /** Línea principal del concepto: lo que se escribió al mover el dinero. */
     public String getConcept() {

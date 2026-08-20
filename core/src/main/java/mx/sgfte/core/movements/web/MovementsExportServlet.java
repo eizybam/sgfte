@@ -63,7 +63,9 @@ public class MovementsExportServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         MovementFilters f = MovementFilters.from(req);
-        LocalDateTime now = LocalDateTime.now();
+        // El sello del archivo y su nombre, en hora de la empresa: quien
+        // descarga el reporte lo archiva por la fecha en que lo sacó.
+        LocalDateTime now = mx.sgfte.core.shared.time.AppTime.now();
 
         int total = movements.countGlobal(f.search(), f.scope(), f.type(),
                 f.categoryId(), f.accountId(), f.period());
@@ -132,7 +134,10 @@ public class MovementsExportServlet extends HttpServlet {
                 "DIRECCIÓN", "MONTO (MXN)");
 
         for (GlobalMovementRow m : rows) {
-            LocalDateTime at = m.getCreatedAt();
+            // Igual que en pantalla: lo guardado es UTC y el CSV se lee aquí.
+            // Un export que fechara distinto que la tabla de la que salió sería
+            // justo lo que un auditor señalaría.
+            LocalDateTime at = mx.sgfte.core.shared.time.AppTime.display(m.getCreatedAt());
             csv.row(
                     at == null ? null : at.format(DATE),
                     at == null ? null : at.format(TIME),
