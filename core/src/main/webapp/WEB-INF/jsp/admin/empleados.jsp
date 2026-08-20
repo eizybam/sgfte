@@ -287,3 +287,13 @@
     })();
 </script>
 <%@ include file="/WEB-INF/jsp/partials/confirm-modal.jspf" %>
+<%--
+  Cierra el cascarón que abrió admin-top.jspf.
+
+  Faltaba, y era la única pantalla del proyecto a la que le faltaba. Con él
+  vuelven cuatro cosas que el resto ya tenía: el modal de resultado —por eso el
+  alta de un empleado no enseñaba nada—, el bloqueo del scroll de fondo con un
+  modal abierto, el ojo de las contraseñas y el cierre de </main>, </div>,
+  </body> y </html>.
+--%>
+<%@ include file="/WEB-INF/jsp/partials/admin-bottom.jspf" %>
